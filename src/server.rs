@@ -5,7 +5,9 @@ use std::sync::Arc;
 use listen_tracing::{LogCache, LogEntry};
 use tokio::spawn;
 use tokio::sync::broadcast;
+use tracing::info;
 use warp::Filter;
+use crate::util::{make_db, make_kv_store};
 
 mod routes;
 mod response;
@@ -30,9 +32,17 @@ pub async fn start() {
     // 初始化 tracing 日志系统
     listen_tracing::setup_tracing_with_broadcast(tx.clone(), cache.clone());
 
+    // 配置文件初始化环境处理
+    if std::env::var("IS_SYSTEMD_SERVICE").is_err() {
+        dotenv::dotenv().expect("Failed to load .env file");
+    }
+    info!("Starting geyser indexer...");
+
+    // todo global
+    let db = make_db().await;
+    let kv_store = make_kv_store().await;
+
     let bind_address: SocketAddr = "127.0.0.1:10099".parse().unwrap();
-
-
 
     // init app
     let app_state = AppState{tx:tx.clone(), cache: cache.clone()};
@@ -41,7 +51,7 @@ pub async fn start() {
 
     warp::serve(routes).run(bind_address).await;
 
-    tracing::info!("You can access the server at {}", bind_address);
+    info!("You can access the server at {}", bind_address);
 }
 
 fn get_absolute_path(file_name: &str) -> String {
