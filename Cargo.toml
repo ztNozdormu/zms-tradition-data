@@ -1,0 +1,17 @@
+[package]
+name = "zms-tradition-data"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio = { version = "1.44.2", features = ["full"] }
+warp = "0.3.7"
+# listen tracing
+tracing = "0.1.41"
+listen-tracing ={ git = "https://github.com/ztNozdormu/listen-tracing", branch = "main", version = "0.1.1"}
+
+# Data Structures
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+chrono = "0.4.40"
+async-stream = "0.3.6"
