@@ -5,6 +5,7 @@ use clickhouse::inserter::Inserter;
 use clickhouse::Client;
 use tokio::sync::RwLock;
 use tracing::{debug, info};
+use crate::model::dex::price::PriceUpdate;
 
 #[async_trait::async_trait]
 pub trait Database {
@@ -20,30 +21,30 @@ pub trait Database {
 
     async fn health_check(&self) -> Result<()>;
     // todo update
-    // async fn insert_price(&self, price: &PriceUpdate) -> Result<()>;
+    async fn insert_price(&self, price: &PriceUpdate) -> Result<()>;
 }
 
 pub struct ClickhouseDb {
     client: Client,
-    // inserter: Option<Arc<RwLock<Inserter<PriceUpdate>>>>,
+    inserter: Option<Arc<RwLock<Inserter<PriceUpdate>>>>,
     is_initialized: bool,
     max_rows: u64,
 }
 
 impl ClickhouseDb {
-    // fn create_inserter(&self) -> Result<Inserter<PriceUpdate>> {
-    //     Ok(self
-    //         .client
-    //         .inserter::<PriceUpdate>("price_updates")
-    //         .context("failed to prepare price insert statement")?
-    //         .with_timeouts(
-    //             Some(Duration::from_secs(5)),
-    //             Some(Duration::from_secs(20)),
-    //         )
-    //         .with_max_rows(self.max_rows)
-    //         .with_max_bytes(1_000_000) // price update is roughly ~200 bytes
-    //         .with_period(Some(Duration::from_secs(15))))
-    // }
+    fn create_inserter(&self) -> Result<Inserter<PriceUpdate>> {
+        Ok(self
+            .client
+            .inserter::<PriceUpdate>("price_updates")
+            .context("failed to prepare price insert statement")?
+            .with_timeouts(
+                Some(Duration::from_secs(5)),
+                Some(Duration::from_secs(20)),
+            )
+            .with_max_rows(self.max_rows)
+            .with_max_bytes(1_000_000) // price update is roughly ~200 bytes
+            .with_period(Some(Duration::from_secs(15))))
+    }
 }
 
 #[async_trait::async_trait]

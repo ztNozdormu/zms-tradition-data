@@ -2,6 +2,7 @@ mod server;
 mod util;
 mod kv_store;
 mod db;
+mod model;
 
 #[tokio::main]
 async fn main() {
