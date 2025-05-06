@@ -158,7 +158,7 @@ impl Database for ClickhouseDb {
                 number_of_trades UInt64,
                 taker_buy_base_asset_volume Float64,
                 taker_buy_quote_asset_volume Float64,
-                PRIMARY KEY (exchange, symbol, period, open_time)
+                PRIMARY KEY (exchange, symbol, period, close_time, open_time)
             ) ENGINE = MergeTree()
             ORDER BY (exchange, symbol, period, close_time, open_time)
         "#),
