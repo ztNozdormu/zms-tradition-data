@@ -27,21 +27,6 @@ pub async fn make_kv_store() -> Result<Arc<RedisKVStore>> {
     }
 }
 
-pub async fn make_message_queue() -> Result<Arc<RedisMessageQueue>> {
-    match is_local() {
-        true => {
-            let message_queue =
-                RedisMessageQueue::new("redis://localhost:6379").await?;
-            Ok(Arc::new(message_queue))
-        }
-        false => {
-            let message_queue =
-                RedisMessageQueue::new(must_get_env("REDIS_URL").as_str())
-                    .await?;
-            Ok(Arc::new(message_queue))
-        }
-    }
-}
 
 pub async fn make_db() -> Result<Arc<ClickhouseDb>> {
     let mut db = match is_local() {

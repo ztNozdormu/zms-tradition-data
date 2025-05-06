@@ -3,6 +3,7 @@ use std::{sync::Arc, time::Duration};
 use anyhow::{Context, Result};
 use clickhouse::inserter::Inserter;
 use clickhouse::Client;
+use futures::future::join_all;
 use tokio::sync::RwLock;
 use tracing::{debug, info};
 use crate::model::dex::price::PriceUpdate;
@@ -22,6 +23,7 @@ pub trait Database {
     async fn health_check(&self) -> Result<()>;
     // todo update
     async fn insert_price(&self, price: &PriceUpdate) -> Result<()>;
+    async fn create_table_if_not_exists(&self, table_name: &str, create_query: &str) -> Result<()>;
 }
 
 pub struct ClickhouseDb {
@@ -80,39 +82,112 @@ impl Database for ClickhouseDb {
         Ok(())
     }
 
+    // async fn initialize(&mut self) -> Result<()> {
+    //     debug!("initializing clickhouse");
+    //     self.client
+    //         .query(
+    //             r#"
+    //             CREATE TABLE IF NOT EXISTS price_updates (
+    //                 name String,
+    //                 pubkey String,
+    //                 price Float64,
+    //                 market_cap Float64,
+    //                 timestamp UInt64,
+    //                 slot UInt64,
+    //                 swap_amount Float64,
+    //                 owner String,
+    //                 signature String,
+    //                 multi_hop Bool,
+    //                 is_buy Bool,
+    //                 is_pump Bool,
+    //                 INDEX idx_mints (name, pubkey) TYPE minmax GRANULARITY 1
+    //             )
+    //             ENGINE = MergeTree()
+    //             ORDER BY (name, pubkey, timestamp)
+    //             "#,
+    //         )
+    //         .execute()
+    //         .await
+    //         .context("Failed to create price_updates table")?;
+    //
+    //     self.inserter = Some(Arc::new(RwLock::new(self.create_inserter()?)));
+    //     self.is_initialized = true;
+    //
+    //     Ok(())
+    // }
+
     async fn initialize(&mut self) -> Result<()> {
         debug!("initializing clickhouse");
-        self.client
-            .query(
-                r#"
-                CREATE TABLE IF NOT EXISTS price_updates (
-                    name String,
-                    pubkey String,
-                    price Float64,
-                    market_cap Float64,
-                    timestamp UInt64,
-                    slot UInt64,
-                    swap_amount Float64,
-                    owner String,
-                    signature String,
-                    multi_hop Bool,
-                    is_buy Bool,
-                    is_pump Bool,
-                    INDEX idx_mints (name, pubkey) TYPE minmax GRANULARITY 1
-                ) 
-                ENGINE = MergeTree()
-                ORDER BY (name, pubkey, timestamp)
-                "#,
-            )
-            .execute()
-            .await
-            .context("Failed to create price_updates table")?;
 
+        // Define the table creation queries
+        let tables = vec![
+            // Price updates table
+            ("price_updates", r#"
+            CREATE TABLE IF NOT EXISTS price_updates (
+                name String,
+                pubkey String,
+                price Float64,
+                market_cap Float64,
+                timestamp UInt64,
+                slot UInt64,
+                swap_amount Float64,
+                owner String,
+                signature String,
+                multi_hop Bool,
+                is_buy Bool,
+                is_pump Bool,
+                INDEX idx_mints (name, pubkey) TYPE minmax GRANULARITY 1
+            ) ENGINE = MergeTree()
+            ORDER BY (name, pubkey, timestamp)
+        "#),
+
+            // Market Klines table
+            ("market_klines", r#"
+            CREATE TABLE IF NOT EXISTS market_klines (
+                exchange String,
+                symbol String,
+                period String,
+                open_time UInt64,
+                open Float64,
+                high Float64,
+                low Float64,
+                close Float64,
+                volume Float64,
+                close_time Int64,
+                quote_asset_volume Float64,
+                number_of_trades UInt64,
+                taker_buy_base_asset_volume Float64,
+                taker_buy_quote_asset_volume Float64,
+                PRIMARY KEY (exchange, symbol, period, open_time)
+            ) ENGINE = MergeTree()
+            ORDER BY (exchange, symbol, period, open_time)
+        "#),
+        ];
+
+        // Execute the creation queries concurrently
+        let creation_futures: Vec<_> = tables.into_iter().map(|(table_name, query)| {
+            self.create_table_if_not_exists(table_name, query)
+        }).collect();
+
+        // Run all the table creation queries concurrently
+        join_all(creation_futures).await.into_iter().collect::<Result<()>>()?;
+
+        // Initialize inserter and set initialized flag
         self.inserter = Some(Arc::new(RwLock::new(self.create_inserter()?)));
         self.is_initialized = true;
 
         Ok(())
     }
+
+    async fn create_table_if_not_exists(&self, table_name: &str, create_query: &str) -> Result<()> {
+        self.client
+            .query(create_query)
+            .execute()
+            .await
+            .context(format!("Failed to create table: {}", table_name))?;
+        Ok(())
+    }
+
 
     /// insert_price uses a batched writer to avoid spamming writes
     /// it is configurable at the initializer
