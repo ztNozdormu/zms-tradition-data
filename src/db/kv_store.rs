@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
-use bb8_redis::{bb8, redis::cmd, RedisConnectionManager};
-use serde::{de::DeserializeOwned, Serialize};
+use bb8_redis::{RedisConnectionManager, bb8, redis::cmd};
+use serde::{Serialize, de::DeserializeOwned};
 use tracing::{debug, info};
 
 use crate::util::create_redis_pool;
@@ -17,10 +17,7 @@ impl RedisKVStore {
         Ok(Self { pool })
     }
 
-    pub async fn get<T: DeserializeOwned + Send>(
-        &self,
-        key: &str,
-    ) -> Result<Option<T>> {
+    pub async fn get<T: DeserializeOwned + Send>(&self, key: &str) -> Result<Option<T>> {
         let mut conn = self
             .pool
             .get()
@@ -31,25 +28,17 @@ impl RedisKVStore {
             .arg(key)
             .query_async(&mut *conn)
             .await
-            .with_context(|| {
-                format!("Failed to execute GET for key: {}", key)
-            })?;
+            .with_context(|| format!("Failed to execute GET for key: {}", key))?;
 
         match value {
             Some(json_str) => serde_json::from_str(&json_str)
-                .with_context(|| {
-                    format!("Failed to deserialize value for key: {}", key)
-                })
+                .with_context(|| format!("Failed to deserialize value for key: {}", key))
                 .map(Some),
             None => Ok(None),
         }
     }
 
-    pub async fn set<T: Serialize + Send + Sync>(
-        &self,
-        key: &str,
-        value: &T,
-    ) -> Result<()> {
+    pub async fn set<T: Serialize + Send + Sync>(&self, key: &str, value: &T) -> Result<()> {
         let mut conn = self.pool.get().await.context(format!(
             "Failed to get Redis connection: {:#?}",
             self.pool.state().statistics
@@ -74,9 +63,7 @@ impl RedisKVStore {
             .arg(key)
             .query_async(&mut *conn)
             .await
-            .with_context(|| {
-                format!("Failed to query exists for key: {}", key)
-            })?;
+            .with_context(|| format!("Failed to query exists for key: {}", key))?;
         debug!(key, exists, "redis exists ok");
         Ok(exists)
     }
@@ -88,5 +75,4 @@ impl RedisKVStore {
     fn make_metadata_key(&self, mint: &str) -> String {
         format!("solana:metadata:{}", mint)
     }
-
 }

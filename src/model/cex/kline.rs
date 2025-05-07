@@ -2,8 +2,7 @@ use clickhouse::Row;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone, Row)]
-pub struct KlineData {
-
+pub struct MarketKline {
     pub exchange: String,
 
     pub symbol: String,
@@ -32,4 +31,3 @@ pub struct KlineData {
 
     pub taker_buy_quote_asset_volume: f64,
 }
-

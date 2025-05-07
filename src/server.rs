@@ -1,25 +1,24 @@
+use crate::util::{make_db, make_kv_store};
+use listen_tracing::{LogCache, LogEntry};
 use std::env;
 use std::fs::File;
 use std::net::SocketAddr;
 use std::sync::Arc;
-use listen_tracing::{LogCache, LogEntry};
 use tokio::spawn;
 use tokio::sync::broadcast;
 use tracing::info;
 use warp::Filter;
-use crate::util::{make_db, make_kv_store};
 
-mod routes;
 mod response;
+mod routes;
 
-const APPLICATION_NAME: &str ="ZMS_MINI_BOT";
+const APPLICATION_NAME: &str = "ZMS_MINI_BOT";
 const FILE_PATH_SYSTEM_CONFIG: &str = "config/system_config.json";
 
-
 #[derive(Clone)]
-pub struct AppState{
+pub struct AppState {
     tx: broadcast::Sender<LogEntry>,
-    cache: LogCache
+    cache: LogCache,
 }
 
 pub async fn start() {
@@ -45,7 +44,10 @@ pub async fn start() {
     let bind_address: SocketAddr = "127.0.0.1:10099".parse().unwrap();
 
     // init app
-    let app_state = AppState{tx:tx.clone(), cache: cache.clone()};
+    let app_state = AppState {
+        tx: tx.clone(),
+        cache: cache.clone(),
+    };
 
     let routes = routes::routes(app_state).with(warp::log(APPLICATION_NAME));
 

@@ -1,11 +1,9 @@
-use tokio::sync::broadcast;
-use warp::{Filter, Rejection, Reply};
 use listen_tracing::{LogCache, LogEntry, LogQuery};
+use tokio::sync::broadcast;
 use warp::sse::Event;
+use warp::{Filter, Rejection, Reply};
 
-pub async fn sse_logs(
-    tx: broadcast::Sender<LogEntry>,
-) -> Result<impl Reply, Rejection> {
+pub async fn sse_logs(tx: broadcast::Sender<LogEntry>) -> Result<impl Reply, Rejection> {
     let mut rx = tx.subscribe();
     let stream = async_stream::stream! {
         while let Ok(log) = rx.recv().await {
@@ -17,17 +15,20 @@ pub async fn sse_logs(
     Ok(warp::sse::reply(warp::sse::keep_alive().stream(stream)))
 }
 
-pub async fn query_logs(
-    params: LogQuery,
-    cache: LogCache,
-) -> Result<impl Reply, Rejection> {
+pub async fn query_logs(params: LogQuery, cache: LogCache) -> Result<impl Reply, Rejection> {
     let logs = cache.read().await;
     let mut filtered: Vec<_> = logs
         .iter()
         .cloned()
         .filter(|entry| {
-            params.level.as_ref().map_or(true, |lvl| entry.level.eq_ignore_ascii_case(lvl))
-                && params.keyword.as_ref().map_or(true, |kw| entry.message.contains(kw))
+            params
+                .level
+                .as_ref()
+                .map_or(true, |lvl| entry.level.eq_ignore_ascii_case(lvl))
+                && params
+                    .keyword
+                    .as_ref()
+                    .map_or(true, |kw| entry.message.contains(kw))
         })
         .collect();
 
@@ -47,10 +48,10 @@ pub async fn query_logs(
     Ok(warp::reply::json(&result))
 }
 
-
 pub fn with_tx(
     tx: broadcast::Sender<LogEntry>,
-) -> impl Filter<Extract = (broadcast::Sender<LogEntry>,), Error = std::convert::Infallible> + Clone {
+) -> impl Filter<Extract = (broadcast::Sender<LogEntry>,), Error = std::convert::Infallible> + Clone
+{
     warp::any().map(move || tx.clone())
 }
 

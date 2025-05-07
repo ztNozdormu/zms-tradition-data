@@ -1,7 +1,7 @@
+use super::AppState;
+use crate::server::routes::handlers::log_handlers::{query_logs, sse_logs, with_cache, with_tx};
 use listen_tracing::LogQuery;
 use warp::{self, Filter};
-use crate::server::routes::handlers::log_handlers::{query_logs, sse_logs, with_cache, with_tx};
-use super::AppState;
 
 pub mod handlers;
 
@@ -21,14 +21,12 @@ pub fn routes(
             warp::path("sse") // 实时 SSE 接口
                 .and(warp::get())
                 .and(with_tx(state.tx.clone()))
-                .and_then(sse_logs)
+                .and_then(sse_logs),
         )
-        .or(
-            warp::get() // 历史查询接口
-                .and(warp::query::<LogQuery>())
-                .and(with_cache(state.cache))
-                .and_then(query_logs)
-        );
+        .or(warp::get() // 历史查询接口
+            .and(warp::query::<LogQuery>())
+            .and(with_cache(state.cache))
+            .and_then(query_logs));
 
     // TODO robot execution routes
 

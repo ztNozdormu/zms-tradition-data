@@ -1,17 +1,13 @@
 use anyhow::Result;
-use bb8_redis::{bb8, RedisConnectionManager};
+use bb8_redis::{RedisConnectionManager, bb8};
 use std::{fs::File, io::BufWriter, sync::Arc};
 
-use crate::{
-    db::{ClickhouseDb, Database},
-    kv_store::RedisKVStore,
-};
+use crate::db::ckdb::{ClickhouseDb, Database};
+use crate::db::kv_store::RedisKVStore;
 
 pub fn is_local() -> bool {
     std::env::var("LOCAL").is_ok()
 }
-
-
 
 pub async fn make_kv_store() -> Result<Arc<RedisKVStore>> {
     match is_local() {
@@ -20,22 +16,15 @@ pub async fn make_kv_store() -> Result<Arc<RedisKVStore>> {
             Ok(Arc::new(kv_store))
         }
         false => {
-            let kv_store =
-                RedisKVStore::new(must_get_env("REDIS_URL").as_str()).await?;
+            let kv_store = RedisKVStore::new(must_get_env("REDIS_URL").as_str()).await?;
             Ok(Arc::new(kv_store))
         }
     }
 }
 
-
 pub async fn make_db() -> Result<Arc<ClickhouseDb>> {
     let mut db = match is_local() {
-        true => ClickhouseDb::new(
-            "http://localhost:8123",
-            "default",
-            "default",
-            "default",
-        ),
+        true => ClickhouseDb::new("http://localhost:8123", "default", "default", "default"),
         false => ClickhouseDb::new(
             must_get_env("CLICKHOUSE_URL").as_str(),
             must_get_env("CLICKHOUSE_PASSWORD").as_str(),
@@ -66,9 +55,7 @@ pub fn must_get_env(key: &str) -> String {
     }
 }
 
-pub async fn create_redis_pool(
-    redis_url: &str,
-) -> Result<bb8::Pool<RedisConnectionManager>> {
+pub async fn create_redis_pool(redis_url: &str) -> Result<bb8::Pool<RedisConnectionManager>> {
     let manager = RedisConnectionManager::new(redis_url)?;
     let pool = bb8::Pool::builder()
         .max_size(200)
@@ -86,6 +73,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_jup_price() {
-       todo!()
+        todo!()
     }
 }
