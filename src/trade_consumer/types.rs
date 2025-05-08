@@ -14,7 +14,6 @@ pub struct CusCandle {
     pub time_range: FastTimeRange,
 }
 
-
 impl<T: TakerTrade> ModularCandle<T> for CusCandle {
     fn update(&mut self, trade: &T) {
         self.open.update(trade);
@@ -94,7 +93,6 @@ impl<T: TakerTrade> CandleComponentUpdate<T> for FastTimeRange {
         self.close_time = ts;
     }
 }
-
 
 // from barter PublicTrade to trade_aggregation Trade
 //

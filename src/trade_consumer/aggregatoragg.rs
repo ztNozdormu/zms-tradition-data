@@ -1,13 +1,15 @@
 use crate::db::ckdb::Database;
-use crate::model::cex::kline::MarketKline;
 use crate::model::TimeFrame;
-use crate::trade_consumer::types::{to_agg_trade, CusCandle};
+use crate::model::cex::kline::MarketKline;
+use crate::trade_consumer::types::{CusCandle, to_agg_trade};
 use barter::barter_data::subscription::trade::PublicTrade;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use trade_aggregation::candle_components::*;
-use trade_aggregation::{Aggregator as TradeAggregator, GenericAggregator, TimeRule, TimestampResolution, Trade};
+use trade_aggregation::{
+    Aggregator as TradeAggregator, GenericAggregator, TimeRule, TimestampResolution, Trade,
+};
 
 /// 聚合器接口定义
 #[async_trait::async_trait]
