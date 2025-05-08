@@ -6,11 +6,13 @@ use anyhow::Result;
 use barter::barter_data::exchange::binance::futures::BinanceFuturesUsd;
 use barter::barter_data::streams::Streams;
 use barter::barter_data::streams::reconnect::stream::ReconnectingStream;
-use barter::barter_data::subscription::trade::PublicTrades;
+use barter::barter_data::subscription::trade::{PublicTrade, PublicTrades};
 use barter::barter_instrument::instrument::market_data::kind::MarketDataInstrumentKind;
 use futures_util::StreamExt;
 use std::sync::Arc;
+use barter::barter_data::event::MarketEvent;
 use tracing::{info, warn};
+use crate::trade_consumer::aggregatoragg::{CusAggregator, MultiTimeFrameAggregator};
 
 pub async fn trade_driven_aggregation(_db: Arc<ClickhouseDb>) -> Result<()> {
     let streams = Streams::<PublicTrades>::builder()
@@ -28,10 +30,34 @@ pub async fn trade_driven_aggregation(_db: Arc<ClickhouseDb>) -> Result<()> {
     let mut joined_stream = streams
         .select_all()
         .with_error_handler(|error| warn!(?error, "MarketStream generated error"));
+    // todo
+    let mfaggregator = MultiTimeFrameAggregator::new();
 
     while let Some(event) = joined_stream.next().await {
-        // todo trade 数据事件 触发聚合器调用
         info!("{event:?}");
+        // Self(vec![Ok(MarketEvent {
+        //     time_exchange: trade.time,
+        //     _time_received: Utc::now(),
+        //     exchange: exchange_id,
+        //     instrument,
+        //     kind: PublicTrade {
+        //         id: trade.id.to_string(),
+        //         price: trade.price,
+        //         amount: trade.amount,
+        //         side: trade.side,
+        //     },
+        // })])
+        if let MarketEvent {
+            time_exchange,
+            time_received: _time_received,
+            exchange,
+            instrument,
+            kind: PublicTrade { id, price, amount, side },
+        } = event
+        {
+            // 这里最好创建 aggregator 实例在循环外
+            mfaggregator.process_trade(instrument, exchange.as_str(), time_exchange.timestamp_millis(), &PublicTrade { id, price, amount, side }).await;
+        }
     }
     Ok(())
 }
