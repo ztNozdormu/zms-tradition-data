@@ -1,6 +1,7 @@
+use barter::barter_data::subscription::trade::PublicTrade;
 use serde::{Deserialize, Serialize};
-use trade_aggregation::candle_components::{Close, High, Low, Open, Volume};
-use trade_aggregation::{CandleComponent, CandleComponentUpdate, ModularCandle, TakerTrade};
+use trade_aggregation::candle_components::{Close, High, Low, NumTrades, Open, Volume};
+use trade_aggregation::{CandleComponent, CandleComponentUpdate, ModularCandle, TakerTrade, Trade};
 
 #[derive(Default, Clone)]
 pub struct CusCandle {
@@ -9,8 +10,10 @@ pub struct CusCandle {
     pub low: Low,
     pub close: Close,
     pub volume: Volume,
+    pub num_trades: NumTrades<u32>,
     pub time_range: FastTimeRange,
 }
+
 
 impl<T: TakerTrade> ModularCandle<T> for CusCandle {
     fn update(&mut self, trade: &T) {
@@ -19,6 +22,7 @@ impl<T: TakerTrade> ModularCandle<T> for CusCandle {
         self.low.update(trade);
         self.close.update(trade);
         self.volume.update(trade);
+        self.num_trades.update(trade);
         self.time_range.update(trade);
     }
 
@@ -28,6 +32,7 @@ impl<T: TakerTrade> ModularCandle<T> for CusCandle {
         self.low.reset();
         self.close.reset();
         self.volume.reset();
+        self.num_trades.reset();
         self.time_range.reset();
     }
 }
@@ -87,5 +92,29 @@ impl<T: TakerTrade> CandleComponentUpdate<T> for FastTimeRange {
             self.initialized = true;
         }
         self.close_time = ts;
+    }
+}
+
+
+// from barter PublicTrade to trade_aggregation Trade
+//
+// Self(vec![Ok(MarketEvent {
+//     time_exchange: trade.time,
+//     time_received: Utc::now(),
+//     exchange: exchange_id,
+//     instrument,
+//     kind: PublicTrade {
+//         id: trade.id.to_string(),
+//         price: trade.price,
+//         amount: trade.amount,
+//         side: trade.side,
+//     },
+// })])
+
+pub fn to_agg_trade(trade: &PublicTrade, timestamp: i64) -> Trade {
+    Trade {
+        timestamp,
+        price: trade.price,
+        size: trade.amount,
     }
 }

@@ -92,25 +92,3 @@ impl TimeFrame {
     }
 }
 
-//
-// Self(vec![Ok(MarketEvent {
-//     time_exchange: trade.time,
-//     time_received: Utc::now(),
-//     exchange: exchange_id,
-//     instrument,
-//     kind: PublicTrade {
-//         id: trade.id.to_string(),
-//         price: trade.price,
-//         amount: trade.amount,
-//         side: trade.side,
-//     },
-// })])
-
-// from barter PublicTrade to trade_aggregation Trade
-pub fn to_agg_trade(trade: &PublicTrade, timestamp: i64) -> Trade {
-    Trade {
-        timestamp,
-        price: trade.price,
-        size: trade.amount,
-    }
-}

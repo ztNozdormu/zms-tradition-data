@@ -1,15 +1,13 @@
 use crate::db::ckdb::Database;
 use crate::model::cex::kline::MarketKline;
-use crate::model::{TimeFrame, to_agg_trade};
-use crate::trade_consumer::types::CusCandle;
+use crate::model::TimeFrame;
+use crate::trade_consumer::types::{to_agg_trade, CusCandle};
 use barter::barter_data::subscription::trade::PublicTrade;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use trade_aggregation::candle_components::*;
-use trade_aggregation::{
-    Aggregator as TradeAggregator, GenericAggregator, TimeRule, TimestampResolution, Trade,
-};
+use trade_aggregation::{Aggregator as TradeAggregator, GenericAggregator, TimeRule, TimestampResolution, Trade};
 
 /// 聚合器接口定义
 #[async_trait::async_trait]
@@ -56,7 +54,7 @@ impl MultiTimeFrameAggregator {
             close: candle.close.value(),
             volume: candle.volume.value(),
             quote_asset_volume: 0.0,
-            number_of_trades: 0,
+            number_of_trades: candle.num_trades.value() as u64,
             taker_buy_base_asset_volume: 0.0,
             taker_buy_quote_asset_volume: 0.0,
         }
