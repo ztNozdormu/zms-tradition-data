@@ -42,7 +42,6 @@ impl MultiTimeFrameAggregator {
         exchange: &str,
         symbol: &str,
         period: &str,
-        timestamp: i64,
         candle: &CusCandle,
     ) -> MarketKline {
         MarketKline {
@@ -92,7 +91,6 @@ impl CusAggregator for MultiTimeFrameAggregator {
                     symbol,
                     exchange,
                     tf.to_str(),
-                    timestamp,
                     &candle,
                 ));
             }
