@@ -39,6 +39,7 @@ impl MultiTimeFrameAggregator {
     }
 
     fn to_market_kline(
+        &self,
         exchange: &str,
         symbol: &str,
         period: &str,
@@ -87,7 +88,7 @@ impl CusAggregator for MultiTimeFrameAggregator {
 
             let trade = to_agg_trade(trade, timestamp);
             if let Some(candle) = aggr.update(&trade) {
-                results.push(Self::to_market_kline(
+                results.push(self.to_market_kline(
                     symbol,
                     exchange,
                     tf.to_str(),
