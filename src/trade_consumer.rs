@@ -1,5 +1,6 @@
 mod aggregatoragg;
 mod types;
+mod aggregatoragg_upgrade;
 
 use crate::db::ckdb::ClickhouseDb;
 use anyhow::Result;
@@ -31,7 +32,7 @@ pub async fn trade_driven_aggregation(_db: Arc<ClickhouseDb>) -> Result<()> {
         .select_all()
         .with_error_handler(|error| warn!(?error, "MarketStream generated error"));
     // todo
-    let mfaggregator = MultiTimeFrameAggregator::new();
+    let mfaggregator = MultiTimeFrameAggregator::new(Vec::new());
 
     while let Some(event) = joined_stream.next().await {
         info!("{event:?}");
@@ -47,16 +48,16 @@ pub async fn trade_driven_aggregation(_db: Arc<ClickhouseDb>) -> Result<()> {
         //         side: trade.side,
         //     },
         // })])
-        if let MarketEvent {
+        if let barter::barter_data::streams::reconnect::Event::Item(MarketEvent {
             time_exchange,
             time_received: _time_received,
             exchange,
             instrument,
             kind: PublicTrade { id, price, amount, side },
-        } = event
+        }) = event
         {
             // 这里最好创建 aggregator 实例在循环外
-            mfaggregator.process_trade(instrument, exchange.as_str(), time_exchange.timestamp_millis(), &PublicTrade { id, price, amount, side }).await;
+            mfaggregator.process_trade(instrument.base.as_ref(), exchange.as_str(), time_exchange.timestamp_millis(), &PublicTrade { id, price, amount, side }).await;
         }
     }
     Ok(())

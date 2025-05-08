@@ -1,7 +1,5 @@
-use barter::barter_data::subscription::trade::PublicTrade;
 use chrono::Duration;
 use serde::{Deserialize, Serialize};
-use trade_aggregation::Trade;
 
 pub mod cex;
 pub mod constant;
