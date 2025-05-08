@@ -1,4 +1,3 @@
-use crate::db::ckdb::TableRecord;
 use crate::model::cex::kline::MarketKline;
 
 pub mod kline;

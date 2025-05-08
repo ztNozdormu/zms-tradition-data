@@ -3,6 +3,7 @@ mod macros;
 mod db;
 mod model;
 mod server;
+mod trade_consumer;
 mod util;
 
 #[tokio::main]

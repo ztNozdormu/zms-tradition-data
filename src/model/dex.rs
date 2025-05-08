@@ -1,4 +1,3 @@
-use crate::db::ckdb::TableRecord;
 use crate::model::dex::price::PriceUpdate;
 
 pub mod price;

@@ -1,7 +1,7 @@
+use crate::trade_consumer::trade_driven_aggregation;
 use crate::util::{make_db, make_kv_store};
 use listen_tracing::{LogCache, LogEntry};
 use std::env;
-use std::fs::File;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::spawn;
@@ -39,7 +39,10 @@ pub async fn start() {
 
     // todo global
     let db = make_db().await;
-    let kv_store = make_kv_store().await;
+    let _kv_store = make_kv_store().await;
+
+    // TODO trade aggregator kline
+    let _aggregation = trade_driven_aggregation(db.unwrap().clone()).await;
 
     let bind_address: SocketAddr = "127.0.0.1:10099".parse().unwrap();
 
