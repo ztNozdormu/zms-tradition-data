@@ -22,8 +22,7 @@ pub async fn trade_driven_aggregation(_db: Arc<ClickhouseDb>) -> Result<()> {
     let multi_aggregator = MultiTimeFrameAggregator::new(vec![TimeFrame::M1, TimeFrame::M5, TimeFrame::M15]);
 
     let mut new_config: HashMap<String, Vec<TimeFrame>> = HashMap::new();
-    new_config.insert("BTCUSDT".into(), vec![TimeFrame::M15, TimeFrame::H1]);
-    new_config.insert("ETHUSDT".into(), vec![TimeFrame::M5]);
+    new_config.insert("btc".into(), vec![TimeFrame::M1, TimeFrame::M5, TimeFrame::M15]);
 
     multi_aggregator.merge_symbols_timeframes(new_config).await;
 
@@ -48,7 +47,7 @@ pub async fn trade_driven_aggregation(_db: Arc<ClickhouseDb>) -> Result<()> {
         .with_error_handler(|error| warn!(?error, "MarketStream generated error"));
 
     while let Some(event) = joined_stream.next().await {
-        info!("{event:?}");
+        // info!("{event:?}");
         // Self(vec![Ok(MarketEvent {
         //     time_exchange: trade.time,
         //     _time_received: Utc::now(),
@@ -74,4 +73,15 @@ pub async fn trade_driven_aggregation(_db: Arc<ClickhouseDb>) -> Result<()> {
         }
     }
     Ok(())
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_trade_driven_aggregation() {
+        trade_driven_aggregation(Arc::new(None).await.expect("Failed to create database")).await.expect("Failed to run trade driven aggregation");
+    }
 }

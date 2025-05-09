@@ -52,10 +52,10 @@ impl MultiTimeFrameAggregator {
     fn default_symbol_timeframes() -> HashMap<String, Vec<TimeFrame>> {
         let tf = DEFAULT_TIMEFRAMES.to_vec();
         HashMap::from([
-            ("BTCUSDT".into(), tf.clone()),
-            ("ETHUSDT".into(), tf.clone()),
-            ("BNBUSDT".into(), tf.clone()),
-            ("SOLUSDT".into(), tf.clone()),
+            ("btc".into(), tf.clone()),
+            ("eth".into(), tf.clone()),
+            ("bnb".into(), tf.clone()),
+            ("sol".into(), tf.clone()),
         ])
     }
 
