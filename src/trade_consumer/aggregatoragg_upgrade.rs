@@ -12,7 +12,7 @@ use crate::model::cex::kline::MarketKline;
 use crate::model::TimeFrame;
 use crate::trade_consumer::types::{to_agg_trade, CusCandle};
 
-/// 聚合器接口定义
+/// 多周期K线聚合器实现
 #[async_trait]
 pub trait CusAggregator {
     async fn process_trade(
@@ -24,19 +24,24 @@ pub trait CusAggregator {
     ) -> Vec<MarketKline>;
 }
 
-/// 多周期K线聚合器实现
 pub struct MultiTimeFrameAggregator {
-    timeframes: Vec<TimeFrame>,
-    aggregators:
-        Arc<RwLock<HashMap<(String, TimeFrame), GenericAggregator<CusCandle, TimeRule, Trade>>>>,
+    default_timeframes: Vec<TimeFrame>,
+    symbol_timeframes: Arc<RwLock<HashMap<String, Vec<TimeFrame>>>>,
+    aggregators: Arc<RwLock<HashMap<(String, TimeFrame), GenericAggregator<CusCandle, TimeRule, Trade>>>>,
 }
 
 impl MultiTimeFrameAggregator {
-    pub fn new(timeframes: Vec<TimeFrame>) -> Self {
+    pub fn new(default_timeframes: Vec<TimeFrame>) -> Self {
         Self {
-            timeframes,
+            default_timeframes,
+            symbol_timeframes: Arc::new(RwLock::new(HashMap::new())),
             aggregators: Arc::new(RwLock::new(HashMap::new())),
         }
+    }
+
+    pub async fn set_symbol_timeframes(&self, symbol: &str, timeframes: Vec<TimeFrame>) {
+        let mut symbol_map = self.symbol_timeframes.write().await;
+        symbol_map.insert(symbol.to_string(), timeframes);
     }
 
     fn get_or_create_aggregator<'a>(
@@ -78,6 +83,20 @@ impl MultiTimeFrameAggregator {
             taker_buy_quote_asset_volume: 0.0,
         }
     }
+
+    pub async fn remove_symbol(&self, symbol: &str) {
+        {
+            // 移除 symbol 对应的自定义时间周期配置
+            let mut symbol_map = self.symbol_timeframes.write().await;
+            symbol_map.remove(symbol);
+        }
+
+        {
+            // 移除 symbol 对应的所有 aggregators
+            let mut aggrs = self.aggregators.write().await;
+            aggrs.retain(|(s, _), _| s != symbol);
+        }
+    }
 }
 
 #[async_trait]
@@ -90,21 +109,19 @@ impl CusAggregator for MultiTimeFrameAggregator {
         trade: &PublicTrade,
     ) -> Vec<MarketKline> {
         let mut results = Vec::new();
+        let trade = to_agg_trade(trade, timestamp);
+
+        let timeframes = {
+            let map = self.symbol_timeframes.read().await;
+            map.get(symbol).cloned().unwrap_or_else(|| self.default_timeframes.clone())
+        };
 
         let mut aggrs = self.aggregators.write().await;
 
-        let trade = to_agg_trade(trade, timestamp);
-
-        for tf in &self.timeframes {
-            let aggr = self.get_or_create_aggregator(&mut aggrs, symbol, tf);
-
+        for tf in timeframes {
+            let aggr = self.get_or_create_aggregator(&mut aggrs, symbol, &tf);
             if let Some(candle) = aggr.update(&trade) {
-                results.push(self.to_market_kline(
-                    exchange,
-                    symbol,
-                    tf.to_str(),
-                    &candle,
-                ));
+                results.push(self.to_market_kline(exchange, symbol, tf.to_str(), &candle));
             }
         }
 
