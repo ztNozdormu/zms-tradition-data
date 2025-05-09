@@ -27,6 +27,10 @@ pub async fn trade_driven_aggregation(_db: Arc<ClickhouseDb>) -> Result<()> {
 
     multi_aggregator.merge_symbols_timeframes(new_config).await;
 
+    // 初始化默认多周期聚合器
+    // let multi_aggregator = MultiTimeFrameAggregator::new_with_defaults();
+
+
     let streams = Streams::<PublicTrades>::builder()
         .subscribe([(
             BinanceFuturesUsd::default(),
