@@ -125,7 +125,7 @@ impl Database for ClickhouseDb {
                 low Float64,
                 close Float64,
                 volume Float64,
-                close_time Int64,
+                close_time UInt64,
                 quote_asset_volume Float64,
                 number_of_trades UInt64,
                 taker_buy_base_asset_volume Float64,
@@ -134,6 +134,21 @@ impl Database for ClickhouseDb {
             ) ENGINE = MergeTree()
             ORDER BY (exchange, symbol, period, close_time, open_time)
         "#,
+            ),
+            // archive_progress table
+            (
+                "archive_progress",
+                r#"
+            CREATE TABLE IF NOT EXISTS archive_progress (
+                exchange String,
+                symbol String,
+                period String,
+                last_archived_time UInt64,
+                updated_at DateTime DEFAULT now(),
+                PRIMARY KEY (exchange, symbol, period)
+            ) ENGINE = ReplacingMergeTree(updated_at)
+            ORDER BY (exchange, symbol, period)
+            "#,
             ),
         ];
 
