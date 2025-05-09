@@ -128,10 +128,10 @@ pub async fn run_archive_task(task: ArchiveTask) -> Result<()> {
         // Gap detection here (optional)
         if !is_kline_continuous(&klines, tf_ms) {
             warn!("Gap detected in klines between {start} ~ {end}");
-            // You may handle/fill gaps here
+            // todo You may handle/fill gaps here
         }
 
-        // writer.write_batch(&klines).await;
+        writer.write_batch(&klines).await;
 
         // Update progress
         let last_ts = klines.iter().map(|k| k.close_time).max().unwrap_or(current_time);
@@ -187,7 +187,9 @@ impl ClickhouseWriter {
 
     pub async fn write_batch(&self, klines: &[KlineSummary]) {
         // todo 需要新增实现批量插入函数
-        // get_ck_db().insert(klines).await.unwrap();
+        for kline in klines {
+            get_ck_db().insert(&kline).await.unwrap();
+        }
         todo!("Insert into ClickHouse here")
 
     }
