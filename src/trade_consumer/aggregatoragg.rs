@@ -1,17 +1,15 @@
-use std::{
-    borrow::Cow,
-    collections::HashMap,
-    sync::Arc,
-};
-use std::collections::HashSet;
+use crate::model::cex::kline::MarketKline;
+use crate::model::{DEFAULT_TIMEFRAMES, TimeFrame};
+use crate::trade_consumer::types::{CusCandle, to_agg_trade};
 use async_trait::async_trait;
 use barter::barter_data::subscription::trade::PublicTrade;
+use std::collections::HashSet;
+use std::{borrow::Cow, collections::HashMap, sync::Arc};
 use tokio::sync::RwLock;
 use tracing::{info, trace};
-use trade_aggregation::{Aggregator, CandleComponent, GenericAggregator, TimeRule, TimestampResolution, Trade};
-use crate::model::cex::kline::MarketKline;
-use crate::model::{TimeFrame, DEFAULT_TIMEFRAMES};
-use crate::trade_consumer::types::{to_agg_trade, CusCandle};
+use trade_aggregation::{
+    Aggregator, CandleComponent, GenericAggregator, TimeRule, TimestampResolution, Trade,
+};
 
 /// 多周期K线聚合器实现
 
@@ -29,7 +27,8 @@ pub trait CusAggregator {
 pub struct MultiTimeFrameAggregator {
     timeframes: Vec<TimeFrame>,
     symbol_timeframes: Arc<RwLock<HashMap<String, Vec<TimeFrame>>>>,
-    aggregators: Arc<RwLock<HashMap<(String, TimeFrame), GenericAggregator<CusCandle, TimeRule, Trade>>>>,
+    aggregators:
+        Arc<RwLock<HashMap<(String, TimeFrame), GenericAggregator<CusCandle, TimeRule, Trade>>>>,
 }
 
 impl MultiTimeFrameAggregator {

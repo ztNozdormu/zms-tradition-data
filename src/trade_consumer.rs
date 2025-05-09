@@ -1,34 +1,36 @@
-mod types;
 mod aggregatoragg;
+mod types;
 
-use std::collections::HashMap;
 use crate::db::ckdb::ClickhouseDb;
+use crate::model::TimeFrame;
+use crate::trade_consumer::aggregatoragg::{CusAggregator, MultiTimeFrameAggregator};
 use anyhow::Result;
+use barter::barter_data::event::MarketEvent;
 use barter::barter_data::exchange::binance::futures::BinanceFuturesUsd;
 use barter::barter_data::streams::Streams;
 use barter::barter_data::streams::reconnect::stream::ReconnectingStream;
 use barter::barter_data::subscription::trade::{PublicTrade, PublicTrades};
 use barter::barter_instrument::instrument::market_data::kind::MarketDataInstrumentKind;
 use futures_util::StreamExt;
+use std::collections::HashMap;
 use std::sync::Arc;
-use barter::barter_data::event::MarketEvent;
 use tracing::{info, warn};
-use crate::model::TimeFrame;
-use crate::trade_consumer::aggregatoragg::{CusAggregator, MultiTimeFrameAggregator};
 
 pub async fn trade_driven_aggregation(_db: Arc<ClickhouseDb>) -> Result<()> {
-
     // 初始化多周期聚合器 自定义聚合器
-    let multi_aggregator = MultiTimeFrameAggregator::new(vec![TimeFrame::M1, TimeFrame::M5, TimeFrame::M15]);
+    let multi_aggregator =
+        MultiTimeFrameAggregator::new(vec![TimeFrame::M1, TimeFrame::M5, TimeFrame::M15]);
 
     let mut new_config: HashMap<String, Vec<TimeFrame>> = HashMap::new();
-    new_config.insert("btc".into(), vec![TimeFrame::M1, TimeFrame::M5, TimeFrame::M15]);
+    new_config.insert(
+        "btc".into(),
+        vec![TimeFrame::M1, TimeFrame::M5, TimeFrame::M15],
+    );
 
     multi_aggregator.merge_symbols_timeframes(new_config).await;
 
     // 初始化默认多周期聚合器
     // let multi_aggregator = MultiTimeFrameAggregator::new_with_defaults();
-
 
     let streams = Streams::<PublicTrades>::builder()
         .subscribe([(
@@ -65,16 +67,33 @@ pub async fn trade_driven_aggregation(_db: Arc<ClickhouseDb>) -> Result<()> {
             time_received: _time_received,
             exchange,
             instrument,
-            kind: PublicTrade { id, price, amount, side },
+            kind:
+                PublicTrade {
+                    id,
+                    price,
+                    amount,
+                    side,
+                },
         }) = event
         {
             // 这里最好创建 aggregator 实例在循环外
-            multi_aggregator.process_trade(instrument.base.as_ref(), exchange.as_str(), time_exchange.timestamp_millis(), &PublicTrade { id, price, amount, side }).await;
+            multi_aggregator
+                .process_trade(
+                    instrument.base.as_ref(),
+                    exchange.as_str(),
+                    time_exchange.timestamp_millis(),
+                    &PublicTrade {
+                        id,
+                        price,
+                        amount,
+                        side,
+                    },
+                )
+                .await;
         }
     }
     Ok(())
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -82,6 +101,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_trade_driven_aggregation() {
-        trade_driven_aggregation(Arc::new(None).await.expect("Failed to create database")).await.expect("Failed to run trade driven aggregation");
+        trade_driven_aggregation(Arc::new(None).await.expect("Failed to create database"))
+            .await
+            .expect("Failed to run trade driven aggregation");
     }
 }
