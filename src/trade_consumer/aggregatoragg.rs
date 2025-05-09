@@ -12,7 +12,6 @@ use trade_aggregation::{
 };
 
 /// 多周期K线聚合器实现
-
 #[async_trait]
 pub trait CusAggregator {
     async fn process_trade(
@@ -137,7 +136,7 @@ impl CusAggregator for MultiTimeFrameAggregator {
         exchange: &str,
         timestamp: i64,
         trade: &PublicTrade,
-    ) -> Vec<MarketKline> {
+    ) {
         let trade = to_agg_trade(trade, timestamp);
 
         // 将 timeframes 明确 clone 出来，避免生命周期问题
@@ -148,19 +147,18 @@ impl CusAggregator for MultiTimeFrameAggregator {
                 .unwrap_or_else(|| self.timeframes.clone())
         };
 
-        let mut results = Vec::new();
         let mut aggrs = self.aggregators.write().await;
 
+        let mut market_kline = None;
         for tf in timeframes.iter() {
             let aggr = self.get_or_create_aggregator(&mut aggrs, symbol, tf);
             if let Some(candle) = aggr.update(&trade) {
-                results.push(self.to_market_kline(exchange, symbol, tf.to_str(), &candle));
+                market_kline = Some(self.to_market_kline(exchange, symbol, tf.to_str(), &candle));
             }
         }
-        if results.len() > 0 {
-            info!("trade: {:?}, Generated {} Klines for {}",trade, results.len(), symbol);
+        if market_kline.is_some() {
+            info!("Generated {} market_kline for {}",trade, market_kline, symbol);
         }
 
-        results
     }
 }
