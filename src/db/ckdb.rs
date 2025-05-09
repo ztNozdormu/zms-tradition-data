@@ -243,11 +243,10 @@ impl Database for ClickhouseDb {
             }
             None => Err(anyhow::anyhow!("No inserter found for {}", T::TABLE_NAME)),
         }
-            .expect("inserter error");
+        .expect("inserter error");
 
         Ok(())
     }
-
 }
 
 #[cfg(test)]

@@ -1,5 +1,9 @@
+use crate::db::ckdb::Database;
+use crate::global::get_ck_db;
+use crate::model::TimeFrame;
+use crate::model::cex::kline::MarketKline;
 use anyhow::Result;
-use backoff::{future::retry, ExponentialBackoff};
+use backoff::{ExponentialBackoff, future::retry};
 /// This file contains the implementation of the maintenance module of the trade consumer.
 /// 对历史数据进行清理、归档、缓存等操作
 use barter::barter_xchange::exchange::binance::api::Binance;
@@ -8,11 +12,6 @@ use barter::barter_xchange::exchange::binance::model::{KlineSummaries, KlineSumm
 use chrono::Utc;
 use futures_util::TryFutureExt;
 use tracing::{info, warn};
-use crate::db::ckdb::Database;
-use crate::global::get_ck_db;
-use crate::model::cex::kline::MarketKline;
-use crate::model::TimeFrame;
-
 
 // ========== Input Structures ==========
 
@@ -84,15 +83,19 @@ pub async fn run_archive_task(task: ArchiveTask) -> Result<()> {
                 ArchiveDirection::Forward => "forward",
                 ArchiveDirection::Backward => "backward",
             },
-        ).await.map(|p| p.last_processed_time + tf_ms).unwrap_or_else(|| {
-            match task.direction {
-                ArchiveDirection::Forward => Utc::now().timestamp_millis() - 86_400_000,
-                ArchiveDirection::Backward => Utc::now().timestamp_millis(),
-            }
+        )
+        .await
+        .map(|p| p.last_processed_time + tf_ms)
+        .unwrap_or_else(|| match task.direction {
+            ArchiveDirection::Forward => Utc::now().timestamp_millis() - 86_400_000,
+            ArchiveDirection::Backward => Utc::now().timestamp_millis(),
         }),
     };
 
-    let end_time = task.window.end_time.unwrap_or_else(|| Utc::now().timestamp_millis());
+    let end_time = task
+        .window
+        .end_time
+        .unwrap_or_else(|| Utc::now().timestamp_millis());
 
     let fetcher = BinanceFetcher::new();
     let writer = ClickhouseWriter::new();
@@ -114,12 +117,21 @@ pub async fn run_archive_task(task: ArchiveTask) -> Result<()> {
         };
 
         let klines = retry(ExponentialBackoff::default(), || async {
-            fetcher.klines(&task.symbol, tf_str, Some(1000), Some(start as u64), Some(end as u64)).await
+            fetcher
+                .klines(
+                    &task.symbol,
+                    tf_str,
+                    Some(1000),
+                    Some(start as u64),
+                    Some(end as u64),
+                )
+                .await
                 .map_err(|e| {
                     warn!(?e, "Failed to fetch Klines, retrying");
                     backoff::Error::transient(e)
                 })
-        }).await?;
+        })
+        .await?;
 
         if klines.is_empty() {
             info!("No data between {start} ~ {end}");
@@ -132,10 +144,16 @@ pub async fn run_archive_task(task: ArchiveTask) -> Result<()> {
             // todo You may handle/fill gaps here
         }
 
-        writer.write_batch(&klines,&task.exchange,&task.symbol,tf_str).await?;
+        writer
+            .write_batch(&klines, &task.exchange, &task.symbol, tf_str)
+            .await?;
 
         // Update progress
-        let last_ts = klines.iter().map(|k| k.close_time).max().unwrap_or(current_time);
+        let last_ts = klines
+            .iter()
+            .map(|k| k.close_time)
+            .max()
+            .unwrap_or(current_time);
         ProgressTracker::update_progress(ArchiveProgress {
             symbol: task.symbol.clone(),
             exchange: task.exchange.clone(),
@@ -146,7 +164,8 @@ pub async fn run_archive_task(task: ArchiveTask) -> Result<()> {
             },
             last_processed_time: last_ts,
             completed: last_ts >= end_time,
-        }).await;
+        })
+        .await;
 
         current_time = match task.direction {
             ArchiveDirection::Forward => last_ts + tf_ms,
@@ -159,7 +178,9 @@ pub async fn run_archive_task(task: ArchiveTask) -> Result<()> {
 // ========== Helper & Placeholder Stubs ==========
 
 fn is_kline_continuous(klines: &[KlineSummary], tf_ms: i64) -> bool {
-    klines.windows(2).all(|w| w[1].open_time - w[0].open_time == tf_ms)
+    klines
+        .windows(2)
+        .all(|w| w[1].open_time - w[0].open_time == tf_ms)
 }
 
 pub struct KlineContext<'a> {
@@ -194,7 +215,9 @@ impl<'a> From<KlineContext<'a>> for MarketKline {
 
 pub struct BinanceFetcher;
 impl BinanceFetcher {
-    pub fn new() -> Self { BinanceFetcher }
+    pub fn new() -> Self {
+        BinanceFetcher
+    }
 
     pub async fn klines(
         &self,
@@ -219,7 +242,9 @@ impl BinanceFetcher {
 
 pub struct ClickhouseWriter;
 impl ClickhouseWriter {
-    pub fn new() -> Self { ClickhouseWriter }
+    pub fn new() -> Self {
+        ClickhouseWriter
+    }
 
     pub async fn write_batch(
         &self,
@@ -235,12 +260,15 @@ impl ClickhouseWriter {
         // 批量构造 MarketKline
         let market_klines: Vec<MarketKline> = klines
             .iter()
-            .map(|kline| KlineContext {
-                summary: kline,
-                exchange: exchange.into(),
-                symbol: symbol.into(),
-                period: period.into(),
-            }.into())
+            .map(|kline| {
+                KlineContext {
+                    summary: kline,
+                    exchange: exchange.into(),
+                    symbol: symbol.into(),
+                    period: period.into(),
+                }
+                .into()
+            })
             .collect();
 
         // 批量写入 ClickHouse
@@ -248,9 +276,7 @@ impl ClickhouseWriter {
 
         Ok(())
     }
-
 }
-
 
 /// 这是一个用于历史数据进行清理、归档的函数
 ///
@@ -260,7 +286,6 @@ impl ClickhouseWriter {
 /// - `tf`: 时间周期
 ///
 async fn historical_maintenance_process(symbol: String, exchange: String, tf: TimeFrame) {
-
     // 构造归档任务
     let task = ArchiveTask {
         symbol,

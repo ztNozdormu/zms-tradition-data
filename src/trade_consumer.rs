@@ -1,6 +1,6 @@
 mod aggregatoragg;
-mod types;
 mod maintenance;
+mod types;
 
 use crate::model::TimeFrame;
 use crate::trade_consumer::aggregatoragg::{CusAggregator, MultiTimeFrameAggregator};

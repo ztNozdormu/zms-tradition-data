@@ -116,5 +116,3 @@ pub fn to_agg_trade(trade: &PublicTrade, timestamp: i64) -> Trade {
         size: trade.amount,
     }
 }
-
-
