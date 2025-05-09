@@ -1,5 +1,5 @@
 use crate::db::ckdb::Database;
-use crate::global::CK_DB;
+use crate::global::get_ck_db;
 use crate::model::cex::kline::MarketKline;
 use crate::model::{DEFAULT_TIMEFRAMES, TimeFrame};
 use crate::trade_consumer::types::{CusCandle, to_agg_trade};
@@ -160,11 +160,11 @@ impl CusAggregator for MultiTimeFrameAggregator {
         }
         if market_kline.is_some() {
             info!(
-                "Generated {:?} market_kline for {:?}",
+                "Generated {:?}, market_kline for {:?}, symbol {}",
                 trade, market_kline, symbol
             );
             // 写入数据库
-            let ck_db = CK_DB.get().expect("DB not initialized");
+            let ck_db = get_ck_db();
             ck_db
                 .insert(&market_kline.unwrap())
                 .await

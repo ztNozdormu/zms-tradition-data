@@ -21,7 +21,7 @@ pub async fn init_global_services() {
 }
 
 /// Get shared ClickHouse instance (panics if not initialized)
-pub fn get_db() -> Arc<ClickhouseDb> {
+pub fn get_ck_db() -> Arc<ClickhouseDb> {
     CK_DB.get().expect("ClickhouseDb not initialized").clone()
 }
 
