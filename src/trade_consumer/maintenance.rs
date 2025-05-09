@@ -1,5 +1,5 @@
-use std::error::Error;
-use backoff::{retry, ExponentialBackoff};
+use anyhow::Result;
+use backoff::{future::retry, ExponentialBackoff};
 /// This file contains the implementation of the maintenance module of the trade consumer.
 /// 对历史数据进行清理、归档、缓存等操作
 use barter::barter_xchange::exchange::binance::api::Binance;
@@ -24,7 +24,7 @@ pub struct ArchiveTask {
     pub direction: ArchiveDirection,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub enum ArchiveDirection {
     Forward,
     Backward,
@@ -69,7 +69,7 @@ impl ProgressTracker {
 
 // ========== Main Archive Logic ==========
 
-pub async fn run_archive_task(task: ArchiveTask) {
+pub async fn run_archive_task(task: ArchiveTask) -> Result<()> {
     let tf_str = task.tf.to_str();
     let tf_ms = task.tf.to_period();
 
@@ -118,7 +118,7 @@ pub async fn run_archive_task(task: ArchiveTask) {
                     warn!(?e, "Failed to fetch Klines, retrying");
                     backoff::Error::transient(e)
                 })
-        }).await.unwrap();
+        }).await?;
 
         if klines.is_empty() {
             info!("No data between {start} ~ {end}");
@@ -131,7 +131,7 @@ pub async fn run_archive_task(task: ArchiveTask) {
             // You may handle/fill gaps here
         }
 
-        writer.write_batch(&klines).await;
+        // writer.write_batch(&klines).await;
 
         // Update progress
         let last_ts = klines.iter().map(|k| k.close_time).max().unwrap_or(current_time);
@@ -152,7 +152,7 @@ pub async fn run_archive_task(task: ArchiveTask) {
             ArchiveDirection::Backward => last_ts - tf_ms,
         };
     }
-
+    Ok(())
 }
 
 // ========== Helper & Placeholder Stubs ==========
@@ -172,7 +172,7 @@ impl BinanceFetcher {
         limit: Option<u16>,
         start: Option<u64>,
         end: Option<u64>,
-    ) -> Vec<KlineSummary> {
+    ) -> Result<Vec<KlineSummary>> {
 
         let market: FuturesMarket = Binance::new(None, None);
         let klines = market.klines(symbol, tf, limit, start, end).await;
