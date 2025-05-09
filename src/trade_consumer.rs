@@ -16,7 +16,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{info, warn};
 
-pub async fn trade_driven_aggregation(_db: Arc<ClickhouseDb>) -> Result<()> {
+pub async fn trade_driven_aggregation() -> Result<()> {
     // 初始化多周期聚合器 自定义聚合器
     let multi_aggregator =
         MultiTimeFrameAggregator::new(vec![TimeFrame::M1, TimeFrame::M5, TimeFrame::M15]);
@@ -101,7 +101,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_trade_driven_aggregation() {
-        trade_driven_aggregation(Arc::new(None).await.expect("Failed to create database"))
+        trade_driven_aggregation()
             .await
             .expect("Failed to run trade driven aggregation");
     }

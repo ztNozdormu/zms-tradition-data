@@ -41,8 +41,8 @@ pub async fn start() {
     let db = make_db().await;
     let _kv_store = make_kv_store().await;
 
-    // TODO trade aggregator kline
-    let _aggregation = trade_driven_aggregation(db.unwrap().clone()).await;
+    //  trade driven aggregator update klines
+    let _aggregation = trade_driven_aggregation().await;
 
     let bind_address: SocketAddr = "127.0.0.1:10099".parse().unwrap();
 
