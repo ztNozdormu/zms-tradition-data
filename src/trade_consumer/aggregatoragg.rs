@@ -1,17 +1,16 @@
+use crate::db::ckdb::Database;
+use crate::global::CK_DB;
 use crate::model::cex::kline::MarketKline;
-use crate::model::{DEFAULT_TIMEFRAMES, TimeFrame};
-use crate::trade_consumer::types::{CusCandle, to_agg_trade};
+use crate::model::{TimeFrame, DEFAULT_TIMEFRAMES};
+use crate::trade_consumer::types::{to_agg_trade, CusCandle};
 use async_trait::async_trait;
 use barter::barter_data::subscription::trade::PublicTrade;
 use std::collections::HashSet;
-use std::{borrow::Cow, collections::HashMap, sync::Arc};
+use std::{collections::HashMap, sync::Arc};
 use tokio::sync::RwLock;
-use tracing::{debug, info, trace};
 use trade_aggregation::{
     Aggregator, CandleComponent, GenericAggregator, TimeRule, TimestampResolution, Trade,
 };
-use crate::db::ckdb::Database;
-use crate::global::CK_DB;
 
 /// 多周期K线聚合器实现
 #[async_trait]
@@ -22,7 +21,7 @@ pub trait CusAggregator {
         exchange: &str,
         timestamp: i64,
         trade: &PublicTrade,
-    ) -> Vec<MarketKline>;
+    );
 }
 
 pub struct MultiTimeFrameAggregator {
@@ -100,9 +99,9 @@ impl MultiTimeFrameAggregator {
         candle: &CusCandle,
     ) -> MarketKline {
         MarketKline {
-            exchange: Cow::Borrowed(exchange).into(),
-            symbol: Cow::Borrowed(symbol).into(),
-            period: Cow::Borrowed(period).into(),
+            exchange: exchange.to_string(),
+            symbol: symbol.to_string(),
+            period : period.to_string(),
             open_time: candle.time_range.open_time,
             close_time: candle.time_range.close_time,
             open: candle.open.value(),
@@ -160,7 +159,7 @@ impl CusAggregator for MultiTimeFrameAggregator {
         }
         if market_kline.is_some() {
             let ck_db = CK_DB.get().expect("DB not initialized");
-            ck_db.insert(&market_kline.unwrap()).await.expect("TODO: panic message");
+            ck_db.insert(&market_kline.unwrap()).await.expect("insert market_kline failed");
             // info!("Generated {:?} market_kline for {:?}", trade, market_kline, symbol);
         }
 

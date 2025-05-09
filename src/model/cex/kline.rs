@@ -1,11 +1,12 @@
 use clickhouse::Row;
-use std::sync::Arc;
+use serde::Serialize;
 
-#[derive(Debug, Clone, Row)]
+#[derive(Debug, Clone, Serialize, Row)]
 pub struct MarketKline {
-    pub exchange: Arc<str>,
-    pub symbol: Arc<str>,
-    pub period: Arc<str>,
+
+    pub exchange: String,
+    pub symbol: String,
+    pub period: String,
 
     pub open_time: i64,
     pub open: f64,

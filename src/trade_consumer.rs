@@ -1,7 +1,6 @@
 mod aggregatoragg;
 mod types;
 
-use crate::db::ckdb::ClickhouseDb;
 use crate::model::TimeFrame;
 use crate::trade_consumer::aggregatoragg::{CusAggregator, MultiTimeFrameAggregator};
 use anyhow::Result;
@@ -13,8 +12,7 @@ use barter::barter_data::subscription::trade::{PublicTrade, PublicTrades};
 use barter::barter_instrument::instrument::market_data::kind::MarketDataInstrumentKind;
 use futures_util::StreamExt;
 use std::collections::HashMap;
-use std::sync::Arc;
-use tracing::{info, warn};
+use tracing::warn;
 
 pub async fn trade_driven_aggregation() -> Result<()> {
 

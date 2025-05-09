@@ -1,10 +1,8 @@
 use crate::trade_consumer::trade_driven_aggregation;
-use crate::util::{make_db, make_kv_store};
 use listen_tracing::{LogCache, LogEntry};
 use std::env;
 use std::net::SocketAddr;
 use std::sync::Arc;
-use tokio::spawn;
 use tokio::sync::broadcast;
 use tracing::info;
 use warp::Filter;
