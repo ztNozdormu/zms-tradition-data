@@ -17,6 +17,7 @@ use std::sync::Arc;
 use tracing::{info, warn};
 
 pub async fn trade_driven_aggregation() -> Result<()> {
+
     // 初始化多周期聚合器 自定义聚合器
     let multi_aggregator =
         MultiTimeFrameAggregator::new(vec![TimeFrame::M1, TimeFrame::M5, TimeFrame::M15]);
@@ -77,7 +78,7 @@ pub async fn trade_driven_aggregation() -> Result<()> {
         }) = event
         {
             // 这里最好创建 aggregator 实例在循环外
-            multi_aggregator
+          multi_aggregator
                 .process_trade(
                     instrument.base.as_ref(),
                     exchange.as_str(),
@@ -101,7 +102,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_trade_driven_aggregation() {
-        trade_driven_aggregation()
+        // 初始化 tracing 日志系统
+        listen_tracing::setup_tracing();
+
+        let results = trade_driven_aggregation()
             .await
             .expect("Failed to run trade driven aggregation");
     }

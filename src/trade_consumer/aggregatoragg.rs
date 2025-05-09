@@ -6,7 +6,7 @@ use barter::barter_data::subscription::trade::PublicTrade;
 use std::collections::HashSet;
 use std::{borrow::Cow, collections::HashMap, sync::Arc};
 use tokio::sync::RwLock;
-use tracing::{info, trace};
+use tracing::{debug, info, trace};
 use trade_aggregation::{
     Aggregator, CandleComponent, GenericAggregator, TimeRule, TimestampResolution, Trade,
 };
@@ -157,8 +157,10 @@ impl CusAggregator for MultiTimeFrameAggregator {
                 results.push(self.to_market_kline(exchange, symbol, tf.to_str(), &candle));
             }
         }
+        if results.len() > 0 {
+            info!("trade: {:?}, Generated {} Klines for {}",trade, results.len(), symbol);
+        }
 
-        trace!("Generated {} Klines for {}", results.len(), symbol);
         results
     }
 }
