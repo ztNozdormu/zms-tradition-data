@@ -15,7 +15,6 @@ use std::collections::HashMap;
 use tracing::warn;
 
 pub async fn trade_driven_aggregation() -> Result<()> {
-
     // 初始化多周期聚合器 自定义聚合器
     let multi_aggregator =
         MultiTimeFrameAggregator::new(vec![TimeFrame::M1, TimeFrame::M5, TimeFrame::M15]);
@@ -76,7 +75,7 @@ pub async fn trade_driven_aggregation() -> Result<()> {
         }) = event
         {
             // 这里最好创建 aggregator 实例在循环外
-          multi_aggregator
+            multi_aggregator
                 .process_trade(
                     instrument.base.as_ref(),
                     exchange.as_str(),

@@ -3,7 +3,6 @@ use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize, Row)]
 pub struct MarketKline {
-
     pub exchange: String,
     pub symbol: String,
     pub period: String,
