@@ -4,12 +4,13 @@ use backoff::{future::retry, ExponentialBackoff};
 /// 对历史数据进行清理、归档、缓存等操作
 use barter::barter_xchange::exchange::binance::api::Binance;
 use barter::barter_xchange::exchange::binance::futures::market::FuturesMarket;
-use barter::barter_xchange::exchange::binance::model::KlineSummary;
+use barter::barter_xchange::exchange::binance::model::{KlineSummaries, KlineSummary};
 use chrono::Utc;
 use futures_util::TryFutureExt;
 use tracing::{info, warn};
 use crate::db::ckdb::Database;
 use crate::global::get_ck_db;
+use crate::model::cex::kline::MarketKline;
 use crate::model::TimeFrame;
 
 
@@ -131,7 +132,7 @@ pub async fn run_archive_task(task: ArchiveTask) -> Result<()> {
             // todo You may handle/fill gaps here
         }
 
-        writer.write_batch(&klines).await;
+        writer.write_batch(&klines,&task.exchange,&task.symbol,tf_str).await?;
 
         // Update progress
         let last_ts = klines.iter().map(|k| k.close_time).max().unwrap_or(current_time);
@@ -161,6 +162,36 @@ fn is_kline_continuous(klines: &[KlineSummary], tf_ms: i64) -> bool {
     klines.windows(2).all(|w| w[1].open_time - w[0].open_time == tf_ms)
 }
 
+pub struct KlineContext<'a> {
+    pub summary: &'a KlineSummary,
+    pub exchange: String,
+    pub symbol: String,
+    pub period: String,
+}
+impl<'a> From<KlineContext<'a>> for MarketKline {
+    fn from(ctx: KlineContext<'a>) -> Self {
+        let s = ctx.summary;
+        MarketKline {
+            exchange: ctx.exchange,
+            symbol: ctx.symbol,
+            period: ctx.period,
+
+            open_time: s.open_time,
+            open: s.open,
+            high: s.high,
+            low: s.low,
+            close: s.close,
+            volume: s.volume,
+            close_time: s.close_time,
+
+            quote_asset_volume: s.quote_asset_volume,
+            number_of_trades: s.number_of_trades as u64,
+            taker_buy_base_asset_volume: s.taker_buy_base_asset_volume,
+            taker_buy_quote_asset_volume: s.taker_buy_quote_asset_volume,
+        }
+    }
+}
+
 pub struct BinanceFetcher;
 impl BinanceFetcher {
     pub fn new() -> Self { BinanceFetcher }
@@ -173,11 +204,16 @@ impl BinanceFetcher {
         start: Option<u64>,
         end: Option<u64>,
     ) -> Result<Vec<KlineSummary>> {
-
+        // 初始化市场实例
         let market: FuturesMarket = Binance::new(None, None);
-        let klines = market.klines(symbol, tf, limit, start, end).await;
 
-        todo!("Call your real klines API here")
+        // 请求 K线数据
+        let summaries = market.klines(symbol, tf, limit, start, end).await.unwrap();
+        if let KlineSummaries::AllKlineSummaries(klines) = summaries {
+            Ok(klines)
+        } else {
+            Ok(Vec::new())
+        }
     }
 }
 
@@ -185,14 +221,34 @@ pub struct ClickhouseWriter;
 impl ClickhouseWriter {
     pub fn new() -> Self { ClickhouseWriter }
 
-    pub async fn write_batch(&self, klines: &[KlineSummary]) {
-        // todo 需要新增实现批量插入函数
-        for kline in klines {
-            get_ck_db().insert(&kline).await.unwrap();
+    pub async fn write_batch(
+        &self,
+        klines: &[KlineSummary],
+        exchange: &str,
+        symbol: &str,
+        period: &str,
+    ) -> Result<(), anyhow::Error> {
+        if klines.is_empty() {
+            return Ok(()); // 提前返回，避免不必要操作
         }
-        todo!("Insert into ClickHouse here")
 
+        // 批量构造 MarketKline
+        let market_klines: Vec<MarketKline> = klines
+            .iter()
+            .map(|kline| KlineContext {
+                summary: kline,
+                exchange: exchange.into(),
+                symbol: symbol.into(),
+                period: period.into(),
+            }.into())
+            .collect();
+
+        // 批量写入 ClickHouse
+        get_ck_db().insert_batch(&market_klines).await?;
+
+        Ok(())
     }
+
 }
 
 
@@ -207,9 +263,9 @@ async fn historical_maintenance_process(symbol: String, exchange: String, tf: Ti
 
     // 构造归档任务
     let task = ArchiveTask {
-        symbol: "BTCUSDT".to_string(),
-        exchange: "binance".to_string(),
-        tf: TimeFrame::M1,
+        symbol,
+        exchange,
+        tf,
         window: ArchiveWindow {
             start_time: Some(1_685_000_000_000), // 手动指定归档起点（毫秒时间戳）TODO: 不设置默认取归档历史最新时间
             end_time: Some(Utc::now().timestamp_millis()), // 默认使用当前时间

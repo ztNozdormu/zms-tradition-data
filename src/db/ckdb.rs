@@ -27,6 +27,10 @@ pub trait Database {
     async fn insert<T>(&self, data: &T) -> Result<()>
     where
         T: TableRecord + Row + Serialize;
+    async fn insert_batch<T>(&self, data: &[T]) -> Result<()>
+    where
+        T: TableRecord + Row + Serialize;
+
     async fn create_table_if_not_exists(&self, table_name: &str, create_query: &str) -> Result<()>;
 }
 
@@ -216,6 +220,34 @@ impl Database for ClickhouseDb {
 
         Ok(())
     }
+
+    async fn insert_batch<T>(&self, data: &[T]) -> Result<()>
+    where
+        T: TableRecord + Row + Serialize,
+    {
+        if data.is_empty() {
+            return Ok(());
+        }
+
+        let _res = match self.inserters.get(T::TABLE_NAME) {
+            Some(inserter) => {
+                if let Some(typed_inserter) = T::to_enum_inserter(inserter) {
+                    let mut lock = typed_inserter.write().await;
+                    for item in data {
+                        lock.write(item).context("Batch insert failed")?;
+                    }
+                    Ok(())
+                } else {
+                    Err(anyhow::anyhow!("Type mismatch for {}", T::TABLE_NAME))
+                }
+            }
+            None => Err(anyhow::anyhow!("No inserter found for {}", T::TABLE_NAME)),
+        }
+            .expect("inserter error");
+
+        Ok(())
+    }
+
 }
 
 #[cfg(test)]
