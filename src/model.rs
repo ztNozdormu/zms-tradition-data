@@ -5,6 +5,20 @@ pub mod cex;
 pub mod constant;
 pub mod dex;
 
+pub static DEFAULT_TIMEFRAMES: &[TimeFrame] = &[
+    TimeFrame::M1,
+    TimeFrame::M5,
+    TimeFrame::M15,
+    TimeFrame::M30,
+    TimeFrame::H1,
+    TimeFrame::H2,
+    TimeFrame::H4,
+    TimeFrame::H8,
+    TimeFrame::H12,
+    TimeFrame::D1,
+];
+
+
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum TimeFrame {

@@ -1,7 +1,7 @@
-mod aggregatoragg;
 mod types;
-mod aggregatoragg_upgrade;
+mod aggregatoragg;
 
+use std::collections::HashMap;
 use crate::db::ckdb::ClickhouseDb;
 use anyhow::Result;
 use barter::barter_data::exchange::binance::futures::BinanceFuturesUsd;
@@ -13,9 +13,20 @@ use futures_util::StreamExt;
 use std::sync::Arc;
 use barter::barter_data::event::MarketEvent;
 use tracing::{info, warn};
+use crate::model::TimeFrame;
 use crate::trade_consumer::aggregatoragg::{CusAggregator, MultiTimeFrameAggregator};
 
 pub async fn trade_driven_aggregation(_db: Arc<ClickhouseDb>) -> Result<()> {
+
+    // 初始化多周期聚合器 自定义聚合器
+    let multi_aggregator = MultiTimeFrameAggregator::new(vec![TimeFrame::M1, TimeFrame::M5, TimeFrame::M15]);
+
+    let mut new_config: HashMap<String, Vec<TimeFrame>> = HashMap::new();
+    new_config.insert("BTCUSDT".into(), vec![TimeFrame::M15, TimeFrame::H1]);
+    new_config.insert("ETHUSDT".into(), vec![TimeFrame::M5]);
+
+    multi_aggregator.merge_symbols_timeframes(new_config).await;
+
     let streams = Streams::<PublicTrades>::builder()
         .subscribe([(
             BinanceFuturesUsd::default(),
@@ -31,8 +42,6 @@ pub async fn trade_driven_aggregation(_db: Arc<ClickhouseDb>) -> Result<()> {
     let mut joined_stream = streams
         .select_all()
         .with_error_handler(|error| warn!(?error, "MarketStream generated error"));
-    // todo
-    let mfaggregator = MultiTimeFrameAggregator::new(Vec::new());
 
     while let Some(event) = joined_stream.next().await {
         info!("{event:?}");
@@ -57,7 +66,7 @@ pub async fn trade_driven_aggregation(_db: Arc<ClickhouseDb>) -> Result<()> {
         }) = event
         {
             // 这里最好创建 aggregator 实例在循环外
-            mfaggregator.process_trade(instrument.base.as_ref(), exchange.as_str(), time_exchange.timestamp_millis(), &PublicTrade { id, price, amount, side }).await;
+            multi_aggregator.process_trade(instrument.base.as_ref(), exchange.as_str(), time_exchange.timestamp_millis(), &PublicTrade { id, price, amount, side }).await;
         }
     }
     Ok(())
