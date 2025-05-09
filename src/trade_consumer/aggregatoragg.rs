@@ -8,6 +8,7 @@ use barter::barter_data::subscription::trade::PublicTrade;
 use std::collections::HashSet;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::RwLock;
+use tracing::info;
 use trade_aggregation::{
     Aggregator, CandleComponent, GenericAggregator, TimeRule, TimestampResolution, Trade,
 };
@@ -158,12 +159,16 @@ impl CusAggregator for MultiTimeFrameAggregator {
             }
         }
         if market_kline.is_some() {
+            info!(
+                "Generated {:?} market_kline for {:?}",
+                trade, market_kline, symbol
+            );
+            // 写入数据库
             let ck_db = CK_DB.get().expect("DB not initialized");
             ck_db
                 .insert(&market_kline.unwrap())
                 .await
                 .expect("insert market_kline failed");
-            // info!("Generated {:?} market_kline for {:?}", trade, market_kline, symbol);
         }
     }
 }
