@@ -11,7 +11,7 @@ use crate::model::TimeFrame;
 /// - `symbol`: 交易对名称
 /// - `tf`: 时间周期
 ///
-async fn handle_historical_maintenance(symbol: String, tf: TimeFrame) {
+async fn historical_maintenance_process(symbol: String, tf: TimeFrame) {
     // 执行清理、归档、缓存等操作
     todo!();
 }
