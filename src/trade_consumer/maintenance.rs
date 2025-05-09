@@ -1,5 +1,5 @@
 use crate::db::ckdb::Database;
-use crate::global::get_ck_db;
+use crate::global::{get_ck_db, get_futures_market};
 use crate::model::TimeFrame;
 use crate::model::cex::kline::MarketKline;
 use anyhow::Result;
@@ -227,11 +227,11 @@ impl BinanceFetcher {
         start: Option<u64>,
         end: Option<u64>,
     ) -> Result<Vec<KlineSummary>> {
-        // 初始化市场实例
-        let market: FuturesMarket = Binance::new(None, None);
-
         // 请求 K线数据
-        let summaries = market.klines(symbol, tf, limit, start, end).await.unwrap();
+        let summaries = get_futures_market()
+            .klines(symbol, tf, limit, start, end)
+            .await
+            .unwrap();
         if let KlineSummaries::AllKlineSummaries(klines) = summaries {
             Ok(klines)
         } else {
