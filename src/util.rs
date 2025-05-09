@@ -1,12 +1,16 @@
 use anyhow::Result;
 use bb8_redis::{RedisConnectionManager, bb8};
 use std::{fs::File, io::BufWriter, sync::Arc};
-
+use barter::barter_xchange::exchange::binance::api::Binance;
+use barter::barter_xchange::exchange::binance::futures::market::FuturesMarket;
 use crate::db::ckdb::{ClickhouseDb, Database};
 use crate::db::kv_store::RedisKVStore;
 
 pub fn is_local() -> bool {
     std::env::var("LOCAL").is_ok()
+}
+pub async fn make_binace_client() -> Result<Arc<FuturesMarket>> {
+    Ok(Arc::new(Binance::new(None, None)))
 }
 
 pub async fn make_kv_store() -> Result<Arc<RedisKVStore>> {
