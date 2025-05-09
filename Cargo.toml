@@ -29,3 +29,4 @@ trade_aggregation = "12.0.3"
 # Barter Ecosystem
 barter = { git = "https://github.com/ztNozdormu/barter-rs.git", branch = "dev-local" }
 futures-util = "0.3.31"
+once_cell = "1.21.3"

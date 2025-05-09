@@ -10,6 +10,8 @@ use tracing::{debug, info, trace};
 use trade_aggregation::{
     Aggregator, CandleComponent, GenericAggregator, TimeRule, TimestampResolution, Trade,
 };
+use crate::db::ckdb::Database;
+use crate::global::CK_DB;
 
 /// 多周期K线聚合器实现
 #[async_trait]
@@ -157,7 +159,9 @@ impl CusAggregator for MultiTimeFrameAggregator {
             }
         }
         if market_kline.is_some() {
-            info!("Generated {} market_kline for {}",trade, market_kline, symbol);
+            let ck_db = CK_DB.get().expect("DB not initialized");
+            ck_db.insert(&market_kline.unwrap()).await.expect("TODO: panic message");
+            // info!("Generated {:?} market_kline for {:?}", trade, market_kline, symbol);
         }
 
     }

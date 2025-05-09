@@ -8,6 +8,7 @@ use tokio::spawn;
 use tokio::sync::broadcast;
 use tracing::info;
 use warp::Filter;
+use crate::global::init_global_services;
 
 mod response;
 mod routes;
@@ -32,14 +33,13 @@ pub async fn start() {
     listen_tracing::setup_tracing_with_broadcast(tx.clone(), cache.clone());
 
     // 配置文件初始化环境处理
-    if std::env::var("IS_SYSTEMD_SERVICE").is_err() {
+    if env::var("IS_SYSTEMD_SERVICE").is_err() {
         dotenv::dotenv().expect("Failed to load .env file");
     }
     info!("Starting geyser indexer...");
 
-    // todo global
-    let db = make_db().await;
-    let _kv_store = make_kv_store().await;
+    // init global comments service
+    init_global_services().await;
 
     //  trade driven aggregator update klines
     let _aggregation = trade_driven_aggregation().await;
