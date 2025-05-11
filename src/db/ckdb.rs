@@ -1,4 +1,4 @@
-use crate::model::cex::kline::MarketKline;
+use crate::model::cex::kline::{ArchiveDirection, ArchiveProgress, MarketKline};
 use crate::model::dex::price::PriceUpdate;
 use anyhow::{Context, Result};
 use clickhouse::inserter::Inserter;
@@ -37,6 +37,7 @@ pub trait Database {
 pub enum AnyInserter {
     PriceUpdate(Arc<RwLock<Inserter<PriceUpdate>>>),
     MarketKline(Arc<RwLock<Inserter<MarketKline>>>),
+    ArchiveProgress(Arc<RwLock<Inserter<ArchiveProgress>>>),
     // 其他表类型可继续添加
 }
 
@@ -139,7 +140,7 @@ impl Database for ClickhouseDb {
             ORDER BY (exchange, symbol, period, close_time, open_time)
         "#,
             ),
-            // archive_progress table
+            // archive_progress 表更新
             (
                 "archive_progress",
                 r#"
@@ -147,11 +148,14 @@ impl Database for ClickhouseDb {
                 exchange String,
                 symbol String,
                 period String,
+                direction Enum8('forward' = 1, 'backward' = 2),
                 last_archived_time UInt64,
+                completed UInt8,
                 updated_at DateTime DEFAULT now(),
-                PRIMARY KEY (exchange, symbol, period)
+                PRIMARY KEY (exchange, symbol, period, direction)
             ) ENGINE = ReplacingMergeTree(updated_at)
-            ORDER BY (exchange, symbol, period)
+            ORDER BY (exchange, symbol, period, direction)
+            TTL updated_at + INTERVAL 30 DAY DELETE
             "#,
             ),
         ];
@@ -172,6 +176,7 @@ impl Database for ClickhouseDb {
 
         let price_ins = Arc::new(RwLock::new(self.create_inserter::<PriceUpdate>()?));
         let kline_ins = Arc::new(RwLock::new(self.create_inserter::<MarketKline>()?));
+        let archive_ins = Arc::new(RwLock::new(self.create_inserter::<ArchiveProgress>()?));
 
         self.inserters.insert(
             "price_updates".to_string(),
@@ -181,6 +186,11 @@ impl Database for ClickhouseDb {
             "market_klines".to_string(),
             AnyInserter::MarketKline(kline_ins),
         );
+        self.inserters.insert(
+            "archive_progress".to_string(),
+            AnyInserter::ArchiveProgress(archive_ins),
+        );
+
 
         self.is_initialized = true;
 
@@ -247,6 +257,70 @@ impl Database for ClickhouseDb {
 
         Ok(())
     }
+
+}
+
+impl ClickhouseDb {
+    pub async fn get_archive_progress(
+        &self,
+        exchange: &str,
+        symbol: &str,
+        period: &str,
+        direction: ArchiveDirection,
+    ) -> Result<Option<ArchiveProgress>> {
+        let query = r#"
+            SELECT *
+            FROM archive_progress
+            WHERE exchange = ? AND symbol = ? AND period = ? AND direction = ?
+            ORDER BY updated_at DESC
+            LIMIT 1
+        "#;
+
+        let row = self
+            .client
+            .query(query)
+            .bind(exchange)
+            .bind(symbol)
+            .bind(period)
+            .bind(direction as i8)
+            .fetch_all::<ArchiveProgress>()
+            .await
+            .context("Failed to fetch archive progress")?;
+
+        Ok(row.into_iter().next())
+    }
+
+    /// 查询过去 n 天的归档记录历史版本（按时间排序）
+    pub async fn get_archive_progress_history(
+        &self,
+        exchange: &str,
+        symbol: &str,
+        period: &str,
+        direction: ArchiveDirection,
+        since: chrono::NaiveDateTime,
+    ) -> Result<Vec<ArchiveProgress>> {
+        let query = r#"
+        SELECT *
+        FROM archive_progress
+        WHERE exchange = ? AND symbol = ? AND period = ? AND direction = ?
+        AND updated_at >= ?
+        ORDER BY updated_at DESC
+    "#;
+
+        let rows = self
+            .client
+            .query(query)
+            .bind(exchange)
+            .bind(symbol)
+            .bind(period)
+            .bind(direction as i8)
+            .bind(since)
+            .fetch_all::<ArchiveProgress>()
+            .await?;
+
+        Ok(rows)
+    }
+
 }
 
 #[cfg(test)]

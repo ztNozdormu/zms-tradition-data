@@ -1,7 +1,7 @@
 use crate::db::ckdb::Database;
 use crate::global::{get_ck_db, get_futures_market};
 use crate::model::TimeFrame;
-use crate::model::cex::kline::MarketKline;
+use crate::model::cex::kline::{ArchiveDirection, ArchiveProgress, MarketKline};
 use anyhow::Result;
 use backoff::{ExponentialBackoff, future::retry};
 /// This file contains the implementation of the maintenance module of the trade consumer.
@@ -9,9 +9,10 @@ use backoff::{ExponentialBackoff, future::retry};
 use barter::barter_xchange::exchange::binance::api::Binance;
 use barter::barter_xchange::exchange::binance::futures::market::FuturesMarket;
 use barter::barter_xchange::exchange::binance::model::{KlineSummaries, KlineSummary};
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use futures_util::TryFutureExt;
-use tracing::{info, warn};
+use serde::Serialize;
+use tracing::{error, info, warn};
 
 // ========== Input Structures ==========
 
@@ -24,11 +25,6 @@ pub struct ArchiveTask {
     pub direction: ArchiveDirection,
 }
 
-#[derive(Debug, Clone, PartialOrd, PartialEq)]
-pub enum ArchiveDirection {
-    Forward,
-    Backward,
-}
 
 #[derive(Debug, Clone)]
 pub struct ArchiveWindow {
@@ -38,14 +34,16 @@ pub struct ArchiveWindow {
 
 // ========== Archive Progress Table Logic ==========
 
-#[derive(Debug, Clone)]
-pub struct ArchiveProgress {
-    pub symbol: String,
-    pub exchange: String,
-    pub tf: String,
-    pub direction: String,
-    pub last_processed_time: i64,
-    pub completed: bool,
+/// 与 archive_progress 表结构对应的写入模型
+#[derive(Debug, Serialize)]
+struct ArchiveProgressRecord {
+    exchange: String,
+    symbol: String,
+    period: String,
+    direction: String, // "forward" or "backward"
+    last_archived_time: u64,
+    completed: u8,
+    updated_at: chrono::NaiveDateTime,
 }
 
 pub struct ProgressTracker;
@@ -56,40 +54,95 @@ impl ProgressTracker {
         exchange: &str,
         tf: &str,
         direction: &str,
-    ) -> Option<ArchiveProgress> {
-        // Load from ClickHouse or other DB
-        todo!()
+    ) -> Option<ArchiveProgressRecord> {
+        let dir = match direction {
+            "forward" => ArchiveDirection::Forward,
+            "backward" => ArchiveDirection::Backward,
+            _ => {
+                error!("Invalid direction: {}", direction);
+                return None;
+            }
+        };
+
+        match get_ck_db()
+            .get_archive_progress(exchange, symbol, tf, dir)
+            .await
+        {
+            Ok(Some(record)) => Some(ArchiveProgressRecord {
+                exchange: record.exchange,
+                symbol: record.symbol,
+                period: record.period,
+                direction: direction.to_string(),
+                last_archived_time: record.last_archived_time,
+                completed: record.completed,
+                updated_at: record.updated_at,
+            }),
+            Ok(None) => None,
+            Err(err) => {
+                error!(?err, "Failed to get archive progress");
+                None
+            }
+        }
     }
 
-    pub async fn update_progress(progress: ArchiveProgress) {
-        // Upsert into DB
-        todo!()
+    pub async fn update_progress(progress: ArchiveProgressRecord) {
+        let direction_enum = match progress.direction.as_str() {
+            "forward" => ArchiveDirection::Forward,
+            "backward" => ArchiveDirection::Backward,
+            _ => {
+                error!("Invalid direction: {}", progress.direction);
+                return;
+            }
+        };
+
+        let ck_record = ArchiveProgress {
+            exchange: progress.exchange.clone(),
+            symbol: progress.symbol.clone(),
+            period: progress.period.clone(),
+            direction: direction_enum,
+            last_archived_time: progress.last_archived_time,
+            completed: progress.completed,
+            updated_at: progress.updated_at,
+        };
+
+        if let Err(err) = get_ck_db().insert_batch(&[ck_record]).await {
+            error!(?err, "Failed to update archive progress");
+        } else {
+            info!(?progress, "Archive progress updated");
+        }
     }
 }
-
 // ========== Main Archive Logic ==========
 
 pub async fn run_archive_task(task: ArchiveTask) -> Result<()> {
     let tf_str = task.tf.to_str();
-    let tf_ms = task.tf.to_period();
+    let tf_ms = task.tf.to_period(); // 每根K线的毫秒数
 
-    let mut current_time = match task.window.start_time {
+    // === 起始时间逻辑 ===
+    let mut current_time: i64 = match task.window.start_time {
         Some(start) => start,
-        None => ProgressTracker::get_progress(
-            &task.symbol,
-            &task.exchange,
-            tf_str,
-            match task.direction {
-                ArchiveDirection::Forward => "forward",
-                ArchiveDirection::Backward => "backward",
-            },
-        )
-        .await
-        .map(|p| p.last_processed_time + tf_ms)
-        .unwrap_or_else(|| match task.direction {
-            ArchiveDirection::Forward => Utc::now().timestamp_millis() - 86_400_000,
-            ArchiveDirection::Backward => Utc::now().timestamp_millis(),
-        }),
+        None => {
+            let fallback_time = match task.direction {
+                ArchiveDirection::Forward => Utc::now().timestamp_millis() - 86_400_000,
+                ArchiveDirection::Backward => Utc::now().timestamp_millis(),
+            };
+
+            match ProgressTracker::get_progress(
+                &task.symbol,
+                &task.exchange,
+                tf_str,
+                task.direction.as_str(),
+            )
+                .await
+            {
+                Some(p) => match i64::try_from(p.last_archived_time) {
+                    Ok(last_ts) => advance_time(last_ts, tf_ms, ArchiveDirection::Forward)
+                        .unwrap_or(fallback_time),
+                    Err(_) => fallback_time,
+                },
+                None => fallback_time,
+            }
+        }
     };
 
     let end_time = task
@@ -100,22 +153,25 @@ pub async fn run_archive_task(task: ArchiveTask) -> Result<()> {
     let fetcher = BinanceFetcher::new();
     let writer = ClickhouseWriter::new();
 
+    // === 主归档循环 ===
     while match task.direction {
         ArchiveDirection::Forward => current_time < end_time,
         ArchiveDirection::Backward => current_time > end_time,
     } {
-        let range_start = current_time;
-        let range_end = match task.direction {
-            ArchiveDirection::Forward => current_time + tf_ms * 1000,
-            ArchiveDirection::Backward => current_time - tf_ms * 1000,
+        // 计算一个批次的时间范围
+        let next_time = advance_time(current_time, tf_ms * 1000, task.direction);
+        let (start, end) = match next_time {
+            Some(t) => match task.direction {
+                ArchiveDirection::Forward => (current_time, t),
+                ArchiveDirection::Backward => (t, current_time),
+            },
+            None => {
+                warn!("Time computation overflowed. Ending archive.");
+                break;
+            }
         };
 
-        let (start, end) = if task.direction == ArchiveDirection::Forward {
-            (range_start, range_end)
-        } else {
-            (range_end, range_start)
-        };
-
+        // === 拉取数据（含重试） ===
         let klines = retry(ExponentialBackoff::default(), || async {
             fetcher
                 .klines(
@@ -127,53 +183,67 @@ pub async fn run_archive_task(task: ArchiveTask) -> Result<()> {
                 )
                 .await
                 .map_err(|e| {
-                    warn!(?e, "Failed to fetch Klines, retrying");
+                    warn!(?e, "Failed to fetch Klines, retrying...");
                     backoff::Error::transient(e)
                 })
         })
-        .await?;
+            .await?;
 
         if klines.is_empty() {
-            info!("No data between {start} ~ {end}");
+            info!("No Kline data between {start} ~ {end}, ending task.");
             break;
         }
 
-        // Gap detection here (optional)
         if !is_kline_continuous(&klines, tf_ms) {
-            warn!("Gap detected in klines between {start} ~ {end}");
-            // todo You may handle/fill gaps here
+            warn!("Kline gap detected between {start} ~ {end}");
+            // 可扩展：记录、补全、跳过或失败
         }
 
         writer
             .write_batch(&klines, &task.exchange, &task.symbol, tf_str)
             .await?;
 
-        // Update progress
+        // === 更新归档进度 ===
         let last_ts = klines
             .iter()
-            .map(|k| k.close_time)
+            .map(|k| k.close_time as i64)
             .max()
             .unwrap_or(current_time);
-        ProgressTracker::update_progress(ArchiveProgress {
+
+
+        ProgressTracker::update_progress(ArchiveProgressRecord {
             symbol: task.symbol.clone(),
             exchange: task.exchange.clone(),
-            tf: tf_str.to_string(),
-            direction: match task.direction {
-                ArchiveDirection::Forward => "forward".into(),
-                ArchiveDirection::Backward => "backward".into(),
-            },
-            last_processed_time: last_ts,
-            completed: last_ts >= end_time,
+            period: tf_str.to_string(),
+            direction: task.direction.as_str().to_string(),
+            last_archived_time: last_ts as u64,
+            completed: match task.direction {
+                ArchiveDirection::Forward => last_ts >= end_time,
+                ArchiveDirection::Backward => last_ts <= end_time,
+            } as u8,
+            updated_at: Utc::now().naive_utc(),
         })
-        .await;
+            .await;
 
-        current_time = match task.direction {
-            ArchiveDirection::Forward => last_ts + tf_ms,
-            ArchiveDirection::Backward => last_ts - tf_ms,
-        };
+
+        // === 推进到下一段时间 ===
+        current_time = advance_time(last_ts, tf_ms, task.direction).unwrap_or_else(|| {
+            warn!("Failed to advance current_time (overflow). Ending task.");
+            end_time
+        });
     }
+
     Ok(())
 }
+
+/// 安全推进时间：根据方向进行加/减，防止溢出
+fn advance_time(current: i64, delta: i64, direction: ArchiveDirection) -> Option<i64> {
+    match direction {
+        ArchiveDirection::Forward => current.checked_add(delta),
+        ArchiveDirection::Backward => current.checked_sub(delta),
+    }
+}
+
 
 // ========== Helper & Placeholder Stubs ==========
 
