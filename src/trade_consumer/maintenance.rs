@@ -355,7 +355,7 @@ impl ClickhouseWriter {
 /// - `exchange`: 交易所名称
 /// - `tf`: 时间周期
 ///
-async fn historical_maintenance_process(symbol: String, exchange: String, tf: TimeFrame) {
+pub async fn historical_maintenance_process(symbol: String, exchange: String, tf: TimeFrame) {
     // 构造归档任务
     let task = ArchiveTask {
         symbol,

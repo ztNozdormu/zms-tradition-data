@@ -8,10 +8,11 @@ use barter::barter_data::subscription::trade::PublicTrade;
 use std::collections::HashSet;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::RwLock;
-use tracing::info;
+use tracing::{error, info};
 use trade_aggregation::{
     Aggregator, CandleComponent, GenericAggregator, TimeRule, TimestampResolution, Trade,
 };
+use crate::trade_consumer::maintenance::historical_maintenance_process;
 
 /// 多周期K线聚合器实现
 #[async_trait]
@@ -151,24 +152,35 @@ impl CusAggregator for MultiTimeFrameAggregator {
 
         let mut aggrs = self.aggregators.write().await;
 
-        let mut market_kline = None;
+        let ck_db = get_ck_db();
+
         for tf in timeframes.iter() {
             let aggr = self.get_or_create_aggregator(&mut aggrs, symbol, tf);
+
             if let Some(candle) = aggr.update(&trade) {
-                market_kline = Some(self.to_market_kline(exchange, symbol, tf.to_str(), &candle));
+                let market_kline = self.to_market_kline(exchange, symbol, tf.to_str(), &candle);
+
+                info!(
+                    "Generated candle at tf {:?} for symbol {}: {:?}",
+                    tf, symbol, market_kline
+                );
+
+                // 写入数据库
+                if let Err(e) = ck_db.insert(&market_kline).await {
+                    error!("Insert market_kline failed: {:?}", e);
+                    continue; // 不终止循环
+                }
+
+                // 当前周期触发维护对应的历史数据（异步任务）
+                let symbol_clone = symbol.to_string();
+                let exchange_clone = exchange.to_string();
+                let tf_clone = tf.clone();
+
+                tokio::spawn(async move {
+                    historical_maintenance_process(symbol_clone, exchange_clone, tf_clone).await;
+                });
             }
         }
-        if market_kline.is_some() {
-            info!(
-                "Generated {:?}, market_kline for {:?}, symbol {}",
-                trade, market_kline, symbol
-            );
-            // 写入数据库
-            let ck_db = get_ck_db();
-            ck_db
-                .insert(&market_kline.unwrap())
-                .await
-                .expect("insert market_kline failed");
-        }
+
     }
 }
