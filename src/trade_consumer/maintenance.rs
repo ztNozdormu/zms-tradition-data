@@ -356,42 +356,70 @@ impl ClickhouseWriter {
 /// - `tf`: 时间周期
 ///
 pub async fn historical_maintenance_process(symbol: String, exchange: String, tf: TimeFrame) {
-    // 构造归档任务
-    let task = ArchiveTask {
-        symbol,
-        exchange,
-        tf,
-        window: ArchiveWindow {
-            start_time: Some(1_685_000_000_000), // 手动指定归档起点（毫秒时间戳）TODO: 不设置默认取归档历史最新时间
-            end_time: Some(Utc::now().timestamp_millis()), // 默认使用当前时间
-        },
-        direction: ArchiveDirection::Forward,
+
+    let tf_clone = tf.clone();
+    let tf_str = tf_clone.to_str();
+
+    let progress = match ProgressTracker::get_progress(&symbol, &exchange, tf_str, "forward").await {
+        Some(progress) => progress,
+        None => {
+            info!("No existing progress found, starting fresh.");
+            return;
+        }
     };
 
-    // 执行归档任务
-    // if let Err(e) = run_archive_task(task).await {
-    //     eprintln!("归档失败: {:?}", e);
-    // } else {
-    //     println!("归档完成");
-    // }
+    // 如果当前已经完成归档的任务，可以跳过
+    if progress.completed == 1 {
+        info!("Archive task already completed for {symbol} on {exchange} for {tf_str}. Skipping.");
+        return;
+    }
 
-    // 构造向后归档任务（从 end_time 向 start_time 回溯）todo 获取归档状态表最小时间 作为end_time 通过k线数【币安默认一次性返回1000条】，周期，end_time计算start_time
-    let start_time = 1_685_000_000_000; // 手动指定归档起点（毫秒时间戳）
-    let end_time = Utc::now().timestamp_millis(); // 默认使用当前时间
+    // 定义任务时间窗口
+    let start_time = progress.last_archived_time as i64;
+    let end_time = Utc::now().timestamp_millis();
+
+    let tf_back = tf.clone();
+    // 创建归档任务（前向）
     let task = ArchiveTask {
-        symbol: "BTCUSDT".into(),
-        exchange: "binance".into(),
-        tf: TimeFrame::M1,
+        symbol: symbol.clone(),
+        exchange: exchange.clone(),
+        tf,
         window: ArchiveWindow {
             start_time: Some(start_time),
             end_time: Some(end_time),
         },
-        direction: ArchiveDirection::Backward,
+        direction: ArchiveDirection::Forward, // 默认归档方向为前向
     };
 
-    // // 执行归档
-    // match run_archive_task(task).await {
-    //     Ok(_) => println!("归档成功"),
-    //     Err(e) => eprintln!("归档失败: {:?}", e),
-    // }
+    // 执行前向归档任务
+    if let Err(e) = run_archive_task(task.clone()).await {
+        error!(?e, "Failed to execute forward archive task");
+    } else {
+        info!("Forward archive task completed for {} - {} - {}", symbol, exchange, tf_str);
+    }
+
+    // 如果有后向归档任务需要执行
+
+    if let Some(last_archived_time) = ProgressTracker::get_progress(&symbol, &exchange, tf_str, "backward").await {
+        let backward_task = ArchiveTask {
+            symbol: symbol.clone(),
+            exchange: exchange.clone(),
+            tf: tf_back, // 保持原始 TimeFrame
+            window: ArchiveWindow {
+                start_time: Some(last_archived_time.last_archived_time as i64),
+                end_time: Some(start_time), // 向后归档
+            },
+            direction: ArchiveDirection::Backward,
+        };
+
+        // 执行向后归档任务
+        if let Err(e) = run_archive_task(backward_task).await {
+            error!(?e, "Failed to execute backward archive task");
+        } else {
+            info!("Backward archive task completed for {} - {} - {}", symbol, exchange, tf_str);
+        }
+    }
+
+    // 注意：此处不再进行归档进度更新，run_archive_task 已经处理了进度的更新
 }
+
