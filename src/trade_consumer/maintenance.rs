@@ -137,13 +137,13 @@ impl ProgressTracker {
             exchange: progress.exchange.clone(),
             symbol: progress.symbol.clone(),
             period: progress.period.clone(),
-            direction: direction_enum,
+            direction: direction_enum.to_i8(),
             last_archived_time: progress.last_archived_time,
             completed: progress.completed,
             updated_at: progress.updated_at,
         };
 
-        if let Err(err) = get_ck_db().insert_batch(&[ck_record]).await {
+        if let Err(err) = get_ck_db().insert(&ck_record).await {
             error!(?err, "Failed to update archive progress");
         } else {
             info!(?progress, "Archive progress updated");

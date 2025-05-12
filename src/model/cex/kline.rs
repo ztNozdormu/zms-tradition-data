@@ -26,7 +26,7 @@ pub struct ArchiveProgress {
     pub exchange: String,
     pub symbol: String,
     pub period: String,
-    pub direction: ArchiveDirection,
+    pub direction: i8, // ArchiveDirection
     pub last_archived_time: u64,
     pub completed: u8,
     pub updated_at: chrono::NaiveDateTime,
@@ -44,6 +44,19 @@ impl ArchiveDirection {
         match self {
             ArchiveDirection::Forward => "forward",
             ArchiveDirection::Backward => "backward",
+        }
+    }
+    // 将 ArchiveDirection 转换为 i8
+    pub fn to_i8(&self) -> i8 {
+        *self as i8
+    }
+
+    // 将 i8 转换为 ArchiveDirection
+    pub fn from_i8(value: i8) -> Option<ArchiveDirection> {
+        match value {
+            1 => Some(ArchiveDirection::Forward),
+            2 => Some(ArchiveDirection::Backward),
+            _ => None, // 不合法的值
         }
     }
 }
