@@ -9,10 +9,49 @@ use backoff::{ExponentialBackoff, future::retry};
 use barter::barter_xchange::exchange::binance::api::Binance;
 use barter::barter_xchange::exchange::binance::futures::market::FuturesMarket;
 use barter::barter_xchange::exchange::binance::model::{KlineSummaries, KlineSummary};
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, TimeZone, Utc};
 use futures_util::TryFutureExt;
 use serde::Serialize;
+use std::fmt;
+use std::time::Duration;
+use tokio::time::sleep;
 use tracing::{error, info, warn};
+
+// 定义 ArchiveError 枚举，涵盖不同类型的错误
+#[derive(Debug)]
+pub enum ArchiveError {
+    NetworkError(String),
+    DatabaseError(String),
+    DataError(String),
+    TimeoutError(String),
+    OtherError(String),
+}
+
+// 实现 Display trait 来格式化错误消息
+impl fmt::Display for ArchiveError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ArchiveError::NetworkError(msg) => write!(f, "Network Error: {}", msg),
+            ArchiveError::DatabaseError(msg) => write!(f, "Database Error: {}", msg),
+            ArchiveError::DataError(msg) => write!(f, "Data Error: {}", msg),
+            ArchiveError::TimeoutError(msg) => write!(f, "Timeout Error: {}", msg),
+            ArchiveError::OtherError(msg) => write!(f, "Other Error: {}", msg),
+        }
+    }
+}
+
+// 实现 From trait 来支持转换其他错误类型为 ArchiveError
+impl From<std::io::Error> for ArchiveError {
+    fn from(error: std::io::Error) -> Self {
+        ArchiveError::NetworkError(error.to_string())
+    }
+}
+
+impl From<tokio::time::error::Elapsed> for ArchiveError {
+    fn from(error: tokio::time::error::Elapsed) -> Self {
+        ArchiveError::TimeoutError(error.to_string())
+    }
+}
 
 // ========== Input Structures ==========
 
@@ -24,7 +63,6 @@ pub struct ArchiveTask {
     pub window: ArchiveWindow,
     pub direction: ArchiveDirection,
 }
-
 
 #[derive(Debug, Clone)]
 pub struct ArchiveWindow {
@@ -85,7 +123,7 @@ impl ProgressTracker {
         }
     }
 
-    pub async fn update_progress(progress: ArchiveProgressRecord) {
+    pub async fn update_progress(progress: &ArchiveProgressRecord) {
         let direction_enum = match progress.direction.as_str() {
             "forward" => ArchiveDirection::Forward,
             "backward" => ArchiveDirection::Backward,
@@ -114,7 +152,7 @@ impl ProgressTracker {
 }
 // ========== Main Archive Logic ==========
 
-pub async fn run_archive_task(task: ArchiveTask) -> Result<()> {
+pub async fn run_archive_task(task: ArchiveTask) -> Result<(), ArchiveError> {
     let tf_str = task.tf.to_str();
     let tf_ms = task.tf.to_period(); // 每根K线的毫秒数
 
@@ -133,7 +171,7 @@ pub async fn run_archive_task(task: ArchiveTask) -> Result<()> {
                 tf_str,
                 task.direction.as_str(),
             )
-                .await
+            .await
             {
                 Some(p) => match i64::try_from(p.last_archived_time) {
                     Ok(last_ts) => advance_time(last_ts, tf_ms, ArchiveDirection::Forward)
@@ -187,7 +225,8 @@ pub async fn run_archive_task(task: ArchiveTask) -> Result<()> {
                     backoff::Error::transient(e)
                 })
         })
-            .await?;
+        .await
+        .map_err(|e| ArchiveError::DataError(e.to_string()))?;
 
         if klines.is_empty() {
             info!("No Kline data between {start} ~ {end}, ending task.");
@@ -201,7 +240,8 @@ pub async fn run_archive_task(task: ArchiveTask) -> Result<()> {
 
         writer
             .write_batch(&klines, &task.exchange, &task.symbol, tf_str)
-            .await?;
+            .await
+            .map_err(|e| ArchiveError::DatabaseError(e.to_string()))?;
 
         // === 更新归档进度 ===
         let last_ts = klines
@@ -210,8 +250,7 @@ pub async fn run_archive_task(task: ArchiveTask) -> Result<()> {
             .max()
             .unwrap_or(current_time);
 
-
-        ProgressTracker::update_progress(ArchiveProgressRecord {
+        ProgressTracker::update_progress(&ArchiveProgressRecord {
             symbol: task.symbol.clone(),
             exchange: task.exchange.clone(),
             period: tf_str.to_string(),
@@ -223,8 +262,7 @@ pub async fn run_archive_task(task: ArchiveTask) -> Result<()> {
             } as u8,
             updated_at: Utc::now().naive_utc(),
         })
-            .await;
-
+        .await;
 
         // === 推进到下一段时间 ===
         current_time = advance_time(last_ts, tf_ms, task.direction).unwrap_or_else(|| {
@@ -243,7 +281,6 @@ fn advance_time(current: i64, delta: i64, direction: ArchiveDirection) -> Option
         ArchiveDirection::Backward => current.checked_sub(delta),
     }
 }
-
 
 // ========== Helper & Placeholder Stubs ==========
 
@@ -355,16 +392,112 @@ impl ClickhouseWriter {
 /// - `exchange`: 交易所名称
 /// - `tf`: 时间周期
 ///
-pub async fn historical_maintenance_process(symbol: String, exchange: String, tf: TimeFrame) {
+// pub async fn historical_maintenance_process(symbol: String, exchange: String, tf: TimeFrame) {
+//
+//     let tf_clone = tf.clone();
+//     let tf_str = tf_clone.to_str();
+//
+//     let progress = match ProgressTracker::get_progress(&symbol, &exchange, tf_str, "forward").await {
+//         Some(progress) => progress,
+//         None => {
+//             info!("No existing progress found, starting fresh.");
+//             return;
+//         }
+//     };
+//
+//     // 如果当前已经完成归档的任务，可以跳过
+//     if progress.completed == 1 {
+//         info!("Archive task already completed for {symbol} on {exchange} for {tf_str}. Skipping.");
+//         return;
+//     }
+//
+//     // 定义任务时间窗口
+//     let start_time = progress.last_archived_time as i64;
+//     let end_time = Utc::now().timestamp_millis();
+//
+//     let tf_back = tf.clone();
+//     // 创建归档任务（前向）
+//     let task = ArchiveTask {
+//         symbol: symbol.clone(),
+//         exchange: exchange.clone(),
+//         tf,
+//         window: ArchiveWindow {
+//             start_time: Some(start_time),
+//             end_time: Some(end_time),
+//         },
+//         direction: ArchiveDirection::Forward, // 默认归档方向为前向
+//     };
+//
+//     // 执行前向归档任务
+//     if let Err(e) = run_archive_task(task.clone()).await {
+//         error!(?e, "Failed to execute forward archive task");
+//     } else {
+//         info!("Forward archive task completed for {} - {} - {}", symbol, exchange, tf_str);
+//     }
+//
+//     // 如果有后向归档任务需要执行
+//
+//     if let Some(last_archived_time) = ProgressTracker::get_progress(&symbol, &exchange, tf_str, "backward").await {
+//         let backward_task = ArchiveTask {
+//             symbol: symbol.clone(),
+//             exchange: exchange.clone(),
+//             tf: tf_back, // 保持原始 TimeFrame
+//             window: ArchiveWindow {
+//                 start_time: Some(last_archived_time.last_archived_time as i64),
+//                 end_time: Some(start_time), // 向后归档
+//             },
+//             direction: ArchiveDirection::Backward,
+//         };
+//
+//         // 执行向后归档任务
+//         if let Err(e) = run_archive_task(backward_task).await {
+//             error!(?e, "Failed to execute backward archive task");
+//         } else {
+//             info!("Backward archive task completed for {} - {} - {}", symbol, exchange, tf_str);
+//         }
+//     }
+//
+//     // 注意：此处不再进行归档进度更新，run_archive_task 已经处理了进度的更新
+// }
 
-    let tf_clone = tf.clone();
-    let tf_str = tf_clone.to_str();
+pub async fn historical_maintenance_process(
+    symbol: String,
+    exchange: String,
+    close_time: i64,
+    tf: TimeFrame,
+) {
+    let tf_back = tf.clone();
+    let tf_str_clone = tf.clone();
+    let tf_str = tf_str_clone.to_str();
 
-    let progress = match ProgressTracker::get_progress(&symbol, &exchange, tf_str, "forward").await {
+    // 获取当前进度，若没有进度则初始化
+    let progress = match ProgressTracker::get_progress(&symbol, &exchange, &tf_str, "forward").await
+    {
         Some(progress) => progress,
         None => {
-            info!("No existing progress found, starting fresh.");
-            return;
+            info!("No existing progress found, initializing the task.");
+
+            // 如果没有进度数据，我们尝试使用某个默认的起始时间（例如过去的某个日期）
+            let fallback_time = get_default_start_time(close_time, &tf).unwrap_or_else(|| {
+                // 如果无法获取默认时间，则使用当前时间的某个合理的回退时间
+                Utc::now().timestamp_millis() - 86_400_000 // 一天前
+            });
+
+            // 使用 ArchiveProgressRecord 初始化进度
+            let progress = ArchiveProgressRecord {
+                symbol: symbol.clone(),
+                exchange: exchange.clone(),
+                period: tf_str.to_string(),
+                direction: "forward".to_string(),
+                last_archived_time: fallback_time as u64, // 使用 fallback 时间作为开始
+                completed: 0,                             // 归档尚未完成
+                updated_at: Utc::now().naive_utc(),
+            };
+
+            // 保存初始化的进度
+            ProgressTracker::update_progress(&progress).await;
+            // 返回初始化的进度
+            progress
         }
     };
 
@@ -378,7 +511,6 @@ pub async fn historical_maintenance_process(symbol: String, exchange: String, tf
     let start_time = progress.last_archived_time as i64;
     let end_time = Utc::now().timestamp_millis();
 
-    let tf_back = tf.clone();
     // 创建归档任务（前向）
     let task = ArchiveTask {
         symbol: symbol.clone(),
@@ -391,16 +523,21 @@ pub async fn historical_maintenance_process(symbol: String, exchange: String, tf
         direction: ArchiveDirection::Forward, // 默认归档方向为前向
     };
 
-    // 执行前向归档任务
-    if let Err(e) = run_archive_task(task.clone()).await {
+    // 执行前向归档任务，并加入重试机制
+    if let Err(e) = run_archive_task_with_retry(task.clone()).await {
         error!(?e, "Failed to execute forward archive task");
+        // 失败后可以考虑通知机制，如通过 Webhook 或邮件通知管理员
     } else {
-        info!("Forward archive task completed for {} - {} - {}", symbol, exchange, tf_str);
+        info!(
+            "Forward archive task completed for {} - {} - {}",
+            symbol, exchange, tf_str
+        );
     }
 
     // 如果有后向归档任务需要执行
-
-    if let Some(last_archived_time) = ProgressTracker::get_progress(&symbol, &exchange, tf_str, "backward").await {
+    if let Some(last_archived_time) =
+        ProgressTracker::get_progress(&symbol, &exchange, tf_str, "backward").await
+    {
         let backward_task = ArchiveTask {
             symbol: symbol.clone(),
             exchange: exchange.clone(),
@@ -412,14 +549,54 @@ pub async fn historical_maintenance_process(symbol: String, exchange: String, tf
             direction: ArchiveDirection::Backward,
         };
 
-        // 执行向后归档任务
-        if let Err(e) = run_archive_task(backward_task).await {
+        // 执行向后归档任务，并加入重试机制
+        if let Err(e) = run_archive_task_with_retry(backward_task).await {
             error!(?e, "Failed to execute backward archive task");
+            // 失败后可以考虑通知机制
         } else {
-            info!("Backward archive task completed for {} - {} - {}", symbol, exchange, tf_str);
+            info!(
+                "Backward archive task completed for {} - {} - {}",
+                symbol, exchange, tf_str
+            );
         }
     }
 
-    // 注意：此处不再进行归档进度更新，run_archive_task 已经处理了进度的更新
+    // 注意：归档进度更新已经在 `run_archive_task` 中处理，不再重复更新
 }
 
+async fn run_archive_task_with_retry(task: ArchiveTask) -> Result<(), ArchiveError> {
+    const MAX_RETRIES: u8 = 3;
+    const RETRY_DELAY: Duration = Duration::from_secs(5);
+
+    let mut retries = 0;
+    loop {
+        match run_archive_task(task.clone()).await {
+            Ok(_) => return Ok(()),
+            Err(e) => {
+                if retries >= MAX_RETRIES {
+                    return Err(e); // 达到最大重试次数，返回错误
+                }
+                retries += 1;
+                error!(?e, "Archive task failed, retrying...");
+                sleep(RETRY_DELAY).await; // 等待 5 秒再重试
+            }
+        }
+    }
+}
+
+/// 获取默认起始时间（如果有配置或其他数据源）
+fn get_default_start_time(close_time: i64, tf: &TimeFrame) -> Option<i64> {
+    // 获取时间周期的毫秒数
+    let tf_ms = tf.to_period(); // 假设 `to_period()` 返回该周期的毫秒数
+
+    // 计算一个周期之前的时间点，排除掉已计算的最新K线
+    let start_time = close_time - tf_ms;
+
+    // 确保返回的时间不>于当前时间，避免归档时间超出范围
+    let now = Utc::now().timestamp_millis();
+    if start_time < now {
+        Some(start_time)
+    } else {
+        None
+    }
+}

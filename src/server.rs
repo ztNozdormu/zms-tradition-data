@@ -42,7 +42,6 @@ pub async fn start() {
     //  trade driven aggregator update klines async
     handle_trade_aggregation().await;
 
-
     let bind_address: SocketAddr = "127.0.0.1:10099".parse().unwrap();
 
     // init app

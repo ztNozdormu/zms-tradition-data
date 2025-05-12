@@ -191,7 +191,6 @@ impl Database for ClickhouseDb {
             AnyInserter::ArchiveProgress(archive_ins),
         );
 
-
         self.is_initialized = true;
 
         Ok(())
@@ -257,7 +256,6 @@ impl Database for ClickhouseDb {
 
         Ok(())
     }
-
 }
 
 impl ClickhouseDb {
@@ -320,7 +318,6 @@ impl ClickhouseDb {
 
         Ok(rows)
     }
-
 }
 
 #[cfg(test)]

@@ -2,6 +2,7 @@ use crate::db::ckdb::Database;
 use crate::global::get_ck_db;
 use crate::model::cex::kline::MarketKline;
 use crate::model::{DEFAULT_TIMEFRAMES, TimeFrame};
+use crate::trade_consumer::maintenance::historical_maintenance_process;
 use crate::trade_consumer::types::{CusCandle, to_agg_trade};
 use async_trait::async_trait;
 use barter::barter_data::subscription::trade::PublicTrade;
@@ -12,7 +13,6 @@ use tracing::{error, info};
 use trade_aggregation::{
     Aggregator, CandleComponent, GenericAggregator, TimeRule, TimestampResolution, Trade,
 };
-use crate::trade_consumer::maintenance::historical_maintenance_process;
 
 /// 多周期K线聚合器实现
 #[async_trait]
@@ -175,12 +175,17 @@ impl CusAggregator for MultiTimeFrameAggregator {
                 let symbol_clone = symbol.to_string();
                 let exchange_clone = exchange.to_string();
                 let tf_clone = tf.clone();
-
+                let close_time = trade.timestamp;
                 tokio::spawn(async move {
-                    historical_maintenance_process(symbol_clone, exchange_clone, tf_clone).await;
+                    historical_maintenance_process(
+                        symbol_clone,
+                        exchange_clone,
+                        close_time,
+                        tf_clone,
+                    )
+                    .await;
                 });
             }
         }
-
     }
 }
