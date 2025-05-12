@@ -18,12 +18,12 @@ use tracing::warn;
 pub async fn trade_driven_aggregation() -> Result<()> {
             // 初始化多周期聚合器 自定义聚合器
             let multi_aggregator =
-                MultiTimeFrameAggregator::new(vec![TimeFrame::M1, TimeFrame::M5, TimeFrame::M15]);
+                MultiTimeFrameAggregator::new(vec![TimeFrame::M1]);//, TimeFrame::M5, TimeFrame::M15
 
             let mut new_config: HashMap<String, Vec<TimeFrame>> = HashMap::new();
             new_config.insert(
                 "btc".into(),
-                vec![TimeFrame::M1, TimeFrame::M5, TimeFrame::M15],
+                vec![TimeFrame::M1],
             );
 
             multi_aggregator.merge_symbols_timeframes(new_config).await;

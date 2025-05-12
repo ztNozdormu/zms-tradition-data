@@ -1,1 +1,8 @@
 {"timestamp":"2025-05-04T16:04:26.775742+00:00","level":"INFO","target":"warp::server","message":"listening on http://127.0.0.1:10099"}
+{"timestamp":"2025-05-12T02:10:18.169815+00:00","level":"INFO","target":"zms_tradition_data::server","message":"Starting geyser indexer..."}
+{"timestamp":"2025-05-12T02:10:18.170337+00:00","level":"INFO","target":"zms_tradition_data::db::ckdb","message":"Connecting to ClickHouse at http://clickhouse.listen.orb.local:8123"}
+{"timestamp":"2025-05-12T02:37:48.911303+00:00","level":"INFO","target":"zms_tradition_data::server","message":"Starting geyser indexer..."}
+{"timestamp":"2025-05-12T02:37:48.912796+00:00","level":"INFO","target":"zms_tradition_data::db::ckdb","message":"Connecting to ClickHouse at http://localhost:8123"}
+{"timestamp":"2025-05-12T02:37:49.166407+00:00","level":"INFO","target":"zms_tradition_data::db::kv_store","message":"Connected to Redis KV store at redis://default:123456@localhost:6379"}
+{"timestamp":"2025-05-12T02:37:49.166987+00:00","level":"INFO","target":"barter_data::streams::consumer","message":"MarketStream with auto reconnect initialising"}
+{"timestamp":"2025-05-12T02:37:50.103896+00:00","level":"INFO","target":"barter_data::streams::reconnect::stream","message":"successfully initialised Stream"}
