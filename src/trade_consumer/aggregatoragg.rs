@@ -165,26 +165,25 @@ impl CusAggregator for MultiTimeFrameAggregator {
                     tf, symbol, market_kline
                 );
 
-                // 写入数据库
+                // 确保插入操作完成
                 if let Err(e) = ck_db.insert(&market_kline).await {
                     error!("Insert market_kline failed: {:?}", e);
-                    continue; // 不终止循环
+                } else {
+                    let symbol_clone = symbol.to_string();
+                    let exchange_clone = exchange.to_string();
+                    let tf_clone = tf.clone();
+                    let close_time = trade.timestamp;
+                    // 插入成功后，执行历史数据维护
+                    tokio::spawn(async move {
+                        historical_maintenance_process(
+                            symbol_clone,
+                            exchange_clone,
+                            close_time,
+                            tf_clone,
+                        )
+                        .await;
+                    });
                 }
-
-                // 当前周期触发维护对应的历史数据（异步任务）
-                let symbol_clone = symbol.to_string();
-                let exchange_clone = exchange.to_string();
-                let tf_clone = tf.clone();
-                let close_time = trade.timestamp;
-                tokio::spawn(async move {
-                    historical_maintenance_process(
-                        symbol_clone,
-                        exchange_clone,
-                        close_time,
-                        tf_clone,
-                    )
-                    .await;
-                });
             }
         }
     }
