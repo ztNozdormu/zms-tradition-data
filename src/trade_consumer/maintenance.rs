@@ -334,9 +334,10 @@ impl BinanceFetcher {
         start: Option<u64>,
         end: Option<u64>,
     ) -> Result<Vec<KlineSummary>> {
+        let symbol_with_usdt = format!("{}usdt", symbol);
         // 请求 K线数据
         let summaries = get_futures_market()
-            .klines(symbol, tf, limit, start, end)
+            .klines(symbol_with_usdt, tf, limit, start, end)
             .await
             .unwrap();
         if let KlineSummaries::AllKlineSummaries(klines) = summaries {
