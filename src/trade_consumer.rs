@@ -131,8 +131,7 @@ mod tests {
         // 初始化 tracing 日志系统
         listen_tracing::setup_tracing();
 
-        trade_driven_aggregation()
-            .await
-            .expect("Failed to run trade driven aggregation");
+        handle_trade_aggregation()
+            .await;
     }
 }
