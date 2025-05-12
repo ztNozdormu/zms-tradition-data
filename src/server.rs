@@ -1,11 +1,11 @@
 use crate::global::init_global_services;
-use crate::trade_consumer::trade_driven_aggregation;
+use crate::trade_consumer::handle_trade_aggregation;
 use listen_tracing::{LogCache, LogEntry};
 use std::env;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::broadcast;
-use tracing::info;
+use tracing::{error, info};
 use warp::Filter;
 
 mod response;
@@ -34,13 +34,14 @@ pub async fn start() {
     if env::var("IS_SYSTEMD_SERVICE").is_err() {
         dotenv::dotenv().expect("Failed to load .env file");
     }
-    info!("Starting geyser indexer...");
+    info!("Starting zms-tradition indexer...");
 
     // init global comments service
     init_global_services().await;
 
-    //  trade driven aggregator update klines
-    let _aggregation = trade_driven_aggregation().await;
+    //  trade driven aggregator update klines async
+    handle_trade_aggregation().await;
+
 
     let bind_address: SocketAddr = "127.0.0.1:10099".parse().unwrap();
 

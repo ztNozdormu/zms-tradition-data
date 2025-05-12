@@ -13,9 +13,46 @@ use barter::barter_data::subscription::trade::{PublicTrade, PublicTrades};
 use barter::barter_instrument::instrument::market_data::kind::MarketDataInstrumentKind;
 use futures_util::StreamExt;
 use std::collections::HashMap;
-use tracing::warn;
+use std::sync::Arc;
+use barter::barter_data::error::DataError;
+use barter::barter_data::streams::consumer::MarketStreamResult;
+use barter::barter_instrument::instrument::market_data::MarketDataInstrument;
+use tracing::metadata::Kind;
+use tracing::{error, warn};
 
-pub async fn trade_driven_aggregation() -> Result<()> {
+pub async fn handle_trade_aggregation() {
+    // 在 tokio::spawn 外 await 初始化
+    let streams = match init_trade_streams().await {
+        Ok(streams) => streams,
+        Err(e) => {
+            error!("Failed to initialize trade streams: {:?}", e);
+            return;
+        }
+    };
+    // 传入 spawn 中，确保 spawn 内的 future 是 Send 的
+    tokio::spawn(async move {
+        if let Err(e) = trade_driven_aggregation(streams).await {
+            error!("Trade aggregation failed with error: {:?}", e);
+        }
+    });
+}
+
+pub async fn init_trade_streams() -> std::result::Result<Streams<MarketStreamResult<MarketDataInstrument, PublicTrade>>, DataError> {
+    let streams = Streams::<PublicTrades>::builder()
+        .subscribe([(
+            BinanceFuturesUsd::default(),
+            "btc",
+            "usdt",
+            MarketDataInstrumentKind::Perpetual,
+            PublicTrades,
+        )])
+        .init()
+        .await?;
+
+    Ok(streams)
+}
+
+async fn trade_driven_aggregation(streams: Streams<MarketStreamResult<MarketDataInstrument, PublicTrade>>) -> Result<()> {
             // 初始化多周期聚合器 自定义聚合器
             let multi_aggregator =
                 MultiTimeFrameAggregator::new(vec![TimeFrame::M1]);//, TimeFrame::M5, TimeFrame::M15
@@ -31,16 +68,7 @@ pub async fn trade_driven_aggregation() -> Result<()> {
             // 初始化默认多周期聚合器
             // let multi_aggregator = MultiTimeFrameAggregator::new_with_defaults();
 
-            let streams = Streams::<PublicTrades>::builder()
-                .subscribe([(
-                    BinanceFuturesUsd::default(),
-                    "btc",
-                    "usdt",
-                    MarketDataInstrumentKind::Perpetual,
-                    PublicTrades,
-                )])
-                .init()
-                .await?;
+
             // Select and merge every exchange Stream using futures_util::stream::select_all
             // Note: use `Streams.select(ExchangeId)` to interact with individual exchange streams!
             let mut joined_stream = streams
