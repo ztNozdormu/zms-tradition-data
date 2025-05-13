@@ -146,11 +146,7 @@ pub async fn run_archive_task(tasks: &Vec<ArchiveTask>) -> Result<(), ArchiveErr
 
         info!(
             "Starting archive task: {} {} [{} ~ {}] direction={:?}",
-            task.exchange,
-            task.symbol,
-            current_time,
-            end_time,
-            task.direction
+            task.exchange, task.symbol, current_time, end_time, task.direction
         );
 
         // === 主归档循环 ===
@@ -174,15 +170,21 @@ pub async fn run_archive_task(tasks: &Vec<ArchiveTask>) -> Result<(), ArchiveErr
             // === 拉取数据（含重试） ===
             let klines = retry(ExponentialBackoff::default(), || async {
                 fetcher
-                    .klines(&task.symbol, tf_str, Some(1000), Some(start as u64), Some(end as u64))
+                    .klines(
+                        &task.symbol,
+                        tf_str,
+                        Some(1000),
+                        Some(start as u64),
+                        Some(end as u64),
+                    )
                     .await
                     .map_err(|e| {
                         warn!(?e, "Failed to fetch Klines, retrying...");
                         backoff::Error::transient(e)
                     })
             })
-                .await
-                .map_err(|e| ArchiveError::DataError(e.to_string()))?;
+            .await
+            .map_err(|e| ArchiveError::DataError(e.to_string()))?;
 
             if klines.is_empty() {
                 info!("No Kline data between {} ~ {}. Stopping.", start, end);
@@ -216,15 +218,12 @@ pub async fn run_archive_task(tasks: &Vec<ArchiveTask>) -> Result<(), ArchiveErr
 
         info!(
             "Archive task finished: {} {} [{:?}]",
-            task.exchange,
-            task.symbol,
-            task.direction
+            task.exchange, task.symbol, task.direction
         );
     }
 
     Ok(())
 }
-
 
 /// 安全推进时间：根据方向进行加/减，防止溢出
 fn advance_time(current: i64, delta: i64, direction: ArchiveDirection) -> Option<i64> {

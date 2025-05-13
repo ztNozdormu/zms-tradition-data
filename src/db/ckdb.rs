@@ -24,7 +24,7 @@ pub trait Database {
 
     async fn health_check(&self) -> Result<()>;
 
-    async fn insert<T>(&self, data: &T) -> Result<()>
+    async fn insert<T>(&self, data: &T, commit: bool) -> Result<()>
     where
         T: TableRecord + Row + Serialize;
     async fn insert_batch<T>(&self, data: &[T]) -> Result<()>
@@ -183,18 +183,31 @@ impl Database for ClickhouseDb {
     }
 
     /// insert_price uses a batched writer to avoid spamming writes
-    async fn insert<T>(&self, data: &T) -> Result<()>
+    async fn insert<T>(&self, data: &T, commit: bool) -> Result<()>
     where
         T: TableRecord + Row + Serialize,
     {
         let _res = match self.inserters.get(T::TABLE_NAME) {
             Some(inserter) => {
                 if let Some(typed_inserter) = T::to_enum_inserter(inserter) {
-                    typed_inserter
-                        .write()
-                        .await
+                    let mut inserter = typed_inserter.write().await;
+
+                    inserter
                         .write(data)
-                        .context("Insert failed")?;
+                        .context("Failed to write price to insert buffer")?;
+
+                    let pending = inserter.pending();
+
+                    if commit {
+                        let stats = inserter.commit().await?;
+                        debug!("Committed {} rows ({} bytes)", stats.rows, stats.bytes);
+                    } else {
+                        if pending.rows >= self.max_rows {
+                            let stats = inserter.commit().await?;
+                            debug!("Committed {} rows ({} bytes)", stats.rows, stats.bytes);
+                        }
+                    }
+
                     Ok(())
                 } else {
                     Err(anyhow::anyhow!("Type mismatch for {}", T::TABLE_NAME))
@@ -222,6 +235,8 @@ impl Database for ClickhouseDb {
                     for item in data {
                         lock.write(item).context("Batch insert failed")?;
                     }
+                    let stats = lock.commit().await?;
+                    debug!("Committed {} rows ({} bytes)", stats.rows, stats.bytes);
                     Ok(())
                 } else {
                     Err(anyhow::anyhow!("Type mismatch for {}", T::TABLE_NAME))

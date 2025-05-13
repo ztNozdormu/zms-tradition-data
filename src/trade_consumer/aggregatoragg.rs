@@ -166,7 +166,7 @@ impl CusAggregator for MultiTimeFrameAggregator {
                 );
 
                 // 确保插入操作完成
-                if let Err(e) = ck_db.insert(&market_kline).await {
+                if let Err(e) = ck_db.insert(&market_kline, true).await {
                     error!("Insert market_kline failed: {:?}", e);
                 } else {
                     let symbol_clone = symbol.to_string();
