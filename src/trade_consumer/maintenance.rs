@@ -1,3 +1,5 @@
+mod types;
+
 use crate::db::ckdb::Database;
 use crate::global::{get_ck_db, get_futures_market};
 use crate::model::TimeFrame;
@@ -18,91 +20,9 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{error, info, warn};
+use crate::trade_consumer::maintenance::types::{ArchiveDirection, ArchiveError, ArchiveTask, ArchiveWindow, KlineContext};
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Copy)]
-#[repr(i8)]
-pub enum ArchiveDirection {
-    Forward = 1,
-    Backward = 2,
-}
-
-impl ArchiveDirection {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            ArchiveDirection::Forward => "forward",
-            ArchiveDirection::Backward => "backward",
-        }
-    }
-    // 将 ArchiveDirection 转换为 i8
-    pub fn to_i8(&self) -> i8 {
-        *self as i8
-    }
-
-    // 将 i8 转换为 ArchiveDirection
-    pub fn from_i8(value: i8) -> Option<ArchiveDirection> {
-        match value {
-            1 => Some(ArchiveDirection::Forward),
-            2 => Some(ArchiveDirection::Backward),
-            _ => None, // 不合法的值
-        }
-    }
-}
-
-// 定义 ArchiveError 枚举，涵盖不同类型的错误
-#[derive(Debug)]
-pub enum ArchiveError {
-    NetworkError(String),
-    DatabaseError(String),
-    DataError(String),
-    TimeoutError(String),
-    OtherError(String),
-}
-
-// 实现 Display trait 来格式化错误消息
-impl fmt::Display for ArchiveError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            ArchiveError::NetworkError(msg) => write!(f, "Network Error: {}", msg),
-            ArchiveError::DatabaseError(msg) => write!(f, "Database Error: {}", msg),
-            ArchiveError::DataError(msg) => write!(f, "Data Error: {}", msg),
-            ArchiveError::TimeoutError(msg) => write!(f, "Timeout Error: {}", msg),
-            ArchiveError::OtherError(msg) => write!(f, "Other Error: {}", msg),
-        }
-    }
-}
-
-// 实现 From trait 来支持转换其他错误类型为 ArchiveError
-impl From<std::io::Error> for ArchiveError {
-    fn from(error: std::io::Error) -> Self {
-        ArchiveError::NetworkError(error.to_string())
-    }
-}
-
-impl From<tokio::time::error::Elapsed> for ArchiveError {
-    fn from(error: tokio::time::error::Elapsed) -> Self {
-        ArchiveError::TimeoutError(error.to_string())
-    }
-}
-
-// ========== Input Structures ==========
-
-#[derive(Debug, Clone)]
-pub struct ArchiveTask {
-    pub symbol: String,
-    pub exchange: String,
-    pub tf: Arc<TimeFrame>,
-    pub window: ArchiveWindow,
-    pub direction: ArchiveDirection,
-}
-
-#[derive(Debug, Clone)]
-pub struct ArchiveWindow {
-    pub start_time: Option<i64>,
-    pub end_time: Option<i64>,
-}
-
-// ========== Archive Progress Table Logic ==========
-
+// ========== Archive Progress Logic ==========
 pub struct ProgressTracker;
 
 impl ProgressTracker {
@@ -241,36 +161,6 @@ fn is_kline_continuous(klines: &[KlineSummary], tf_ms: i64) -> bool {
         .all(|w| w[1].open_time - w[0].open_time == tf_ms)
 }
 
-pub struct KlineContext<'a> {
-    pub summary: &'a KlineSummary,
-    pub exchange: String,
-    pub symbol: String,
-    pub period: String,
-}
-impl<'a> From<KlineContext<'a>> for MarketKline {
-    fn from(ctx: KlineContext<'a>) -> Self {
-        let s = ctx.summary;
-        MarketKline {
-            exchange: ctx.exchange,
-            symbol: ctx.symbol,
-            period: ctx.period,
-
-            open_time: s.open_time,
-            open: s.open,
-            high: s.high,
-            low: s.low,
-            close: s.close,
-            volume: s.volume,
-            close_time: s.close_time,
-
-            quote_asset_volume: s.quote_asset_volume,
-            number_of_trades: s.number_of_trades as u64,
-            taker_buy_base_asset_volume: s.taker_buy_base_asset_volume,
-            taker_buy_quote_asset_volume: s.taker_buy_quote_asset_volume,
-        }
-    }
-}
-
 pub struct BinanceFetcher;
 impl BinanceFetcher {
     pub fn new() -> Self {
@@ -349,7 +239,6 @@ pub async fn historical_maintenance_process(
     close_time: i64,
     time_frame: Arc<TimeFrame>,
 ) {
-    // let time_frame = Arc::new(tf);
     // 获取历史记录最大时间和最小时间
     let mima_time =
         match ProgressTracker::get_progress(&symbol, &exchange, &time_frame.to_str()).await {
@@ -397,7 +286,7 @@ pub async fn historical_maintenance_process(
     let tasks = vec![forward_task, back_task];
     // 执行前向归档任务，并加入重试机制
     if let Err(e) = run_archive_task_with_retry(&tasks).await {
-        error!(?e, "Failed to execute forward archive task");
+        error!(?e, "Failed to execute archive task");
         // 失败后可以考虑通知机制，如通过 Webhook 或邮件通知管理员
     } else {
         info!(
