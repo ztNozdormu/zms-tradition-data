@@ -1,9 +1,9 @@
-use std::fmt;
-use std::sync::Arc;
+use crate::model::TimeFrame;
+use crate::model::cex::kline::MarketKline;
 use barter::barter_xchange::exchange::binance::model::KlineSummary;
 use serde::{Deserialize, Serialize};
-use crate::model::cex::kline::MarketKline;
-use crate::model::{constant, TimeFrame};
+use std::fmt;
+use std::sync::Arc;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Copy)]
 #[repr(i8)]
@@ -77,7 +77,7 @@ pub struct ArchiveTask {
     pub symbol: String,
     pub exchange: String,
     pub tf: Arc<TimeFrame>,
-    pub window: ArchiveWindow,
+    pub window: Vec<ArchiveWindow>,
     pub direction: ArchiveDirection,
 }
 
@@ -87,20 +87,13 @@ pub struct ArchiveWindow {
     pub end_time: Option<i64>,
 }
 
-
-pub struct KlineContext<'a> {
-    pub summary: &'a KlineSummary,
-    pub exchange: String,
-    pub symbol: String,
-    pub period: String,
-}
-impl<'a> From<KlineContext<'a>> for MarketKline {
-    fn from(ctx: KlineContext<'a>) -> Self {
-        let s = ctx.summary;
+/// convert KlineSummary to MarketKline
+impl From<(&KlineSummary, &str, &str, &str)> for MarketKline {
+    fn from((s, exchange, symbol, period): (&KlineSummary, &str, &str, &str)) -> Self {
         MarketKline {
-            exchange: ctx.exchange,
-            symbol: ctx.symbol,
-            period: ctx.period,
+            exchange: exchange.to_string(),
+            symbol: symbol.to_string(),
+            period: period.to_string(),
 
             open_time: s.open_time,
             open: s.open,
@@ -141,4 +134,3 @@ impl TimeFrame {
         }
     }
 }
-

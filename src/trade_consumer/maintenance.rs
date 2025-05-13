@@ -4,23 +4,21 @@ use crate::db::ckdb::Database;
 use crate::global::{get_ck_db, get_futures_market};
 use crate::model::TimeFrame;
 use crate::model::cex::kline::{MarketKline, MinMaxCloseTime};
+use crate::trade_consumer::maintenance::types::{
+    ArchiveDirection, ArchiveError, ArchiveTask, ArchiveWindow,
+};
 use anyhow::Result;
 use backoff::{ExponentialBackoff, future::retry};
 /// This file contains the implementation of the maintenance module of the trade consumer.
 /// 对历史数据进行清理、归档、缓存等操作
 use barter::barter_xchange::exchange::binance::api::Binance;
-use barter::barter_xchange::exchange::binance::futures::market::FuturesMarket;
 use barter::barter_xchange::exchange::binance::model::{KlineSummaries, KlineSummary};
-use chrono::{DateTime, Utc};
-use clickhouse::Row;
+use chrono::Utc;
 use futures_util::TryFutureExt;
-use serde::{Deserialize, Serialize};
-use std::fmt;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{error, info, warn};
-use crate::trade_consumer::maintenance::types::{ArchiveDirection, ArchiveError, ArchiveTask, ArchiveWindow, KlineContext};
 
 // ========== Archive Progress Logic ==========
 pub struct ProgressTracker;
@@ -40,52 +38,56 @@ impl ProgressTracker {
         }
     }
 }
+
 // ========== Main Archive Logic ==========
 
-pub async fn run_archive_task(tasks: &Vec<ArchiveTask>) -> Result<(), ArchiveError> {
+pub async fn run_archive_task(
+    tasks: &[ArchiveTask],
+    symbol: &str,
+    exchange: &str,
+    time_frame: &str,
+) -> Result<(), ArchiveError> {
+    let fetcher = BinanceFetcher::new();
+    let writer = ClickhouseWriter::new();
+
+    let mut all_klines = Vec::new();
+
     for task in tasks {
         let tf_str = task.tf.to_str();
-        let tf_ms = task.tf.to_period(); // 每根K线的毫秒数
-
-        // === 起始时间逻辑 ===
-        let mut current_time: i64 = match task.window.start_time {
-            Some(start) => start,
-            None => {
-                warn!("Task has no start_time defined. Skipping.");
-                continue;
-            }
-        };
-
-        let end_time = task
-            .window
-            .end_time
-            .unwrap_or_else(|| Utc::now().timestamp_millis());
-
-        let fetcher = BinanceFetcher::new();
-        let writer = ClickhouseWriter::new();
+        let tf_ms = task.tf.to_period();
 
         info!(
-            "Starting archive task: {} {} [{} ~ {}] direction={:?}",
-            task.exchange, task.symbol, current_time, end_time, task.direction
+            "Starting archive task: {} {} direction={:?}, windows={}",
+            task.exchange,
+            task.symbol,
+            task.direction,
+            task.window.len()
         );
 
-        // === 主归档循环 ===
-        while match task.direction {
-            ArchiveDirection::Forward => current_time < end_time,
-            ArchiveDirection::Backward => current_time > end_time,
-        } {
-            // 计算一个批次的时间范围
-            let next_time = advance_time(current_time, tf_ms * 1000, task.direction);
-            let (start, end) = match next_time {
-                Some(t) => match task.direction {
-                    ArchiveDirection::Forward => (current_time, t),
-                    ArchiveDirection::Backward => (t, current_time),
-                },
+        for window in &task.window {
+            let start = match window.start_time {
+                Some(t) => t,
                 None => {
-                    warn!("Time computation overflowed. Ending archive.");
-                    break;
+                    warn!("Missing start_time in window. Skipping.");
+                    continue;
                 }
             };
+
+            let end = match window.end_time {
+                Some(t) => t,
+                None => {
+                    warn!("Missing end_time in window. Skipping.");
+                    continue;
+                }
+            };
+
+            if start >= end {
+                warn!(
+                    "Invalid window: start >= end [{} >= {}]. Skipping.",
+                    start, end
+                );
+                continue;
+            }
 
             // === 拉取数据（含重试） ===
             let klines = retry(ExponentialBackoff::default(), || async {
@@ -107,50 +109,49 @@ pub async fn run_archive_task(tasks: &Vec<ArchiveTask>) -> Result<(), ArchiveErr
             .map_err(|e| ArchiveError::DataError(e.to_string()))?;
 
             if klines.is_empty() {
-                info!("No Kline data between {} ~ {}. Stopping.", start, end);
-                break;
+                info!("No Kline data between {} ~ {}.", start, end);
+                continue;
             }
 
-            // 检查连续性
+            // === 连续性检查 ===
             if !is_kline_continuous(&klines, tf_ms) {
                 warn!("Kline gap detected in range {} ~ {}", start, end);
-                // 可选扩展：记录 gap，打标，补全等
             }
 
-            // === 写入 ClickHouse ===
-            writer
-                .write_batch(&klines, &task.exchange, &task.symbol, tf_str)
-                .await
-                .map_err(|e| ArchiveError::DatabaseError(e.to_string()))?;
-
-            // === 推进 current_time ===
-            let last_ts = klines
+            // 批量构造 MarketKline
+            let market_klines: Vec<MarketKline> = klines
                 .iter()
-                .map(|k| k.close_time as i64)
-                .max()
-                .unwrap_or(current_time);
+                .map(|k| (k, &task.exchange[..], &task.symbol[..], tf_str).into())
+                .collect();
 
-            current_time = advance_time(last_ts, tf_ms, task.direction).unwrap_or_else(|| {
-                warn!("Failed to advance current_time (overflow). Ending task.");
-                end_time
-            });
+            all_klines.extend(market_klines);
         }
-
-        info!(
-            "Archive task finished: {} {} [{:?}]",
-            task.exchange, task.symbol, task.direction
-        );
     }
+    if all_klines.is_empty() {
+        info!(
+            "No Klines collected for task {} {} [{:?}]",
+            exchange, symbol, time_frame
+        );
+        return Ok(()); // 提前返回，避免不必要操作
+    }
+    // 按时间排序以提升 ClickHouse 插入性能（可选）
+    all_klines.sort_by_key(|k| k.close_time);
+
+    // === 批量写入 ClickHouse ===
+    writer
+        .write_batch(&all_klines)
+        .await
+        .map_err(|e| ArchiveError::DatabaseError(e.to_string()))?;
+
+    info!(
+        "Archive task finished: {} {} [{:?}], total klines: {}",
+        exchange,
+        symbol,
+        time_frame,
+        all_klines.len()
+    );
 
     Ok(())
-}
-
-/// 安全推进时间：根据方向进行加/减，防止溢出
-fn advance_time(current: i64, delta: i64, direction: ArchiveDirection) -> Option<i64> {
-    match direction {
-        ArchiveDirection::Forward => current.checked_add(delta),
-        ArchiveDirection::Backward => current.checked_sub(delta),
-    }
 }
 
 // ========== Helper & Placeholder Stubs ==========
@@ -195,31 +196,10 @@ impl ClickhouseWriter {
         ClickhouseWriter
     }
 
-    pub async fn write_batch(
-        &self,
-        klines: &[KlineSummary],
-        exchange: &str,
-        symbol: &str,
-        period: &str,
-    ) -> Result<(), anyhow::Error> {
-        if klines.is_empty() {
+    pub async fn write_batch(&self, market_klines: &[MarketKline]) -> Result<(), anyhow::Error> {
+        if market_klines.is_empty() {
             return Ok(()); // 提前返回，避免不必要操作
         }
-
-        // 批量构造 MarketKline
-        let market_klines: Vec<MarketKline> = klines
-            .iter()
-            .map(|kline| {
-                KlineContext {
-                    summary: kline,
-                    exchange: exchange.into(),
-                    symbol: symbol.into(),
-                    period: period.into(),
-                }
-                .into()
-            })
-            .collect();
-
         // 批量写入 ClickHouse
         get_ck_db().insert_batch(&market_klines).await?;
 
@@ -258,34 +238,28 @@ pub async fn historical_maintenance_process(
                 }
             }
         };
+    // 默认只归档不超过五年的数据
+    if should_skip_archiving_due_to_old_data(
+        mima_time.min_close_time,
+        &symbol,
+        &exchange,
+        &time_frame,
+    ) {
+        return;
+    }
+    // 构建回溯/追溯任务集合
+    let tasks = build_archive_tasks(
+        &symbol,
+        &exchange,
+        time_frame.clone(),
+        &mima_time,
+        close_time,
+    );
 
-    // 根据mima_time 构建回溯和追溯任务
-    // 创建归档任务（前向）max_close_time 与 close_time 间隔大于2个周期及以上才构建追溯任务
-    //
-    let forward_task = ArchiveTask {
-        symbol: symbol.clone(),
-        exchange: exchange.clone(),
-        tf: time_frame.clone(),
-        window: ArchiveWindow {
-            start_time: Some(mima_time.max_close_time),
-            end_time: Some(close_time),
-        },
-        direction: ArchiveDirection::Forward, // 默认归档方向为前向
-    };
-
-    let back_task = ArchiveTask {
-        symbol: symbol.clone(),
-        exchange: exchange.clone(),
-        tf: time_frame.clone(),
-        window: ArchiveWindow {
-            start_time: Some(mima_time.max_close_time - 1000 * time_frame.to_period()), // 往历史记录回溯1000根K线得到回溯起始时间
-            end_time: Some(mima_time.max_close_time),
-        },
-        direction: ArchiveDirection::Backward, // 默认归档方向为前向
-    };
-    let tasks = vec![forward_task, back_task];
     // 执行前向归档任务，并加入重试机制
-    if let Err(e) = run_archive_task_with_retry(&tasks).await {
+    if let Err(e) =
+        run_archive_task_with_retry(&tasks, &symbol, &exchange, &time_frame.to_str()).await
+    {
         error!(?e, "Failed to execute archive task");
         // 失败后可以考虑通知机制，如通过 Webhook 或邮件通知管理员
     } else {
@@ -298,13 +272,18 @@ pub async fn historical_maintenance_process(
     }
 }
 
-async fn run_archive_task_with_retry(tasks: &Vec<ArchiveTask>) -> Result<(), ArchiveError> {
+async fn run_archive_task_with_retry(
+    tasks: &Vec<ArchiveTask>,
+    symbol: &str,
+    exchange: &str,
+    time_frame: &str,
+) -> Result<(), ArchiveError> {
     const MAX_RETRIES: u8 = 3;
     const RETRY_DELAY: Duration = Duration::from_secs(5);
 
     let mut retries = 0;
     loop {
-        match run_archive_task(tasks).await {
+        match run_archive_task(tasks, symbol, exchange, time_frame).await {
             Ok(_) => return Ok(()),
             Err(e) => {
                 if retries >= MAX_RETRIES {
@@ -315,6 +294,28 @@ async fn run_archive_task_with_retry(tasks: &Vec<ArchiveTask>) -> Result<(), Arc
                 sleep(RETRY_DELAY).await; // 等待 5 秒再重试
             }
         }
+    }
+}
+
+/// 如果历史数据早于当前时间五年前，认为数据已经足够完整，可跳过归档。
+pub fn should_skip_archiving_due_to_old_data(
+    min_close_time: i64,
+    symbol: &str,
+    exchange: &str,
+    tf: &TimeFrame,
+) -> bool {
+    let five_years_ago = Utc::now().timestamp_millis() - (5 * 365 * 24 * 60 * 60 * 1000);
+    if min_close_time <= five_years_ago {
+        tracing::info!(
+            "Min close time {:?} is earlier than 5 years ago, skipping archive for {} - {} - {}",
+            min_close_time,
+            symbol,
+            exchange,
+            tf.to_str()
+        );
+        true
+    } else {
+        false
     }
 }
 
@@ -333,4 +334,85 @@ fn get_default_start_time(close_time: i64, tf: &TimeFrame) -> Option<i64> {
     } else {
         None
     }
+}
+
+/// 构建回溯与追溯的归档任务集合
+pub fn build_archive_tasks(
+    symbol: &str,
+    exchange: &str,
+    time_frame: Arc<TimeFrame>,
+    mima_time: &MinMaxCloseTime,
+    close_time: i64,
+) -> Vec<ArchiveTask> {
+    let period_ms = time_frame.to_millis();
+    let backtrack_count = time_frame.backtrack_count() as i64;
+    let backtrack_ms = backtrack_count * period_ms;
+
+    let default_chunk_size_ms = 1000 * period_ms;
+    // 保证 chunk_size 不超过总回溯区间
+    let actual_chunk_size_ms = default_chunk_size_ms.min(backtrack_ms);
+
+    let mut tasks = vec![];
+
+    // 构造任务的内部函数
+    let try_build_task =
+        |direction: ArchiveDirection, start: i64, end: i64| -> Option<ArchiveTask> {
+            if start < end {
+                let windows = split_into_chunks(start, end, actual_chunk_size_ms)
+                    .into_iter()
+                    .map(|(s, e)| ArchiveWindow {
+                        start_time: Some(s),
+                        end_time: Some(e),
+                    })
+                    .collect::<Vec<_>>();
+
+                Some(ArchiveTask {
+                    symbol: symbol.to_string(),
+                    exchange: exchange.to_string(),
+                    tf: time_frame.clone(),
+                    window: windows,
+                    direction,
+                })
+            } else {
+                None
+            }
+        };
+
+    // === Backward 任务 ===
+    let backward_start = (mima_time.max_close_time - backtrack_ms).max(mima_time.min_close_time);
+    let backward_end = mima_time.max_close_time;
+    if let Some(task) = try_build_task(ArchiveDirection::Backward, backward_start, backward_end) {
+        tasks.push(task);
+    }
+
+    // === Forward 任务 ===
+    let forward_start = mima_time.max_close_time;
+    let forward_end = close_time;
+    if let Some(task) = try_build_task(ArchiveDirection::Forward, forward_start, forward_end) {
+        tasks.push(task);
+    }
+
+    tasks
+}
+
+/// 时间窗口生成
+fn create_windows(start_time: i64, end_time: i64, chunk_size: i64) -> Vec<ArchiveWindow> {
+    split_into_chunks(start_time, end_time, chunk_size)
+        .into_iter()
+        .map(|(s, e)| ArchiveWindow {
+            start_time: Some(s),
+            end_time: Some(e),
+        })
+        .collect()
+}
+
+pub fn split_into_chunks(start_time: i64, end_time: i64, chunk_size: i64) -> Vec<(i64, i64)> {
+    let mut result = vec![];
+    let mut current = start_time;
+    while current < end_time {
+        let next = (current + chunk_size).min(end_time);
+        result.push((current, next));
+        current = next;
+    }
+    result
 }
