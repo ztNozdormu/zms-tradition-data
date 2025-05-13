@@ -251,6 +251,7 @@ impl Database for ClickhouseDb {
 }
 
 impl ClickhouseDb {
+    /// 查询指定交易所、币对、周期的最早和最晚时间
     pub async fn get_mima_time(
         &self,
         exchange: &str,
@@ -285,6 +286,87 @@ impl ClickhouseDb {
         } else {
             Ok(None)
         }
+    }
+    /// 查询指定交易所、币对、周期、时间范围内的k线数据
+    /// 时间范围可选，默认查询最近1000条数据
+    pub async fn query_market_klines(
+        &self,
+        exchange: &str,
+        symbol: &str,
+        period: &str,
+        start_time: Option<u64>,
+        end_time: Option<u64>,
+        limit: Option<u64>,
+    ) -> Result<Vec<MarketKline>> {
+        let mut sql = String::from(
+            r#"
+        SELECT
+            exchange,
+            symbol,
+            period,
+            open_time,
+            open,
+            high,
+            low,
+            close,
+            volume,
+            close_time,
+            quote_asset_volume,
+            number_of_trades,
+            taker_buy_base_asset_volume,
+            taker_buy_quote_asset_volume,
+            updated_at
+        FROM market_klines
+        WHERE exchange = ? AND symbol = ? AND period = ?
+    "#,
+        );
+
+        // 构造查询
+        let mut query = self
+            .client
+            .query(&sql)
+            .bind(exchange)
+            .bind(symbol)
+            .bind(period);
+
+        // 附加时间过滤
+        if let (Some(start), Some(end)) = (start_time, end_time) {
+            sql.push_str(" AND close_time BETWEEN ? AND ?");
+            query = self
+                .client
+                .query(&sql)
+                .bind(exchange)
+                .bind(symbol)
+                .bind(period)
+                .bind(start)
+                .bind(end);
+        }
+
+        // ORDER BY + LIMIT
+        sql.push_str(" ORDER BY close_time DESC LIMIT ?");
+        query = self
+            .client
+            .query(&sql)
+            .bind(exchange)
+            .bind(symbol)
+            .bind(period);
+
+        if let (Some(start), Some(end)) = (start_time, end_time) {
+            query = query.bind(start).bind(end);
+        }
+
+        query = query.bind(limit.unwrap_or(1000));
+
+        // 执行查询
+        query
+            .fetch_all::<MarketKline>()
+            .await
+            .with_context(|| {
+                format!(
+                    "Failed to query market_klines: exchange={}, symbol={}, period={}, start={:?}, end={:?}",
+                    exchange, symbol, period, start_time, end_time
+                )
+            })
     }
 }
 

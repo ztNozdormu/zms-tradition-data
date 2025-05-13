@@ -11,7 +11,6 @@ use anyhow::Result;
 use backoff::{ExponentialBackoff, future::retry};
 /// This file contains the implementation of the maintenance module of the trade consumer.
 /// 对历史数据进行清理、归档、缓存等操作
-use barter::barter_xchange::exchange::binance::api::Binance;
 use barter::barter_xchange::exchange::binance::model::{KlineSummaries, KlineSummary};
 use chrono::Utc;
 use futures_util::TryFutureExt;

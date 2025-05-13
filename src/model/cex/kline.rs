@@ -1,7 +1,7 @@
 use clickhouse::Row;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Row)]
+#[derive(Debug, Clone, Serialize, Deserialize, Row)]
 pub struct MarketKline {
     pub exchange: String,
     pub symbol: String,
