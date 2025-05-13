@@ -9,7 +9,7 @@ use backoff::{ExponentialBackoff, future::retry};
 use barter::barter_xchange::exchange::binance::api::Binance;
 use barter::barter_xchange::exchange::binance::futures::market::FuturesMarket;
 use barter::barter_xchange::exchange::binance::model::{KlineSummaries, KlineSummary};
-use chrono::{DateTime, TimeZone, Utc};
+use chrono::{DateTime, Utc};
 use clickhouse::Row;
 use futures_util::TryFutureExt;
 use serde::{Deserialize, Serialize};
@@ -123,92 +123,108 @@ impl ProgressTracker {
 // ========== Main Archive Logic ==========
 
 pub async fn run_archive_task(tasks: &Vec<ArchiveTask>) -> Result<(), ArchiveError> {
-    todo!();
-    // let tf_str = task.tf.to_str();
-    // let tf_ms = task.tf.to_period(); // 每根K线的毫秒数
-    //
-    // // === 起始时间逻辑 ===
-    // let mut current_time: i64 = match task.window.start_time {
-    //     Some(start) => start,
-    //     None => _,
-    // };
-    //
-    // let end_time = task
-    //     .window
-    //     .end_time
-    //     .unwrap_or_else(|| Utc::now().timestamp_millis());
-    //
-    // let fetcher = BinanceFetcher::new();
-    // let writer = ClickhouseWriter::new();
-    //
-    // // === 主归档循环 ===
-    // while match task.direction {
-    //     ArchiveDirection::Forward => current_time < end_time,
-    //     ArchiveDirection::Backward => current_time > end_time,
-    // } {
-    //     // 计算一个批次的时间范围
-    //     let next_time = advance_time(current_time, tf_ms * 1000, task.direction);
-    //     let (start, end) = match next_time {
-    //         Some(t) => match task.direction {
-    //             ArchiveDirection::Forward => (current_time, t),
-    //             ArchiveDirection::Backward => (t, current_time),
-    //         },
-    //         None => {
-    //             warn!("Time computation overflowed. Ending archive.");
-    //             break;
-    //         }
-    //     };
-    //
-    //     // === 拉取数据（含重试） ===
-    //     let klines = retry(ExponentialBackoff::default(), || async {
-    //         fetcher
-    //             .klines(
-    //                 &task.symbol,
-    //                 tf_str,
-    //                 Some(1000),
-    //                 Some(start as u64),
-    //                 Some(end as u64),
-    //             )
-    //             .await
-    //             .map_err(|e| {
-    //                 warn!(?e, "Failed to fetch Klines, retrying...");
-    //                 backoff::Error::transient(e)
-    //             })
-    //     })
-    //     .await
-    //     .map_err(|e| ArchiveError::DataError(e.to_string()))?;
-    //
-    //     if klines.is_empty() {
-    //         info!("No Kline data between {start} ~ {end}, ending task.");
-    //         break;
-    //     }
-    //
-    //     if !is_kline_continuous(&klines, tf_ms) {
-    //         warn!("Kline gap detected between {start} ~ {end}");
-    //         // 可扩展：记录、补全、跳过或失败
-    //     }
-    //
-    //     writer
-    //         .write_batch(&klines, &task.exchange, &task.symbol, tf_str)
-    //         .await
-    //         .map_err(|e| ArchiveError::DatabaseError(e.to_string()))?;
-    //
-    //     // === 更新归档进度 ===
-    //     let last_ts = klines
-    //         .iter()
-    //         .map(|k| k.close_time as i64)
-    //         .max()
-    //         .unwrap_or(current_time);
-    //
-    //     // === 推进到下一段时间 ===
-    //     current_time = advance_time(last_ts, tf_ms, task.direction).unwrap_or_else(|| {
-    //         warn!("Failed to advance current_time (overflow). Ending task.");
-    //         end_time
-    //     });
-    // }
+    for task in tasks {
+        let tf_str = task.tf.to_str();
+        let tf_ms = task.tf.to_period(); // 每根K线的毫秒数
+
+        // === 起始时间逻辑 ===
+        let mut current_time: i64 = match task.window.start_time {
+            Some(start) => start,
+            None => {
+                warn!("Task has no start_time defined. Skipping.");
+                continue;
+            }
+        };
+
+        let end_time = task
+            .window
+            .end_time
+            .unwrap_or_else(|| Utc::now().timestamp_millis());
+
+        let fetcher = BinanceFetcher::new();
+        let writer = ClickhouseWriter::new();
+
+        info!(
+            "Starting archive task: {} {} [{} ~ {}] direction={:?}",
+            task.exchange,
+            task.symbol,
+            current_time,
+            end_time,
+            task.direction
+        );
+
+        // === 主归档循环 ===
+        while match task.direction {
+            ArchiveDirection::Forward => current_time < end_time,
+            ArchiveDirection::Backward => current_time > end_time,
+        } {
+            // 计算一个批次的时间范围
+            let next_time = advance_time(current_time, tf_ms * 1000, task.direction);
+            let (start, end) = match next_time {
+                Some(t) => match task.direction {
+                    ArchiveDirection::Forward => (current_time, t),
+                    ArchiveDirection::Backward => (t, current_time),
+                },
+                None => {
+                    warn!("Time computation overflowed. Ending archive.");
+                    break;
+                }
+            };
+
+            // === 拉取数据（含重试） ===
+            let klines = retry(ExponentialBackoff::default(), || async {
+                fetcher
+                    .klines(&task.symbol, tf_str, Some(1000), Some(start as u64), Some(end as u64))
+                    .await
+                    .map_err(|e| {
+                        warn!(?e, "Failed to fetch Klines, retrying...");
+                        backoff::Error::transient(e)
+                    })
+            })
+                .await
+                .map_err(|e| ArchiveError::DataError(e.to_string()))?;
+
+            if klines.is_empty() {
+                info!("No Kline data between {} ~ {}. Stopping.", start, end);
+                break;
+            }
+
+            // 检查连续性
+            if !is_kline_continuous(&klines, tf_ms) {
+                warn!("Kline gap detected in range {} ~ {}", start, end);
+                // 可选扩展：记录 gap，打标，补全等
+            }
+
+            // === 写入 ClickHouse ===
+            writer
+                .write_batch(&klines, &task.exchange, &task.symbol, tf_str)
+                .await
+                .map_err(|e| ArchiveError::DatabaseError(e.to_string()))?;
+
+            // === 推进 current_time ===
+            let last_ts = klines
+                .iter()
+                .map(|k| k.close_time as i64)
+                .max()
+                .unwrap_or(current_time);
+
+            current_time = advance_time(last_ts, tf_ms, task.direction).unwrap_or_else(|| {
+                warn!("Failed to advance current_time (overflow). Ending task.");
+                end_time
+            });
+        }
+
+        info!(
+            "Archive task finished: {} {} [{:?}]",
+            task.exchange,
+            task.symbol,
+            task.direction
+        );
+    }
 
     Ok(())
 }
+
 
 /// 安全推进时间：根据方向进行加/减，防止溢出
 fn advance_time(current: i64, delta: i64, direction: ArchiveDirection) -> Option<i64> {
@@ -328,75 +344,6 @@ impl ClickhouseWriter {
 /// - `symbol`: 交易对名称
 /// - `exchange`: 交易所名称
 /// - `tf`: 时间周期
-///
-// pub async fn historical_maintenance_process(symbol: String, exchange: String, tf: TimeFrame) {
-//
-//     let tf_clone = tf.clone();
-//     let tf_str = tf_clone.to_str();
-//
-//     let progress = match ProgressTracker::get_progress(&symbol, &exchange, tf_str, "forward").await {
-//         Some(progress) => progress,
-//         None => {
-//             info!("No existing progress found, starting fresh.");
-//             return;
-//         }
-//     };
-//
-//     // 如果当前已经完成归档的任务，可以跳过
-//     if progress.completed == 1 {
-//         info!("Archive task already completed for {symbol} on {exchange} for {tf_str}. Skipping.");
-//         return;
-//     }
-//
-//     // 定义任务时间窗口
-//     let start_time = progress.last_archived_time as i64;
-//     let end_time = Utc::now().timestamp_millis();
-//
-//     let tf_back = tf.clone();
-//     // 创建归档任务（前向）
-//     let task = ArchiveTask {
-//         symbol: symbol.clone(),
-//         exchange: exchange.clone(),
-//         tf,
-//         window: ArchiveWindow {
-//             start_time: Some(start_time),
-//             end_time: Some(end_time),
-//         },
-//         direction: ArchiveDirection::Forward, // 默认归档方向为前向
-//     };
-//
-//     // 执行前向归档任务
-//     if let Err(e) = run_archive_task(task.clone()).await {
-//         error!(?e, "Failed to execute forward archive task");
-//     } else {
-//         info!("Forward archive task completed for {} - {} - {}", symbol, exchange, tf_str);
-//     }
-//
-//     // 如果有后向归档任务需要执行
-//
-//     if let Some(last_archived_time) = ProgressTracker::get_progress(&symbol, &exchange, tf_str, "backward").await {
-//         let backward_task = ArchiveTask {
-//             symbol: symbol.clone(),
-//             exchange: exchange.clone(),
-//             tf: tf_back, // 保持原始 TimeFrame
-//             window: ArchiveWindow {
-//                 start_time: Some(last_archived_time.last_archived_time as i64),
-//                 end_time: Some(start_time), // 向后归档
-//             },
-//             direction: ArchiveDirection::Backward,
-//         };
-//
-//         // 执行向后归档任务
-//         if let Err(e) = run_archive_task(backward_task).await {
-//             error!(?e, "Failed to execute backward archive task");
-//         } else {
-//             info!("Backward archive task completed for {} - {} - {}", symbol, exchange, tf_str);
-//         }
-//     }
-//
-//     // 注意：此处不再进行归档进度更新，run_archive_task 已经处理了进度的更新
-// }
-
 pub async fn historical_maintenance_process(
     symbol: String,
     exchange: String,

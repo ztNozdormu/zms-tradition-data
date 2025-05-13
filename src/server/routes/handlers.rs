@@ -8,10 +8,6 @@ pub fn ping() -> &'static str {
     "ping pong!"
 }
 
-pub fn logs() -> &'static str {
-    "TODO last logs info"
-}
-
 pub fn version() -> &'static str {
     "mini bot version 0.0.1"
 }
