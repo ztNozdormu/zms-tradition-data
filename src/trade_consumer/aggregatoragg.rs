@@ -179,7 +179,7 @@ impl CusAggregator for MultiTimeFrameAggregator {
                             symbol_clone,
                             exchange_clone,
                             close_time,
-                            tf_clone,
+                            Arc::new(tf_clone),
                         )
                         .await;
                     });

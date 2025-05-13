@@ -1,4 +1,4 @@
-use crate::model::cex::kline::{ArchiveDirection, ArchiveProgress, MarketKline};
+use crate::model::cex::kline::{MarketKline, MinMaxCloseTime};
 use crate::model::dex::price::PriceUpdate;
 use anyhow::{Context, Result};
 use clickhouse::inserter::Inserter;
@@ -37,7 +37,6 @@ pub trait Database {
 pub enum AnyInserter {
     PriceUpdate(Arc<RwLock<Inserter<PriceUpdate>>>),
     MarketKline(Arc<RwLock<Inserter<MarketKline>>>),
-    ArchiveProgress(Arc<RwLock<Inserter<ArchiveProgress>>>),
     // 其他表类型可继续添加
 }
 
@@ -135,28 +134,11 @@ impl Database for ClickhouseDb {
                 number_of_trades UInt64,
                 taker_buy_base_asset_volume Float64,
                 taker_buy_quote_asset_volume Float64,
-                PRIMARY KEY (exchange, symbol, period, close_time, open_time)
-            ) ENGINE = MergeTree()
-            ORDER BY (exchange, symbol, period, close_time, open_time)
-        "#,
-            ),
-            // archive_progress 表更新
-            (
-                "archive_progress",
-                r#"
-            CREATE TABLE IF NOT EXISTS archive_progress (
-                exchange String,
-                symbol String,
-                period String,
-                direction Enum8('forward' = 1, 'backward' = 2),
-                last_archived_time UInt64,
-                completed UInt8,
                 updated_at DateTime DEFAULT now(),
-                PRIMARY KEY (exchange, symbol, period, direction)
+                PRIMARY KEY (exchange, symbol, period, close_time)
             ) ENGINE = ReplacingMergeTree(updated_at)
-            ORDER BY (exchange, symbol, period, direction)
-            TTL updated_at + INTERVAL 30 DAY DELETE
-            "#,
+            ORDER BY (exchange, symbol, period, close_time)
+        "#,
             ),
         ];
 
@@ -176,7 +158,6 @@ impl Database for ClickhouseDb {
 
         let price_ins = Arc::new(RwLock::new(self.create_inserter::<PriceUpdate>()?));
         let kline_ins = Arc::new(RwLock::new(self.create_inserter::<MarketKline>()?));
-        let archive_ins = Arc::new(RwLock::new(self.create_inserter::<ArchiveProgress>()?));
 
         self.inserters.insert(
             "price_updates".to_string(),
@@ -185,10 +166,6 @@ impl Database for ClickhouseDb {
         self.inserters.insert(
             "market_klines".to_string(),
             AnyInserter::MarketKline(kline_ins),
-        );
-        self.inserters.insert(
-            "archive_progress".to_string(),
-            AnyInserter::ArchiveProgress(archive_ins),
         );
 
         self.is_initialized = true;
@@ -259,64 +236,40 @@ impl Database for ClickhouseDb {
 }
 
 impl ClickhouseDb {
-    pub async fn get_archive_progress(
+    pub async fn get_mima_time(
         &self,
         exchange: &str,
         symbol: &str,
         period: &str,
-        direction: ArchiveDirection,
-    ) -> Result<Option<ArchiveProgress>> {
+    ) -> Result<Option<MinMaxCloseTime>> {
         let query = r#"
-            SELECT *
-            FROM archive_progress
-            WHERE exchange = ? AND symbol = ? AND period = ? AND direction = ?
-            ORDER BY updated_at DESC
-            LIMIT 1
+            SELECT
+                min(close_time) AS min_close_time,
+                max(close_time) AS max_close_time
+            FROM market_klines
+            WHERE exchange = ? AND symbol = ? AND period = ?
         "#;
 
-        let row = self
+        let mut rows = self
             .client
             .query(query)
             .bind(exchange)
             .bind(symbol)
             .bind(period)
-            .bind(direction as i8)
-            .fetch_all::<ArchiveProgress>()
+            .fetch_all::<MinMaxCloseTime>()
             .await
-            .context("Failed to fetch archive progress")?;
+            .context("Failed to fetch min/max close_time")?;
 
-        Ok(row.into_iter().next())
-    }
-
-    /// 查询过去 n 天的归档记录历史版本（按时间排序）
-    pub async fn get_archive_progress_history(
-        &self,
-        exchange: &str,
-        symbol: &str,
-        period: &str,
-        direction: ArchiveDirection,
-        since: chrono::NaiveDateTime,
-    ) -> Result<Vec<ArchiveProgress>> {
-        let query = r#"
-        SELECT *
-        FROM archive_progress
-        WHERE exchange = ? AND symbol = ? AND period = ? AND direction = ?
-        AND updated_at >= ?
-        ORDER BY updated_at DESC
-    "#;
-
-        let rows = self
-            .client
-            .query(query)
-            .bind(exchange)
-            .bind(symbol)
-            .bind(period)
-            .bind(direction as i8)
-            .bind(since)
-            .fetch_all::<ArchiveProgress>()
-            .await?;
-
-        Ok(rows)
+        // 可能返回一行，但字段为空（表中无匹配记录），可根据是否为0进行判断
+        if let Some(result) = rows.pop() {
+            if result.min_close_time == 0 && result.max_close_time == 0 {
+                Ok(None)
+            } else {
+                Ok(Some(result))
+            }
+        } else {
+            Ok(None)
+        }
     }
 }
 
