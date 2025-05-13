@@ -9,36 +9,7 @@ use std::collections::HashMap;
 use std::{sync::Arc, time::Duration};
 use tokio::sync::RwLock;
 use tracing::{debug, info};
-
-pub trait TableRecord: Row + Sized + Send + Sync + Clone + 'static {
-    const TABLE_NAME: &'static str;
-    fn to_enum_inserter<'a>(inserter: &'a AnyInserter) -> Option<&'a RwLock<Inserter<Self>>>;
-}
-
-#[async_trait::async_trait]
-pub trait Database {
-    fn new(database_url: &str, password: &str, user: &str, database: &str) -> Self
-    where
-        Self: Sized;
-    async fn initialize(&mut self) -> Result<()>;
-
-    async fn health_check(&self) -> Result<()>;
-
-    async fn insert<T>(&self, data: &T, commit: bool) -> Result<()>
-    where
-        T: TableRecord + Row + Serialize;
-    async fn insert_batch<T>(&self, data: &[T]) -> Result<()>
-    where
-        T: TableRecord + Row + Serialize;
-
-    async fn create_table_if_not_exists(&self, table_name: &str, create_query: &str) -> Result<()>;
-}
-
-pub enum AnyInserter {
-    PriceUpdate(Arc<RwLock<Inserter<PriceUpdate>>>),
-    MarketKline(Arc<RwLock<Inserter<MarketKline>>>),
-    // 其他表类型可继续添加
-}
+use crate::db::types::{AnyInserter, Database, PageParams, PageResult, Paginatable, RowCount, SortOrder, TableRecord};
 
 pub struct ClickhouseDb {
     client: Client,
@@ -76,16 +47,6 @@ impl Database for ClickhouseDb {
             is_initialized: false,
             max_rows: 1000,
         }
-    }
-
-    async fn health_check(&self) -> Result<()> {
-        debug!("clickhouse healthz");
-        self.client
-            .query("SELECT 1")
-            .execute()
-            .await
-            .context("Failed to execute health check query")?;
-        Ok(())
     }
 
     async fn initialize(&mut self) -> Result<()> {
@@ -173,12 +134,13 @@ impl Database for ClickhouseDb {
         Ok(())
     }
 
-    async fn create_table_if_not_exists(&self, table_name: &str, create_query: &str) -> Result<()> {
+    async fn health_check(&self) -> Result<()> {
+        debug!("clickhouse healthz");
         self.client
-            .query(create_query)
+            .query("SELECT 1")
             .execute()
             .await
-            .context(format!("Failed to create table: {}", table_name))?;
+            .context("Failed to execute health check query")?;
         Ok(())
     }
 
@@ -246,6 +208,15 @@ impl Database for ClickhouseDb {
         }
         .expect("inserter error");
 
+        Ok(())
+    }
+
+    async fn create_table_if_not_exists(&self, table_name: &str, create_query: &str) -> Result<()> {
+        self.client
+            .query(create_query)
+            .execute()
+            .await
+            .context(format!("Failed to create table: {}", table_name))?;
         Ok(())
     }
 }
@@ -367,6 +338,77 @@ impl ClickhouseDb {
                     exchange, symbol, period, start_time, end_time
                 )
             })
+    }
+
+}
+
+#[async_trait::async_trait]
+impl Paginatable<MarketKline> for ClickhouseDb {
+    async fn get_paginated(
+        &self,
+        exchange: &str,
+        symbol: &str,
+        period: &str,
+        params: &PageParams,
+    ) -> anyhow::Result<PageResult<MarketKline>> {
+        let mut query = String::from(
+            r#"
+            SELECT * FROM market_klines
+            WHERE exchange = ? AND symbol = ? AND period = ?
+        "#,
+        );
+
+        if let Some(start) = params.start_time {
+            query.push_str(" AND close_time >= ?");
+        }
+        if let Some(end) = params.end_time {
+            query.push_str(" AND close_time <= ?");
+        }
+
+        let order = match params.sort_order {
+            SortOrder::Asc => "ASC",
+            SortOrder::Desc => "DESC",
+        };
+        query.push_str(&format!(" ORDER BY close_time {} LIMIT ? OFFSET ?", order));
+
+        let mut q = self.client.query(&query);
+        q = q.bind(exchange).bind(symbol).bind(period);
+
+        if let Some(start) = params.start_time {
+            q = q.bind(start);
+        }
+        if let Some(end) = params.end_time {
+            q = q.bind(end);
+        }
+
+        q = q.bind(params.limit as u64).bind(params.offset as u64);
+
+        let items = q.fetch_all::<MarketKline>().await?;
+
+        // 获取总条数
+        let mut count_q = self.client.query(
+            r#"
+            SELECT count(*) AS count FROM market_klines
+            WHERE exchange = ? AND symbol = ? AND period = ?
+        "#,
+        );
+        count_q = count_q.bind(exchange).bind(symbol).bind(period);
+
+        if let Some(start) = params.start_time {
+            count_q = count_q.bind(start);
+        }
+        if let Some(end) = params.end_time {
+            count_q = count_q.bind(end);
+        }
+
+        let count: usize = count_q
+            .fetch_one::<RowCount>()
+            .await
+            .map(|r| r.count as usize)
+            .unwrap_or(0);
+
+
+        Ok(PageResult { total: count, items })
     }
 }
 

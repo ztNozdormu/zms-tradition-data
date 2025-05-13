@@ -5,7 +5,7 @@ use std::env;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::broadcast;
-use tracing::{error, info};
+use tracing::info;
 use warp::Filter;
 
 mod response;
