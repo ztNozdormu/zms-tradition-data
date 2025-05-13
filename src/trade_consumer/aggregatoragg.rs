@@ -1,4 +1,4 @@
-use crate::db::ckdb::Database;
+use crate::db::types::ClickHouseDatabase;
 use crate::global::get_ck_db;
 use crate::model::cex::kline::MarketKline;
 use crate::model::{DEFAULT_TIMEFRAMES, TimeFrame};

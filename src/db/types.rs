@@ -1,10 +1,10 @@
-use std::sync::Arc;
-use clickhouse::inserter::Inserter;
-use clickhouse::Row;
-use serde::{Deserialize, Serialize};
-use tokio::sync::RwLock;
 use crate::model::cex::kline::MarketKline;
 use crate::model::dex::price::PriceUpdate;
+use clickhouse::Row;
+use clickhouse::inserter::Inserter;
+use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
 pub trait TableRecord: Row + Sized + Send + Sync + Clone + 'static {
     const TABLE_NAME: &'static str;
@@ -12,7 +12,7 @@ pub trait TableRecord: Row + Sized + Send + Sync + Clone + 'static {
 }
 
 #[async_trait::async_trait]
-pub trait Database {
+pub trait ClickHouseDatabase {
     fn new(database_url: &str, password: &str, user: &str, database: &str) -> Self
     where
         Self: Sized;
@@ -27,7 +27,11 @@ pub trait Database {
     where
         T: TableRecord + Row + Serialize;
 
-    async fn create_table_if_not_exists(&self, table_name: &str, create_query: &str) -> anyhow::Result<()>;
+    async fn create_table_if_not_exists(
+        &self,
+        table_name: &str,
+        create_query: &str,
+    ) -> anyhow::Result<()>;
 }
 
 pub enum AnyInserter {
@@ -35,7 +39,6 @@ pub enum AnyInserter {
     MarketKline(Arc<RwLock<Inserter<MarketKline>>>),
     // 其他表类型可继续添加
 }
-
 
 #[async_trait::async_trait]
 pub trait Paginatable<T> {
@@ -47,7 +50,6 @@ pub trait Paginatable<T> {
         params: &PageParams,
     ) -> anyhow::Result<PageResult<T>>;
 }
-
 
 #[derive(Debug, Clone)]
 pub enum SortOrder {

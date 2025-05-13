@@ -1,3 +1,7 @@
+use crate::db::types::{
+    AnyInserter, ClickHouseDatabase, PageParams, PageResult, Paginatable, RowCount, SortOrder,
+    TableRecord,
+};
 use crate::model::cex::kline::{MarketKline, MinMaxCloseTime};
 use crate::model::dex::price::PriceUpdate;
 use anyhow::{Context, Result};
@@ -9,7 +13,6 @@ use std::collections::HashMap;
 use std::{sync::Arc, time::Duration};
 use tokio::sync::RwLock;
 use tracing::{debug, info};
-use crate::db::types::{AnyInserter, Database, PageParams, PageResult, Paginatable, RowCount, SortOrder, TableRecord};
 
 pub struct ClickhouseDb {
     client: Client,
@@ -18,21 +21,8 @@ pub struct ClickhouseDb {
     max_rows: u64,
 }
 
-impl ClickhouseDb {
-    fn create_inserter<T: TableRecord>(&self) -> Result<Inserter<T>> {
-        Ok(self
-            .client
-            .inserter::<T>(T::TABLE_NAME)
-            .context(format!("failed to prepare insert for {}", T::TABLE_NAME))?
-            .with_timeouts(Some(Duration::from_secs(5)), Some(Duration::from_secs(20)))
-            .with_max_rows(self.max_rows)
-            .with_max_bytes(1_000_000)
-            .with_period(Some(Duration::from_secs(15))))
-    }
-}
-
 #[async_trait::async_trait]
-impl Database for ClickhouseDb {
+impl ClickHouseDatabase for ClickhouseDb {
     fn new(database_url: &str, password: &str, user: &str, database: &str) -> Self {
         let client = Client::default()
             .with_url(database_url)
@@ -222,6 +212,17 @@ impl Database for ClickhouseDb {
 }
 
 impl ClickhouseDb {
+    fn create_inserter<T: TableRecord>(&self) -> Result<Inserter<T>> {
+        Ok(self
+            .client
+            .inserter::<T>(T::TABLE_NAME)
+            .context(format!("failed to prepare insert for {}", T::TABLE_NAME))?
+            .with_timeouts(Some(Duration::from_secs(5)), Some(Duration::from_secs(20)))
+            .with_max_rows(self.max_rows)
+            .with_max_bytes(1_000_000)
+            .with_period(Some(Duration::from_secs(15))))
+    }
+
     /// 查询指定交易所、币对、周期的最早和最晚时间
     pub async fn get_mima_time(
         &self,
@@ -339,7 +340,6 @@ impl ClickhouseDb {
                 )
             })
     }
-
 }
 
 #[async_trait::async_trait]
@@ -407,8 +407,10 @@ impl Paginatable<MarketKline> for ClickhouseDb {
             .map(|r| r.count as usize)
             .unwrap_or(0);
 
-
-        Ok(PageResult { total: count, items })
+        Ok(PageResult {
+            total: count,
+            items,
+        })
     }
 }
 
