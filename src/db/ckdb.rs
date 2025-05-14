@@ -91,14 +91,6 @@ impl ClickHouseDatabase for ClickhouseDb {
             ORDER BY (exchange, symbol, period, close_time)
         "#,
             ),
-            (
-                "buffer_market_klines",
-                r#"
-        CREATE TABLE IF NOT EXISTS buffer_market_klines
-        AS market_klines
-        ENGINE = Buffer('default', 'market_klines', 16, 10, 60, 10000, 100000, 10, 100)
-        "#,
-            ),
         ];
 
         // Execute the creation queries concurrently
@@ -221,14 +213,10 @@ impl ClickHouseDatabase for ClickhouseDb {
 
 impl ClickhouseDb {
     fn create_inserter<T: TableRecord>(&self) -> Result<Inserter<T>> {
-        let table = if T::use_buffer() {
-            format!("buffer_{}", T::TABLE_NAME)
-        } else {
-            T::TABLE_NAME.to_string()
-        };
+
         Ok(self
             .client
-            .inserter::<T>(&table)
+            .inserter::<T>(T::TABLE_NAME)
             .context(format!("failed to prepare insert for {}", T::TABLE_NAME))?
             .with_timeouts(Some(Duration::from_secs(5)), Some(Duration::from_secs(20)))
             .with_max_rows(self.max_rows)
