@@ -27,7 +27,7 @@ impl ProgressTracker {
         match get_ck_db().get_mima_time(exchange, symbol, tf).await {
             Ok(Some(record)) => Some(MinMaxCloseTime {
                 min_close_time: record.min_close_time,
-                max_close_time: record.max_close_time
+                max_close_time: record.max_close_time,
             }),
             Ok(None) => None,
             Err(err) => {
