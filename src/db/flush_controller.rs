@@ -9,8 +9,6 @@ use std::time::{Duration, Instant};
 use tokio::sync::Mutex;
 use tracing::debug;
 
-const KLINE_BATCH_SIZE: usize = 1000;
-const MAX_CACHE_DURATION: Duration = Duration::from_secs(10);
 pub const SEGMENT_RECENT: &str = "recent";
 pub const SEGMENT_HISTORY: &str = "history";
 
