@@ -1,5 +1,5 @@
 use crate::db::types::ClickHouseDatabase;
-use crate::global::get_ck_db;
+use crate::global::{get_ck_db, get_flush_controller};
 use crate::model::cex::kline::MarketKline;
 use crate::model::{DEFAULT_TIMEFRAMES, TimeFrame};
 use crate::trade_consumer::maintenance::historical_maintenance_process;
@@ -13,6 +13,7 @@ use tracing::{error, info};
 use trade_aggregation::{
     Aggregator, CandleComponent, GenericAggregator, TimeRule, TimestampResolution, Trade,
 };
+use crate::db::flush_controller::{FlushController, SEGMENT_RECENT};
 
 /// 多周期K线聚合器实现
 #[async_trait]
@@ -166,7 +167,7 @@ impl CusAggregator for MultiTimeFrameAggregator {
                 );
 
                 // 确保插入操作完成
-                if let Err(e) = ck_db.insert(&market_kline, true).await {
+                if let Err(e) = get_flush_controller().push(exchange,symbol,tf.to_str(),SEGMENT_RECENT,&market_kline).await {
                     error!("Insert market_kline failed: {:?}", e);
                 } else {
                     let symbol_clone = symbol.to_string();

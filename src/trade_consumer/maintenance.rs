@@ -53,7 +53,7 @@ pub async fn run_archive_task(
 
     for task in tasks {
         let tf_str = task.tf.to_str();
-        let tf_ms = task.tf.to_period();
+        let tf_ms = task.tf.to_millis();
 
         info!(
             "Starting archive task: {} {} direction={:?}, windows={}",
@@ -158,7 +158,7 @@ pub async fn run_archive_task(
 fn is_kline_continuous(klines: &[KlineSummary], tf_ms: i64) -> bool {
     klines
         .windows(2)
-        .all(|w| w[1].open_time - w[0].open_time == tf_ms)
+        .all(|w| w[1].close_time - w[0].close_time == tf_ms)
 }
 
 pub struct BinanceFetcher;
@@ -234,6 +234,7 @@ pub async fn historical_maintenance_process(
                 }
             }
         };
+    // info!("is max_close is {} min close is {}",&mima_time.max_close_time,&mima_time.min_close_time);
     // 默认只归档不超过五年的数据
     if should_skip_archiving_due_to_old_data(
         mima_time.min_close_time,
@@ -318,10 +319,10 @@ pub fn should_skip_archiving_due_to_old_data(
 /// 获取默认起始时间（如果有配置或其他数据源）
 fn get_default_start_time(close_time: i64, tf: &TimeFrame) -> Option<i64> {
     // 获取时间周期的毫秒数
-    let tf_ms = tf.to_period(); // 假设 `to_period()` 返回该周期的毫秒数
+    let tf_ms = tf.to_millis(); // 返回该周期的毫秒数
 
     // 计算一个周期之前的时间点，排除掉已计算的最新K线
-    let start_time = close_time - tf_ms;
+    let start_time = close_time;
 
     // 确保返回的时间不>于当前时间，避免归档时间超出范围
     let now = Utc::now().timestamp_millis();
@@ -350,23 +351,15 @@ pub fn build_archive_tasks(
 
     let mut tasks = vec![];
 
-    // 构造任务的内部函数
+    // 构造任务的闭包函数
     let try_build_task =
         |direction: ArchiveDirection, start: i64, end: i64| -> Option<ArchiveTask> {
             if start < end {
-                let windows = split_into_chunks(start, end, actual_chunk_size_ms)
-                    .into_iter()
-                    .map(|(s, e)| ArchiveWindow {
-                        start_time: Some(s),
-                        end_time: Some(e),
-                    })
-                    .collect::<Vec<_>>();
-
                 Some(ArchiveTask {
                     symbol: symbol.to_string(),
                     exchange: exchange.to_string(),
                     tf: time_frame.clone(),
-                    window: windows,
+                    window: create_windows(start, end, actual_chunk_size_ms),
                     direction,
                 })
             } else {
@@ -375,17 +368,19 @@ pub fn build_archive_tasks(
         };
 
     // === Backward 任务 ===
-    let backward_start = (mima_time.max_close_time - backtrack_ms).max(mima_time.min_close_time);
-    let backward_end = mima_time.max_close_time;
+    let backward_start = mima_time.min_close_time - backtrack_ms; // 得到追溯开始时间
+    let backward_end = mima_time.min_close_time;
     if let Some(task) = try_build_task(ArchiveDirection::Backward, backward_start, backward_end) {
         tasks.push(task);
     }
 
     // === Forward 任务 ===
-    let forward_start = mima_time.max_close_time;
-    let forward_end = close_time;
-    if let Some(task) = try_build_task(ArchiveDirection::Forward, forward_start, forward_end) {
-        tasks.push(task);
+    if mima_time.max_close_time != 0 {
+        let forward_start = mima_time.max_close_time;
+        let forward_end = close_time; // redis缓存如果存在取最小时间
+        if let Some(task) = try_build_task(ArchiveDirection::Forward, forward_start, forward_end) {
+            tasks.push(task);
+        }
     }
 
     tasks

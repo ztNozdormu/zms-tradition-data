@@ -315,3 +315,307 @@
 {"timestamp":"2025-05-14T03:15:37.899031+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"Archive task finished: binance_futures_usd btc [\"1m\"], total klines: 1"}
 {"timestamp":"2025-05-14T03:16:38.469103+00:00","level":"ERROR","target":"zms_tradition_data::trade_consumer::aggregatoragg","message":"Insert market_kline failed: bad response: Code: 209. DB::NetException: Timeout exceeded while reading from socket (peer: 192.168.228.1:50842, local: 192.168.228.2:8123, 30000 ms). (SOCKET_TIMEOUT) (version 25.4.3.22 (official build))\n\nStack backtrace:\n   0: std::backtrace::Backtrace::create\n   1: anyhow::error::<impl core::convert::From<E> for anyhow::Error>::from\n   2: <zms_tradition_data::db::ckdb::ClickhouseDb as zms_tradition_data::db::types::ClickHouseDatabase>::insert::{{closure}}\n   3: <zms_tradition_data::trade_consumer::aggregatoragg::MultiTimeFrameAggregator as zms_tradition_data::trade_consumer::aggregatoragg::CusAggregator>::process_trade::{{closure}}\n   4: zms_tradition_data::trade_consumer::handle_trade_aggregation::{{closure}}::{{closure}}\n   5: tokio::runtime::task::core::Core<T,S>::poll\n   6: tokio::runtime::task::harness::Harness<T,S>::poll\n   7: tokio::runtime::scheduler::multi_thread::worker::Context::run_task\n   8: tokio::runtime::scheduler::multi_thread::worker::Context::run\n   9: tokio::runtime::context::scoped::Scoped<T>::set\n  10: tokio::runtime::context::runtime::enter_runtime\n  11: tokio::runtime::scheduler::multi_thread::worker::run\n  12: <tokio::runtime::blocking::task::BlockingTask<T> as core::future::future::Future>::poll\n  13: tokio::runtime::task::core::Core<T,S>::poll\n  14: tokio::runtime::task::harness::Harness<T,S>::poll\n  15: tokio::runtime::blocking::pool::Inner::run\n  16: std::sys::backtrace::__rust_begin_short_backtrace\n  17: core::ops::function::FnOnce::call_once{{vtable.shim}}\n  18: std::sys::pal::unix::thread::Thread::new::thread_start\n  19: __pthread_deallocate"}
 {"timestamp":"2025-05-14T03:16:38.458056+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::aggregatoragg","message":"Generated candle at tf M1 for symbol btc: MarketKline { exchange: \"binance_futures_usd\", symbol: \"btc\", period: \"1m\", open_time: 1747192537117, open: 103580.0, high: 103605.2, low: 103580.0, close: 103594.7, volume: 25.150999999999986, close_time: 1747192597820, quote_asset_volume: 0.0, number_of_trades: 604, taker_buy_base_asset_volume: 0.0, taker_buy_quote_asset_volume: 0.0 }"}
+{"timestamp":"2025-05-14T15:13:48.881333+00:00","level":"INFO","target":"zms_tradition_data::server","message":"Starting zms-tradition indexer..."}
+{"timestamp":"2025-05-14T15:13:48.881474+00:00","level":"INFO","target":"zms_tradition_data::db::ckdb","message":"Connecting to ClickHouse at http://localhost:8123"}
+{"timestamp":"2025-05-14T15:13:49.107160+00:00","level":"INFO","target":"zms_tradition_data::db::kv_store","message":"Connected to Redis KV store at redis://default:123456@localhost:6379"}
+{"timestamp":"2025-05-14T15:13:49.107300+00:00","level":"INFO","target":"barter_data::streams::consumer","message":"MarketStream with auto reconnect initialising"}
+{"timestamp":"2025-05-14T15:13:50.018862+00:00","level":"INFO","target":"barter_data::streams::reconnect::stream","message":"successfully initialised Stream"}
+{"timestamp":"2025-05-14T15:13:50.018868+00:00","level":"INFO","target":"warp::server","message":"listening on http://127.0.0.1:10099"}
+{"timestamp":"2025-05-14T15:14:50.498309+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::aggregatoragg","message":"Generated candle at tf M1 for symbol btc: MarketKline { exchange: \"binance_futures_usd\", symbol: \"btc\", period: \"1m\", open_time: 1747235630047, open: 103204.9, high: 103262.7, low: 103167.1, close: 103244.8, volume: 177.0790000000006, close_time: 1747235689967, quote_asset_volume: 0.0, number_of_trades: 2696, taker_buy_base_asset_volume: 0.0, taker_buy_quote_asset_volume: 0.0 }"}
+{"timestamp":"2025-05-14T15:14:50.512473+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"Starting archive task: binance_futures_usd btc direction=Forward, windows=1"}
+{"timestamp":"2025-05-14T15:14:51.272928+00:00","level":"WARN","target":"zms_tradition_data::trade_consumer::maintenance","message":"Kline gap detected in range 1747192536959 ~ 1747235630481"}
+{"timestamp":"2025-05-14T15:14:51.286594+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"archive task completed for btc - binance_futures_usd - 1m"}{"timestamp":"2025-05-14T15:14:51.286560+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"Archive task finished: binance_futures_usd btc [\"1m\"], total klines: 718"}
+
+{"timestamp":"2025-05-14T15:24:41.098818+00:00","level":"INFO","target":"zms_tradition_data::server","message":"Starting zms-tradition indexer..."}{"timestamp":"2025-05-14T15:24:41.098956+00:00","level":"INFO","target":"zms_tradition_data::db::ckdb","message":"Connecting to ClickHouse at http://localhost:8123"}
+
+{"timestamp":"2025-05-14T15:24:41.316065+00:00","level":"INFO","target":"zms_tradition_data::db::kv_store","message":"Connected to Redis KV store at redis://default:123456@localhost:6379"}
+{"timestamp":"2025-05-14T15:24:41.316208+00:00","level":"INFO","target":"barter_data::streams::consumer","message":"MarketStream with auto reconnect initialising"}
+{"timestamp":"2025-05-14T15:24:42.457140+00:00","level":"INFO","target":"barter_data::streams::reconnect::stream","message":"successfully initialised Stream"}
+{"timestamp":"2025-05-14T15:24:42.457349+00:00","level":"INFO","target":"warp::server","message":"listening on http://127.0.0.1:10099"}
+{"timestamp":"2025-05-14T15:25:42.803161+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::aggregatoragg","message":"Generated candle at tf M1 for symbol btc: MarketKline { exchange: \"binance_futures_usd\", symbol: \"btc\", period: \"1m\", open_time: 1747236282605, open: 103167.2, high: 103207.2, low: 103167.1, close: 103207.2, volume: 64.9460000000006, close_time: 1747236342586, quote_asset_volume: 0.0, number_of_trades: 1782, taker_buy_base_asset_volume: 0.0, taker_buy_quote_asset_volume: 0.0 }"}
+{"timestamp":"2025-05-14T15:25:42.818552+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No existing progress found, initializing the task."}
+{"timestamp":"2025-05-14T15:25:42.819049+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"Starting archive task: binance_futures_usd btc direction=Forward, windows=29121"}
+{"timestamp":"2025-05-14T15:25:43.187041+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 0 ~ 60000000."}
+{"timestamp":"2025-05-14T15:25:43.557183+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 60000000 ~ 120000000."}
+{"timestamp":"2025-05-14T15:25:43.919854+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 120000000 ~ 180000000."}
+{"timestamp":"2025-05-14T15:25:44.301922+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 180000000 ~ 240000000."}
+{"timestamp":"2025-05-14T15:25:44.725023+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 240000000 ~ 300000000."}
+{"timestamp":"2025-05-14T15:25:45.095819+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 300000000 ~ 360000000."}
+{"timestamp":"2025-05-14T15:25:45.455432+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 360000000 ~ 420000000."}
+{"timestamp":"2025-05-14T15:25:45.825417+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 420000000 ~ 480000000."}
+{"timestamp":"2025-05-14T15:25:46.175478+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 480000000 ~ 540000000."}
+{"timestamp":"2025-05-14T15:25:46.546642+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 540000000 ~ 600000000."}
+{"timestamp":"2025-05-14T15:25:46.896521+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 600000000 ~ 660000000."}
+{"timestamp":"2025-05-14T15:25:47.260153+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 660000000 ~ 720000000."}
+{"timestamp":"2025-05-14T15:25:47.609556+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 720000000 ~ 780000000."}
+{"timestamp":"2025-05-14T15:25:47.961184+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 780000000 ~ 840000000."}
+{"timestamp":"2025-05-14T15:25:48.335901+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 840000000 ~ 900000000."}
+{"timestamp":"2025-05-14T15:25:48.700055+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 900000000 ~ 960000000."}
+{"timestamp":"2025-05-14T15:25:49.115174+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 960000000 ~ 1020000000."}
+{"timestamp":"2025-05-14T15:25:49.472286+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1020000000 ~ 1080000000."}
+{"timestamp":"2025-05-14T15:25:49.838378+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1080000000 ~ 1140000000."}
+{"timestamp":"2025-05-14T15:25:50.203564+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1140000000 ~ 1200000000."}
+{"timestamp":"2025-05-14T15:25:50.627998+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1200000000 ~ 1260000000."}
+{"timestamp":"2025-05-14T15:25:50.980267+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1260000000 ~ 1320000000."}
+{"timestamp":"2025-05-14T15:25:51.338422+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1320000000 ~ 1380000000."}
+{"timestamp":"2025-05-14T15:25:51.708437+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1380000000 ~ 1440000000."}
+{"timestamp":"2025-05-14T15:25:52.061481+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1440000000 ~ 1500000000."}
+{"timestamp":"2025-05-14T15:25:52.435739+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1500000000 ~ 1560000000."}
+{"timestamp":"2025-05-14T15:25:52.795976+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1560000000 ~ 1620000000."}
+{"timestamp":"2025-05-14T15:25:53.145665+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1620000000 ~ 1680000000."}
+{"timestamp":"2025-05-14T15:25:53.495754+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1680000000 ~ 1740000000."}
+{"timestamp":"2025-05-14T15:25:53.860413+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1740000000 ~ 1800000000."}
+{"timestamp":"2025-05-14T15:25:54.299126+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1800000000 ~ 1860000000."}
+{"timestamp":"2025-05-14T15:25:54.660122+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1860000000 ~ 1920000000."}
+{"timestamp":"2025-05-14T15:25:55.022869+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1920000000 ~ 1980000000."}
+{"timestamp":"2025-05-14T15:25:55.435156+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1980000000 ~ 2040000000."}
+{"timestamp":"2025-05-14T15:25:55.803645+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 2040000000 ~ 2100000000."}
+{"timestamp":"2025-05-14T15:25:56.177653+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 2100000000 ~ 2160000000."}
+{"timestamp":"2025-05-14T15:25:56.535022+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 2160000000 ~ 2220000000."}
+{"timestamp":"2025-05-14T15:25:56.914964+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 2220000000 ~ 2280000000."}
+{"timestamp":"2025-05-14T15:25:57.288685+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 2280000000 ~ 2340000000."}
+{"timestamp":"2025-05-14T15:28:04.913850+00:00","level":"INFO","target":"zms_tradition_data::server","message":"Starting zms-tradition indexer..."}
+{"timestamp":"2025-05-14T15:28:04.913996+00:00","level":"INFO","target":"zms_tradition_data::db::ckdb","message":"Connecting to ClickHouse at http://localhost:8123"}
+{"timestamp":"2025-05-14T15:28:05.127309+00:00","level":"INFO","target":"zms_tradition_data::db::kv_store","message":"Connected to Redis KV store at redis://default:123456@localhost:6379"}
+{"timestamp":"2025-05-14T15:28:05.127456+00:00","level":"INFO","target":"barter_data::streams::consumer","message":"MarketStream with auto reconnect initialising"}
+{"timestamp":"2025-05-14T15:28:06.212557+00:00","level":"INFO","target":"barter_data::streams::reconnect::stream","message":"successfully initialised Stream"}
+{"timestamp":"2025-05-14T15:28:06.212783+00:00","level":"INFO","target":"warp::server","message":"listening on http://127.0.0.1:10099"}
+{"timestamp":"2025-05-14T15:29:06.454722+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::aggregatoragg","message":"Generated candle at tf M1 for symbol btc: MarketKline { exchange: \"binance_futures_usd\", symbol: \"btc\", period: \"1m\", open_time: 1747236486248, open: 103348.9, high: 103374.8, low: 103348.9, close: 103372.6, volume: 92.49100000000021, close_time: 1747236546180, quote_asset_volume: 0.0, number_of_trades: 1668, taker_buy_base_asset_volume: 0.0, taker_buy_quote_asset_volume: 0.0 }"}
+{"timestamp":"2025-05-14T15:29:06.460398+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No existing progress found, initializing the task."}
+{"timestamp":"2025-05-14T15:29:06.460666+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"Starting archive task: binance_futures_usd btc direction=Forward, windows=29121"}
+{"timestamp":"2025-05-14T15:29:06.869800+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 0 ~ 60000000."}
+{"timestamp":"2025-05-14T15:29:07.220172+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 60000000 ~ 120000000."}
+{"timestamp":"2025-05-14T15:29:07.590416+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 120000000 ~ 180000000."}
+{"timestamp":"2025-05-14T15:29:07.951278+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 180000000 ~ 240000000."}
+{"timestamp":"2025-05-14T15:29:08.327469+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 240000000 ~ 300000000."}
+{"timestamp":"2025-05-14T15:29:08.696367+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 300000000 ~ 360000000."}
+{"timestamp":"2025-05-14T15:29:09.040485+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 360000000 ~ 420000000."}
+{"timestamp":"2025-05-14T15:29:09.464978+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 420000000 ~ 480000000."}
+{"timestamp":"2025-05-14T15:29:09.829170+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 480000000 ~ 540000000."}
+{"timestamp":"2025-05-14T15:29:10.176325+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 540000000 ~ 600000000."}
+{"timestamp":"2025-05-14T15:29:10.563759+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 600000000 ~ 660000000."}
+{"timestamp":"2025-05-14T15:29:10.978300+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 660000000 ~ 720000000."}
+{"timestamp":"2025-05-14T15:29:11.367339+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 720000000 ~ 780000000."}
+{"timestamp":"2025-05-14T15:29:11.784567+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 780000000 ~ 840000000."}
+{"timestamp":"2025-05-14T15:29:12.216798+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 840000000 ~ 900000000."}
+{"timestamp":"2025-05-14T15:29:12.592296+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 900000000 ~ 960000000."}
+{"timestamp":"2025-05-14T15:29:12.949180+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 960000000 ~ 1020000000."}
+{"timestamp":"2025-05-14T15:29:13.308191+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1020000000 ~ 1080000000."}
+{"timestamp":"2025-05-14T15:29:13.668868+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1080000000 ~ 1140000000."}
+{"timestamp":"2025-05-14T15:29:14.078447+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1140000000 ~ 1200000000."}
+{"timestamp":"2025-05-14T15:29:14.448121+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1200000000 ~ 1260000000."}
+{"timestamp":"2025-05-14T15:29:14.864237+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1260000000 ~ 1320000000."}
+{"timestamp":"2025-05-14T15:29:15.233464+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1320000000 ~ 1380000000."}
+{"timestamp":"2025-05-14T15:29:15.580293+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1380000000 ~ 1440000000."}
+{"timestamp":"2025-05-14T15:29:15.940700+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1440000000 ~ 1500000000."}
+{"timestamp":"2025-05-14T15:29:16.311521+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1500000000 ~ 1560000000."}
+{"timestamp":"2025-05-14T15:29:16.692050+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1560000000 ~ 1620000000."}
+{"timestamp":"2025-05-14T15:29:17.109517+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1620000000 ~ 1680000000."}
+{"timestamp":"2025-05-14T15:29:17.460448+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1680000000 ~ 1740000000."}
+{"timestamp":"2025-05-14T15:29:17.902751+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1740000000 ~ 1800000000."}
+{"timestamp":"2025-05-14T15:29:18.273350+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1800000000 ~ 1860000000."}
+{"timestamp":"2025-05-14T15:29:18.634519+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1860000000 ~ 1920000000."}
+{"timestamp":"2025-05-14T15:29:18.997342+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1920000000 ~ 1980000000."}
+{"timestamp":"2025-05-14T15:29:19.414424+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 1980000000 ~ 2040000000."}
+{"timestamp":"2025-05-14T15:29:19.800070+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 2040000000 ~ 2100000000."}
+{"timestamp":"2025-05-14T15:29:20.187016+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 2100000000 ~ 2160000000."}
+{"timestamp":"2025-05-14T15:29:20.567940+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 2160000000 ~ 2220000000."}
+{"timestamp":"2025-05-14T15:29:21.007459+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 2220000000 ~ 2280000000."}
+{"timestamp":"2025-05-14T15:29:21.386999+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 2280000000 ~ 2340000000."}
+{"timestamp":"2025-05-14T15:29:21.749549+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 2340000000 ~ 2400000000."}
+{"timestamp":"2025-05-14T15:29:22.121752+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 2400000000 ~ 2460000000."}
+{"timestamp":"2025-05-14T15:29:22.479949+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 2460000000 ~ 2520000000."}
+{"timestamp":"2025-05-14T15:29:22.861849+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 2520000000 ~ 2580000000."}
+{"timestamp":"2025-05-14T15:29:23.211173+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 2580000000 ~ 2640000000."}
+{"timestamp":"2025-05-14T15:29:23.569620+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 2640000000 ~ 2700000000."}
+{"timestamp":"2025-05-14T15:29:23.942571+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 2700000000 ~ 2760000000."}
+{"timestamp":"2025-05-14T15:29:24.361201+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 2760000000 ~ 2820000000."}
+{"timestamp":"2025-05-14T15:29:24.723396+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 2820000000 ~ 2880000000."}
+{"timestamp":"2025-05-14T15:29:25.136878+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 2880000000 ~ 2940000000."}
+{"timestamp":"2025-05-14T15:29:25.564907+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 2940000000 ~ 3000000000."}
+{"timestamp":"2025-05-14T15:29:25.915925+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 3000000000 ~ 3060000000."}
+{"timestamp":"2025-05-14T15:29:26.268898+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 3060000000 ~ 3120000000."}
+{"timestamp":"2025-05-14T15:29:26.713154+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 3120000000 ~ 3180000000."}
+{"timestamp":"2025-05-14T15:29:27.080862+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 3180000000 ~ 3240000000."}
+{"timestamp":"2025-05-14T15:29:27.489030+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 3240000000 ~ 3300000000."}
+{"timestamp":"2025-05-14T15:29:27.905749+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 3300000000 ~ 3360000000."}
+{"timestamp":"2025-05-14T15:29:28.273182+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 3360000000 ~ 3420000000."}
+{"timestamp":"2025-05-14T15:29:28.626313+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 3420000000 ~ 3480000000."}
+{"timestamp":"2025-05-14T15:29:28.991221+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 3480000000 ~ 3540000000."}
+{"timestamp":"2025-05-14T15:29:29.361675+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 3540000000 ~ 3600000000."}
+{"timestamp":"2025-05-14T15:29:29.726528+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 3600000000 ~ 3660000000."}
+{"timestamp":"2025-05-14T15:29:30.109777+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 3660000000 ~ 3720000000."}
+{"timestamp":"2025-05-14T15:29:30.495843+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 3720000000 ~ 3780000000."}
+{"timestamp":"2025-05-14T15:29:30.848514+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 3780000000 ~ 3840000000."}
+{"timestamp":"2025-05-14T15:29:31.265173+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 3840000000 ~ 3900000000."}
+{"timestamp":"2025-05-14T15:29:31.613876+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 3900000000 ~ 3960000000."}
+{"timestamp":"2025-05-14T15:29:31.977717+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 3960000000 ~ 4020000000."}
+{"timestamp":"2025-05-14T15:29:32.400747+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 4020000000 ~ 4080000000."}
+{"timestamp":"2025-05-14T15:29:32.763257+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 4080000000 ~ 4140000000."}
+{"timestamp":"2025-05-14T15:29:33.121196+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 4140000000 ~ 4200000000."}
+{"timestamp":"2025-05-14T15:29:33.486937+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 4200000000 ~ 4260000000."}
+{"timestamp":"2025-05-14T15:29:33.840695+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 4260000000 ~ 4320000000."}
+{"timestamp":"2025-05-14T15:29:34.208122+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 4320000000 ~ 4380000000."}
+{"timestamp":"2025-05-14T15:29:34.565766+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 4380000000 ~ 4440000000."}
+{"timestamp":"2025-05-14T15:29:34.956185+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 4440000000 ~ 4500000000."}
+{"timestamp":"2025-05-14T15:29:35.330856+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 4500000000 ~ 4560000000."}
+{"timestamp":"2025-05-14T15:29:35.757242+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 4560000000 ~ 4620000000."}
+{"timestamp":"2025-05-14T15:29:36.125716+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 4620000000 ~ 4680000000."}
+{"timestamp":"2025-05-14T15:29:36.492488+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 4680000000 ~ 4740000000."}
+{"timestamp":"2025-05-14T15:29:36.855088+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 4740000000 ~ 4800000000."}
+{"timestamp":"2025-05-14T15:29:37.205058+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 4800000000 ~ 4860000000."}
+{"timestamp":"2025-05-14T15:29:37.563825+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 4860000000 ~ 4920000000."}
+{"timestamp":"2025-05-14T15:29:37.978079+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 4920000000 ~ 4980000000."}
+{"timestamp":"2025-05-14T15:29:38.345651+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 4980000000 ~ 5040000000."}
+{"timestamp":"2025-05-14T15:29:38.708229+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 5040000000 ~ 5100000000."}
+{"timestamp":"2025-05-14T15:29:39.070412+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 5100000000 ~ 5160000000."}
+{"timestamp":"2025-05-14T15:29:39.494317+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 5160000000 ~ 5220000000."}
+{"timestamp":"2025-05-14T15:29:39.869025+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 5220000000 ~ 5280000000."}
+{"timestamp":"2025-05-14T15:29:40.315579+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 5280000000 ~ 5340000000."}
+{"timestamp":"2025-05-14T15:29:40.696006+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 5340000000 ~ 5400000000."}
+{"timestamp":"2025-05-14T15:29:41.050995+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 5400000000 ~ 5460000000."}
+{"timestamp":"2025-05-14T15:29:41.477782+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 5460000000 ~ 5520000000."}
+{"timestamp":"2025-05-14T15:29:41.834977+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 5520000000 ~ 5580000000."}
+{"timestamp":"2025-05-14T15:29:42.194367+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 5580000000 ~ 5640000000."}
+{"timestamp":"2025-05-14T15:29:42.561926+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 5640000000 ~ 5700000000."}
+{"timestamp":"2025-05-14T15:29:42.920237+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 5700000000 ~ 5760000000."}
+{"timestamp":"2025-05-14T15:29:43.335733+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 5760000000 ~ 5820000000."}
+{"timestamp":"2025-05-14T15:29:43.700945+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 5820000000 ~ 5880000000."}
+{"timestamp":"2025-05-14T15:29:44.111615+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 5880000000 ~ 5940000000."}
+{"timestamp":"2025-05-14T15:29:44.471352+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 5940000000 ~ 6000000000."}
+{"timestamp":"2025-05-14T15:29:44.837423+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 6000000000 ~ 6060000000."}
+{"timestamp":"2025-05-14T15:29:45.192001+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 6060000000 ~ 6120000000."}
+{"timestamp":"2025-05-14T15:29:45.544780+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 6120000000 ~ 6180000000."}
+{"timestamp":"2025-05-14T15:29:45.903430+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 6180000000 ~ 6240000000."}
+{"timestamp":"2025-05-14T15:29:46.248857+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 6240000000 ~ 6300000000."}
+{"timestamp":"2025-05-14T15:29:46.610452+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 6300000000 ~ 6360000000."}
+{"timestamp":"2025-05-14T15:29:46.963690+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 6360000000 ~ 6420000000."}
+{"timestamp":"2025-05-14T15:29:47.338863+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 6420000000 ~ 6480000000."}
+{"timestamp":"2025-05-14T15:29:47.684973+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 6480000000 ~ 6540000000."}
+{"timestamp":"2025-05-14T15:29:48.054493+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 6540000000 ~ 6600000000."}
+{"timestamp":"2025-05-14T15:29:48.479987+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 6600000000 ~ 6660000000."}
+{"timestamp":"2025-05-14T15:29:48.901324+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 6660000000 ~ 6720000000."}
+{"timestamp":"2025-05-14T15:29:49.270371+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 6720000000 ~ 6780000000."}
+{"timestamp":"2025-05-14T15:29:49.618079+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 6780000000 ~ 6840000000."}
+{"timestamp":"2025-05-14T15:29:49.980544+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 6840000000 ~ 6900000000."}
+{"timestamp":"2025-05-14T15:29:50.389700+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 6900000000 ~ 6960000000."}
+{"timestamp":"2025-05-14T15:29:50.760049+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 6960000000 ~ 7020000000."}
+{"timestamp":"2025-05-14T15:29:51.105927+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 7020000000 ~ 7080000000."}
+{"timestamp":"2025-05-14T15:29:51.477888+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 7080000000 ~ 7140000000."}
+{"timestamp":"2025-05-14T15:29:51.859015+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 7140000000 ~ 7200000000."}
+{"timestamp":"2025-05-14T15:29:52.241002+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 7200000000 ~ 7260000000."}
+{"timestamp":"2025-05-14T15:29:52.622130+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 7260000000 ~ 7320000000."}
+{"timestamp":"2025-05-14T15:29:53.034632+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 7320000000 ~ 7380000000."}
+{"timestamp":"2025-05-14T15:29:53.386041+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 7380000000 ~ 7440000000."}
+{"timestamp":"2025-05-14T15:29:53.731513+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 7440000000 ~ 7500000000."}
+{"timestamp":"2025-05-14T15:29:54.087663+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 7500000000 ~ 7560000000."}
+{"timestamp":"2025-05-14T15:29:54.455123+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 7560000000 ~ 7620000000."}
+{"timestamp":"2025-05-14T15:29:54.809203+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 7620000000 ~ 7680000000."}
+{"timestamp":"2025-05-14T15:29:55.184229+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 7680000000 ~ 7740000000."}
+{"timestamp":"2025-05-14T15:29:55.548833+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 7740000000 ~ 7800000000."}
+{"timestamp":"2025-05-14T15:29:55.915081+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 7800000000 ~ 7860000000."}
+{"timestamp":"2025-05-14T15:29:56.341450+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 7860000000 ~ 7920000000."}
+{"timestamp":"2025-05-14T15:29:56.707980+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 7920000000 ~ 7980000000."}
+{"timestamp":"2025-05-14T15:29:57.116777+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 7980000000 ~ 8040000000."}
+{"timestamp":"2025-05-14T15:29:57.527852+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 8040000000 ~ 8100000000."}
+{"timestamp":"2025-05-14T15:29:57.879788+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 8100000000 ~ 8160000000."}
+{"timestamp":"2025-05-14T15:29:58.239870+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 8160000000 ~ 8220000000."}
+{"timestamp":"2025-05-14T15:29:58.606125+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 8220000000 ~ 8280000000."}
+{"timestamp":"2025-05-14T15:29:59.048232+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 8280000000 ~ 8340000000."}
+{"timestamp":"2025-05-14T15:29:59.414058+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 8340000000 ~ 8400000000."}
+{"timestamp":"2025-05-14T15:29:59.783291+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 8400000000 ~ 8460000000."}
+{"timestamp":"2025-05-14T15:30:00.132362+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 8460000000 ~ 8520000000."}
+{"timestamp":"2025-05-14T15:30:00.494919+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 8520000000 ~ 8580000000."}
+{"timestamp":"2025-05-14T15:30:00.913576+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 8580000000 ~ 8640000000."}
+{"timestamp":"2025-05-14T15:30:01.276725+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 8640000000 ~ 8700000000."}
+{"timestamp":"2025-05-14T15:30:01.632925+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 8700000000 ~ 8760000000."}
+{"timestamp":"2025-05-14T15:30:02.061668+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 8760000000 ~ 8820000000."}
+{"timestamp":"2025-05-14T15:30:02.474065+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 8820000000 ~ 8880000000."}
+{"timestamp":"2025-05-14T15:30:02.859060+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Kline data between 8880000000 ~ 8940000000."}
+{"timestamp":"2025-05-14T15:31:33.779332+00:00","level":"INFO","target":"zms_tradition_data::server","message":"Starting zms-tradition indexer..."}{"timestamp":"2025-05-14T15:31:33.779571+00:00","level":"INFO","target":"zms_tradition_data::db::ckdb","message":"Connecting to ClickHouse at http://localhost:8123"}
+
+{"timestamp":"2025-05-14T15:31:34.001663+00:00","level":"INFO","target":"zms_tradition_data::db::kv_store","message":"Connected to Redis KV store at redis://default:123456@localhost:6379"}
+{"timestamp":"2025-05-14T15:31:34.001809+00:00","level":"INFO","target":"barter_data::streams::consumer","message":"MarketStream with auto reconnect initialising"}
+{"timestamp":"2025-05-14T15:31:34.938656+00:00","level":"INFO","target":"barter_data::streams::reconnect::stream","message":"successfully initialised Stream"}
+{"timestamp":"2025-05-14T15:31:34.938980+00:00","level":"INFO","target":"warp::server","message":"listening on http://127.0.0.1:10099"}
+{"timestamp":"2025-05-14T15:32:35.071320+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::aggregatoragg","message":"Generated candle at tf M1 for symbol btc: MarketKline { exchange: \"binance_futures_usd\", symbol: \"btc\", period: \"1m\", open_time: 1747236694989, open: 103305.5, high: 103312.0, low: 103250.0, close: 103258.4, volume: 50.35800000000027, close_time: 1747236754546, quote_asset_volume: 0.0, number_of_trades: 1881, taker_buy_base_asset_volume: 0.0, taker_buy_quote_asset_volume: 0.0 }"}
+{"timestamp":"2025-05-14T15:32:35.084590+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No existing progress found, initializing the task."}
+{"timestamp":"2025-05-14T15:32:35.084636+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"archive task completed for btc - binance_futures_usd - 1m"}{"timestamp":"2025-05-14T15:32:35.084625+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Klines collected for task binance_futures_usd btc [\"1m\"]"}
+
+{"timestamp":"2025-05-14T15:33:35.570747+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::aggregatoragg","message":"Generated candle at tf M1 for symbol btc: MarketKline { exchange: \"binance_futures_usd\", symbol: \"btc\", period: \"1m\", open_time: 1747236755047, open: 103258.3, high: 103300.0, low: 103247.0, close: 103299.9, volume: 37.710000000000015, close_time: 1747236815473, quote_asset_volume: 0.0, number_of_trades: 1276, taker_buy_base_asset_volume: 0.0, taker_buy_quote_asset_volume: 0.0 }"}
+{"timestamp":"2025-05-14T15:33:35.582822+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No existing progress found, initializing the task."}
+{"timestamp":"2025-05-14T15:33:35.582839+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Klines collected for task binance_futures_usd btc [\"1m\"]"}
+{"timestamp":"2025-05-14T15:33:35.582847+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"archive task completed for btc - binance_futures_usd - 1m"}
+{"timestamp":"2025-05-14T15:33:51.180078+00:00","level":"INFO","target":"zms_tradition_data::server","message":"Starting zms-tradition indexer..."}
+{"timestamp":"2025-05-14T15:33:51.180216+00:00","level":"INFO","target":"zms_tradition_data::db::ckdb","message":"Connecting to ClickHouse at http://localhost:8123"}
+{"timestamp":"2025-05-14T15:33:51.397380+00:00","level":"INFO","target":"zms_tradition_data::db::kv_store","message":"Connected to Redis KV store at redis://default:123456@localhost:6379"}
+{"timestamp":"2025-05-14T15:33:51.397535+00:00","level":"INFO","target":"barter_data::streams::consumer","message":"MarketStream with auto reconnect initialising"}
+{"timestamp":"2025-05-14T15:33:52.368351+00:00","level":"INFO","target":"barter_data::streams::reconnect::stream","message":"successfully initialised Stream"}
+{"timestamp":"2025-05-14T15:33:52.368721+00:00","level":"INFO","target":"warp::server","message":"listening on http://127.0.0.1:10099"}
+{"timestamp":"2025-05-14T15:34:24.193737+00:00","level":"INFO","target":"zms_tradition_data::server","message":"Starting zms-tradition indexer..."}{"timestamp":"2025-05-14T15:34:24.193878+00:00","level":"INFO","target":"zms_tradition_data::db::ckdb","message":"Connecting to ClickHouse at http://localhost:8123"}
+
+{"timestamp":"2025-05-14T15:34:24.408756+00:00","level":"INFO","target":"zms_tradition_data::db::kv_store","message":"Connected to Redis KV store at redis://default:123456@localhost:6379"}
+{"timestamp":"2025-05-14T15:34:24.408909+00:00","level":"INFO","target":"barter_data::streams::consumer","message":"MarketStream with auto reconnect initialising"}
+{"timestamp":"2025-05-14T15:34:25.378387+00:00","level":"INFO","target":"barter_data::streams::reconnect::stream","message":"successfully initialised Stream"}
+{"timestamp":"2025-05-14T15:34:25.378623+00:00","level":"INFO","target":"warp::server","message":"listening on http://127.0.0.1:10099"}
+{"timestamp":"2025-05-14T15:35:25.416080+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::aggregatoragg","message":"Generated candle at tf M1 for symbol btc: MarketKline { exchange: \"binance_futures_usd\", symbol: \"btc\", period: \"1m\", open_time: 1747236865363, open: 103426.9, high: 103450.0, low: 103378.6, close: 103378.7, volume: 150.17400000000077, close_time: 1747236925206, quote_asset_volume: 0.0, number_of_trades: 2638, taker_buy_base_asset_volume: 0.0, taker_buy_quote_asset_volume: 0.0 }"}
+{"timestamp":"2025-05-14T15:35:25.420280+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No existing progress found, initializing the task."}
+{"timestamp":"2025-05-14T15:35:25.420303+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"archive task completed for btc - binance_futures_usd - 1m"}{"timestamp":"2025-05-14T15:35:25.420294+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Klines collected for task binance_futures_usd btc [\"1m\"]"}
+
+{"timestamp":"2025-05-14T15:37:17.039091+00:00","level":"INFO","target":"zms_tradition_data::server","message":"Starting zms-tradition indexer..."}
+{"timestamp":"2025-05-14T15:37:17.039297+00:00","level":"INFO","target":"zms_tradition_data::db::ckdb","message":"Connecting to ClickHouse at http://localhost:8123"}
+{"timestamp":"2025-05-14T15:37:17.256656+00:00","level":"INFO","target":"zms_tradition_data::db::kv_store","message":"Connected to Redis KV store at redis://default:123456@localhost:6379"}
+{"timestamp":"2025-05-14T15:37:17.256873+00:00","level":"INFO","target":"barter_data::streams::consumer","message":"MarketStream with auto reconnect initialising"}
+{"timestamp":"2025-05-14T15:37:18.424640+00:00","level":"INFO","target":"barter_data::streams::reconnect::stream","message":"successfully initialised Stream"}
+{"timestamp":"2025-05-14T15:37:18.424741+00:00","level":"INFO","target":"warp::server","message":"listening on http://127.0.0.1:10099"}
+{"timestamp":"2025-05-14T15:38:18.895511+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::aggregatoragg","message":"Generated candle at tf M1 for symbol btc: MarketKline { exchange: \"binance_futures_usd\", symbol: \"btc\", period: \"1m\", open_time: 1747237038655, open: 103316.5, high: 103374.3, low: 103316.4, close: 103328.4, volume: 55.53600000000036, close_time: 1747237098035, quote_asset_volume: 0.0, number_of_trades: 1490, taker_buy_base_asset_volume: 0.0, taker_buy_quote_asset_volume: 0.0 }"}
+{"timestamp":"2025-05-14T15:38:18.913702+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No existing progress found, initializing the task."}
+{"timestamp":"2025-05-14T15:38:18.913732+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"mima_time is 01747237098815"}
+{"timestamp":"2025-05-14T15:38:18.913762+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"archive task completed for btc - binance_futures_usd - 1m"}{"timestamp":"2025-05-14T15:38:18.913749+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Klines collected for task binance_futures_usd btc [\"1m\"]"}
+
+{"timestamp":"2025-05-14T15:40:33.002938+00:00","level":"INFO","target":"zms_tradition_data::server","message":"Starting zms-tradition indexer..."}
+{"timestamp":"2025-05-14T15:40:33.003213+00:00","level":"INFO","target":"zms_tradition_data::db::ckdb","message":"Connecting to ClickHouse at http://localhost:8123"}
+{"timestamp":"2025-05-14T15:40:33.226090+00:00","level":"INFO","target":"zms_tradition_data::db::kv_store","message":"Connected to Redis KV store at redis://default:123456@localhost:6379"}
+{"timestamp":"2025-05-14T15:40:33.226264+00:00","level":"INFO","target":"barter_data::streams::consumer","message":"MarketStream with auto reconnect initialising"}
+{"timestamp":"2025-05-14T15:40:34.189124+00:00","level":"INFO","target":"barter_data::streams::reconnect::stream","message":"successfully initialised Stream"}
+{"timestamp":"2025-05-14T15:40:34.189495+00:00","level":"INFO","target":"warp::server","message":"listening on http://127.0.0.1:10099"}
+{"timestamp":"2025-05-14T15:41:34.433328+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::aggregatoragg","message":"Generated candle at tf M1 for symbol btc: MarketKline { exchange: \"binance_futures_usd\", symbol: \"btc\", period: \"1m\", open_time: 1747237234249, open: 103390.5, high: 103412.9, low: 103363.2, close: 103387.3, volume: 90.10199999999968, close_time: 1747237293994, quote_asset_volume: 0.0, number_of_trades: 2141, taker_buy_base_asset_volume: 0.0, taker_buy_quote_asset_volume: 0.0 }"}
+{"timestamp":"2025-05-14T15:41:34.447637+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No existing progress found, initializing the task.fallback_time is 1747237294356"}
+{"timestamp":"2025-05-14T15:41:34.447616+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No existing progress found, initializing the task."}{"timestamp":"2025-05-14T15:41:34.447661+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Klines collected for task binance_futures_usd btc [\"1m\"]"}
+
+{"timestamp":"2025-05-14T15:41:34.447670+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"archive task completed for btc - binance_futures_usd - 1m"}
+{"timestamp":"2025-05-14T15:41:34.447646+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"is max_close is 0 min close is 1747237294356"}
+{"timestamp":"2025-05-14T15:45:46.509100+00:00","level":"INFO","target":"zms_tradition_data::server","message":"Starting zms-tradition indexer..."}
+{"timestamp":"2025-05-14T15:45:46.509361+00:00","level":"INFO","target":"zms_tradition_data::db::ckdb","message":"Connecting to ClickHouse at http://localhost:8123"}
+{"timestamp":"2025-05-14T15:45:46.730007+00:00","level":"INFO","target":"zms_tradition_data::db::kv_store","message":"Connected to Redis KV store at redis://default:123456@localhost:6379"}
+{"timestamp":"2025-05-14T15:45:46.730158+00:00","level":"INFO","target":"barter_data::streams::consumer","message":"MarketStream with auto reconnect initialising"}
+{"timestamp":"2025-05-14T15:45:47.720371+00:00","level":"INFO","target":"barter_data::streams::reconnect::stream","message":"successfully initialised Stream"}
+{"timestamp":"2025-05-14T15:45:47.720783+00:00","level":"INFO","target":"warp::server","message":"listening on http://127.0.0.1:10099"}
+{"timestamp":"2025-05-14T15:46:47.925255+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::aggregatoragg","message":"Generated candle at tf M1 for symbol btc: MarketKline { exchange: \"binance_futures_usd\", symbol: \"btc\", period: \"1m\", open_time: 1747237547770, open: 103296.3, high: 103325.8, low: 103242.5, close: 103247.0, volume: 100.52999999999992, close_time: 1747237607698, quote_asset_volume: 0.0, number_of_trades: 2401, taker_buy_base_asset_volume: 0.0, taker_buy_quote_asset_volume: 0.0 }"}
+{"timestamp":"2025-05-14T15:46:47.941499+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"is max_close is 0 min close is 1747237547912"}
+{"timestamp":"2025-05-14T15:46:47.941476+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No existing progress found, initializing the task."}{"timestamp":"2025-05-14T15:46:47.941492+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No existing progress found, initializing the task.fallback_time is 1747237547912"}
+{"timestamp":"2025-05-14T15:46:47.941509+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No Klines collected for task binance_futures_usd btc [\"1m\"]"}
+{"timestamp":"2025-05-14T15:46:47.941516+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"archive task completed for btc - binance_futures_usd - 1m"}
+
+{"timestamp":"2025-05-14T15:56:46.102287+00:00","level":"INFO","target":"zms_tradition_data::server","message":"Starting zms-tradition indexer..."}
+{"timestamp":"2025-05-14T15:56:46.102551+00:00","level":"INFO","target":"zms_tradition_data::db::ckdb","message":"Connecting to ClickHouse at http://localhost:8123"}
+{"timestamp":"2025-05-14T15:56:46.325348+00:00","level":"INFO","target":"zms_tradition_data::db::kv_store","message":"Connected to Redis KV store at redis://default:123456@localhost:6379"}
+{"timestamp":"2025-05-14T15:56:46.325503+00:00","level":"INFO","target":"barter_data::streams::consumer","message":"MarketStream with auto reconnect initialising"}
+{"timestamp":"2025-05-14T15:56:47.606947+00:00","level":"INFO","target":"barter_data::streams::reconnect::stream","message":"successfully initialised Stream"}
+{"timestamp":"2025-05-14T15:56:47.607618+00:00","level":"INFO","target":"warp::server","message":"listening on http://127.0.0.1:10099"}
+{"timestamp":"2025-05-14T15:57:48.226429+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::aggregatoragg","message":"Generated candle at tf M1 for symbol btc: MarketKline { exchange: \"binance_futures_usd\", symbol: \"btc\", period: \"1m\", open_time: 1747238207616, open: 103395.4, high: 103420.0, low: 103379.5, close: 103420.0, volume: 104.97000000000013, close_time: 1747238267270, quote_asset_volume: 0.0, number_of_trades: 1723, taker_buy_base_asset_volume: 0.0, taker_buy_quote_asset_volume: 0.0 }"}
+{"timestamp":"2025-05-14T15:57:48.231308+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"No existing progress found, initializing the task."}
+{"timestamp":"2025-05-14T15:57:48.231327+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"Starting archive task: binance_futures_usd btc direction=Backward, windows=3"}
+{"timestamp":"2025-05-14T15:57:48.866412+00:00","level":"WARN","target":"zms_tradition_data::trade_consumer::maintenance","message":"Kline gap detected in range 1747058268214 ~ 1747118268214"}
+{"timestamp":"2025-05-14T15:57:49.586842+00:00","level":"WARN","target":"zms_tradition_data::trade_consumer::maintenance","message":"Kline gap detected in range 1747118268214 ~ 1747178268214"}
+{"timestamp":"2025-05-14T15:57:50.246524+00:00","level":"WARN","target":"zms_tradition_data::trade_consumer::maintenance","message":"Kline gap detected in range 1747178268214 ~ 1747238268214"}
+{"timestamp":"2025-05-14T15:57:50.266139+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"archive task completed for btc - binance_futures_usd - 1m"}
+{"timestamp":"2025-05-14T15:57:50.265892+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"Archive task finished: binance_futures_usd btc [\"1m\"], total klines: 3000"}
+{"timestamp":"2025-05-14T15:58:48.988754+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::aggregatoragg","message":"Generated candle at tf M1 for symbol btc: MarketKline { exchange: \"binance_futures_usd\", symbol: \"btc\", period: \"1m\", open_time: 1747238268214, open: 103419.9, high: 103450.0, low: 103419.9, close: 103449.9, volume: 81.48800000000017, close_time: 1747238328350, quote_asset_volume: 0.0, number_of_trades: 1582, taker_buy_base_asset_volume: 0.0, taker_buy_quote_asset_volume: 0.0 }"}
+{"timestamp":"2025-05-14T15:58:49.010551+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"Starting archive task: binance_futures_usd btc direction=Backward, windows=3"}
+{"timestamp":"2025-05-14T15:58:49.653767+00:00","level":"WARN","target":"zms_tradition_data::trade_consumer::maintenance","message":"Kline gap detected in range 1746878339999 ~ 1746938339999"}
+{"timestamp":"2025-05-14T15:58:50.329722+00:00","level":"WARN","target":"zms_tradition_data::trade_consumer::maintenance","message":"Kline gap detected in range 1746938339999 ~ 1746998339999"}
+{"timestamp":"2025-05-14T15:58:51.091287+00:00","level":"WARN","target":"zms_tradition_data::trade_consumer::maintenance","message":"Kline gap detected in range 1746998339999 ~ 1747058339999"}{"timestamp":"2025-05-14T15:58:51.091507+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"Starting archive task: binance_futures_usd btc direction=Forward, windows=1"}
+
+{"timestamp":"2025-05-14T15:58:51.493746+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"archive task completed for btc - binance_futures_usd - 1m"}
+{"timestamp":"2025-05-14T15:58:51.493312+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"Archive task finished: binance_futures_usd btc [\"1m\"], total klines: 3001"}
