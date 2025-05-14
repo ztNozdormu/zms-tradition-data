@@ -3,7 +3,7 @@ macro_rules! impl_table_record {
         impl crate::db::types::TableRecord for $ty {
             const TABLE_NAME: &'static str = $table;
 
-            fn to_enum_inserter<'a>(
+            fn get_enum_inserter<'a>(
                 inserter: &'a crate::db::types::AnyInserter,
             ) -> Option<&'a tokio::sync::RwLock<clickhouse::inserter::Inserter<Self>>> {
                 match inserter {
@@ -14,4 +14,3 @@ macro_rules! impl_table_record {
         }
     };
 }
-

@@ -8,11 +8,7 @@ use tokio::sync::RwLock;
 
 pub trait TableRecord: Row + Sized + Send + Sync + Clone + 'static {
     const TABLE_NAME: &'static str;
-    /// 是否使用 Buffer 引擎写入
-    fn use_buffer() -> bool {
-        false
-    }
-    fn to_enum_inserter<'a>(inserter: &'a AnyInserter) -> Option<&'a RwLock<Inserter<Self>>>;
+    fn get_enum_inserter(inserter: &AnyInserter) -> Option<&RwLock<Inserter<Self>>>;
 }
 
 #[async_trait::async_trait]

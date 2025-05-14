@@ -180,12 +180,9 @@ impl BinanceFetcher {
         let summaries = get_futures_market()
             .klines(symbol_with_usdt, tf, limit, start, end)
             .await
-            .unwrap();
-        if let KlineSummaries::AllKlineSummaries(klines) = summaries {
-            Ok(klines)
-        } else {
-            Ok(Vec::new())
-        }
+            .expect("Failed to fetch klines");
+        let KlineSummaries::AllKlineSummaries(klines) = summaries;
+        Ok(klines)
     }
 }
 

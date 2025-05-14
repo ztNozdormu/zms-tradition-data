@@ -16,8 +16,6 @@ use barter::barter_instrument::instrument::market_data::MarketDataInstrument;
 use barter::barter_instrument::instrument::market_data::kind::MarketDataInstrumentKind;
 use futures_util::StreamExt;
 use std::collections::HashMap;
-use std::sync::Arc;
-use tracing::metadata::Kind;
 use tracing::{error, warn};
 
 pub async fn handle_trade_aggregation() {
