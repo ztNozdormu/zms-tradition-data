@@ -27,7 +27,7 @@ impl ProgressTracker {
         match get_ck_db().get_mima_time(exchange, symbol, tf).await {
             Ok(Some(record)) => Some(MinMaxCloseTime {
                 min_close_time: record.min_close_time,
-                max_close_time: record.max_close_time
+                max_close_time: record.max_close_time,
             }),
             Ok(None) => None,
             Err(err) => {
@@ -180,12 +180,9 @@ impl BinanceFetcher {
         let summaries = get_futures_market()
             .klines(symbol_with_usdt, tf, limit, start, end)
             .await
-            .unwrap();
-        if let KlineSummaries::AllKlineSummaries(klines) = summaries {
-            Ok(klines)
-        } else {
-            Ok(Vec::new())
-        }
+            .expect("Failed to fetch klines");
+        let KlineSummaries::AllKlineSummaries(klines) = summaries;
+        Ok(klines)
     }
 }
 

@@ -141,7 +141,7 @@ impl ClickHouseDatabase for ClickhouseDb {
     {
         let _res = match self.inserters.get(T::TABLE_NAME) {
             Some(inserter) => {
-                if let Some(typed_inserter) = T::to_enum_inserter(inserter) {
+                if let Some(typed_inserter) = T::get_enum_inserter(inserter) {
                     let mut inserter = typed_inserter.write().await;
 
                     inserter
@@ -182,7 +182,7 @@ impl ClickHouseDatabase for ClickhouseDb {
 
         let _res = match self.inserters.get(T::TABLE_NAME) {
             Some(inserter) => {
-                if let Some(typed_inserter) = T::to_enum_inserter(inserter) {
+                if let Some(typed_inserter) = T::get_enum_inserter(inserter) {
                     let mut lock = typed_inserter.write().await;
                     for item in data {
                         lock.write(item).context("Batch insert failed")?;
@@ -213,7 +213,6 @@ impl ClickHouseDatabase for ClickhouseDb {
 
 impl ClickhouseDb {
     fn create_inserter<T: TableRecord>(&self) -> Result<Inserter<T>> {
-
         Ok(self
             .client
             .inserter::<T>(T::TABLE_NAME)
