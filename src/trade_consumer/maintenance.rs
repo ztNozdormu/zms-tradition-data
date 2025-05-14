@@ -27,7 +27,7 @@ impl ProgressTracker {
         match get_ck_db().get_mima_time(exchange, symbol, tf).await {
             Ok(Some(record)) => Some(MinMaxCloseTime {
                 min_close_time: record.min_close_time,
-                max_close_time: record.max_close_time,
+                max_close_time: record.max_close_time
             }),
             Ok(None) => None,
             Err(err) => {
@@ -263,7 +263,7 @@ pub async fn historical_maintenance_process(
         // 失败后可以考虑通知机制，如通过 Webhook 或邮件通知管理员
     } else {
         info!(
-            "Forward archive task completed for {} - {} - {}",
+            "archive task completed for {} - {} - {}",
             symbol,
             exchange,
             &time_frame.to_str()
