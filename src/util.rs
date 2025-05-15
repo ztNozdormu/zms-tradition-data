@@ -1,5 +1,5 @@
-use crate::db::kv_store::RedisKVStore;
-use crate::db::{ckdb::ClickhouseDb, types::ClickHouseDatabase};
+use crate::infra::cache::kv_store::RedisKVStore;
+use crate::infra::db::{ckdb::ClickhouseDb, types::ClickHouseDatabase};
 use anyhow::Result;
 use barter::barter_xchange::exchange::binance::api::Binance;
 use barter::barter_xchange::exchange::binance::futures::market::FuturesMarket;

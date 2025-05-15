@@ -1,4 +1,4 @@
-use crate::db::types::{
+use crate::infra::db::types::{
     AnyInserter, ClickHouseDatabase, PageParams, PageResult, Paginatable, RowCount, SortOrder,
     TableRecord,
 };

@@ -619,3 +619,11 @@
 
 {"timestamp":"2025-05-14T15:58:51.493746+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"archive task completed for btc - binance_futures_usd - 1m"}
 {"timestamp":"2025-05-14T15:58:51.493312+00:00","level":"INFO","target":"zms_tradition_data::trade_consumer::maintenance","message":"Archive task finished: binance_futures_usd btc [\"1m\"], total klines: 3001"}
+{"timestamp":"2025-05-15T08:12:52.824825+00:00","level":"INFO","target":"zms_tradition_data::server","message":"Starting zms-tradition indexer..."}
+{"timestamp":"2025-05-15T08:12:52.825088+00:00","level":"INFO","target":"zms_tradition_data::db::ckdb","message":"Connecting to ClickHouse at http://localhost:8123"}
+{"timestamp":"2025-05-15T08:13:19.280817+00:00","level":"INFO","target":"zms_tradition_data::server","message":"Starting zms-tradition indexer..."}
+{"timestamp":"2025-05-15T08:13:19.280965+00:00","level":"INFO","target":"zms_tradition_data::db::ckdb","message":"Connecting to ClickHouse at http://localhost:8123"}
+{"timestamp":"2025-05-15T08:13:19.504006+00:00","level":"INFO","target":"zms_tradition_data::db::kv_store","message":"Connected to Redis KV store at redis://default:123456@localhost:6379"}
+{"timestamp":"2025-05-15T08:13:19.504159+00:00","level":"INFO","target":"barter_data::streams::consumer","message":"MarketStream with auto reconnect initialising"}
+{"timestamp":"2025-05-15T08:13:20.459219+00:00","level":"INFO","target":"barter_data::streams::reconnect::stream","message":"successfully initialised Stream"}
+{"timestamp":"2025-05-15T08:13:20.459358+00:00","level":"INFO","target":"warp::server","message":"listening on http://127.0.0.1:10099"}

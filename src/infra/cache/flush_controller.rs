@@ -1,4 +1,4 @@
-use crate::db::types::{ClickHouseDatabase, TableRecord};
+use crate::infra::db::types::{ClickHouseDatabase, TableRecord};
 use crate::global::{get_ck_db, get_kv};
 use anyhow::Result;
 use clickhouse::Row;

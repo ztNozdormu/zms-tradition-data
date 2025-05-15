@@ -1,6 +1,6 @@
 mod types;
 
-use crate::db::types::ClickHouseDatabase;
+use crate::infra::db::types::ClickHouseDatabase;
 use crate::global::{get_ck_db, get_futures_market};
 use crate::model::TimeFrame;
 use crate::model::cex::kline::{MarketKline, MinMaxCloseTime};

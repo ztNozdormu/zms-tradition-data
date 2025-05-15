@@ -1,4 +1,3 @@
-use crate::db::types::ClickHouseDatabase;
 use crate::global::{get_ck_db, get_flush_controller};
 use crate::model::cex::kline::MarketKline;
 use crate::model::{DEFAULT_TIMEFRAMES, TimeFrame};
@@ -13,7 +12,6 @@ use tracing::{error, info};
 use trade_aggregation::{
     Aggregator, CandleComponent, GenericAggregator, TimeRule, TimestampResolution, Trade,
 };
-use crate::db::flush_controller::{FlushController, SEGMENT_RECENT};
 
 /// 多周期K线聚合器实现
 #[async_trait]
