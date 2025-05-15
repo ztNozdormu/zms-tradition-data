@@ -6,5 +6,5 @@ mod collector;
 mod global;
 mod infra;
 mod tasks;
-mod common;
 mod service;
+mod common;
