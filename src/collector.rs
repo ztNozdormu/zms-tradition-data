@@ -3,7 +3,7 @@ mod maintenance;
 mod types;
 
 use crate::model::TimeFrame;
-use crate::trade_consumer::aggregatoragg::{CusAggregator, MultiTimeFrameAggregator};
+use crate::collector::aggregatoragg::{CusAggregator, MultiTimeFrameAggregator};
 use anyhow::Result;
 use barter::barter_data::error::DataError;
 use barter::barter_data::event::MarketEvent;

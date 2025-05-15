@@ -1,5 +1,5 @@
 use crate::global::init_global_services;
-use crate::trade_consumer::handle_trade_aggregation;
+use crate::collector::handle_trade_aggregation;
 use listen_tracing::{LogCache, LogEntry};
 use std::env;
 use std::net::SocketAddr;

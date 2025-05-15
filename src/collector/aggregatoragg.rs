@@ -2,8 +2,8 @@ use crate::db::types::ClickHouseDatabase;
 use crate::global::{get_ck_db, get_flush_controller};
 use crate::model::cex::kline::MarketKline;
 use crate::model::{DEFAULT_TIMEFRAMES, TimeFrame};
-use crate::trade_consumer::maintenance::historical_maintenance_process;
-use crate::trade_consumer::types::{CusCandle, to_agg_trade};
+use crate::collector::maintenance::historical_maintenance_process;
+use crate::collector::types::{CusCandle, to_agg_trade};
 use async_trait::async_trait;
 use barter::barter_data::subscription::trade::PublicTrade;
 use std::collections::HashSet;
@@ -166,10 +166,10 @@ impl CusAggregator for MultiTimeFrameAggregator {
                     tf, symbol, market_kline
                 );
 
-                // 确保插入操作完成
-                if let Err(e) = get_flush_controller().push(exchange,symbol,tf.to_str(),SEGMENT_RECENT,&market_kline).await {
-                    error!("Insert market_kline failed: {:?}", e);
-                } else {
+                // 确保插入操作完成 comment
+                // if let Err(e) = get_flush_controller().push(exchange,symbol,tf.to_str(),SEGMENT_RECENT,&market_kline).await {
+                //     error!("Insert market_kline failed: {:?}", e);
+                // } else {
                     let symbol_clone = symbol.to_string();
                     let exchange_clone = exchange.to_string();
                     let tf_clone = tf.clone();
@@ -184,7 +184,7 @@ impl CusAggregator for MultiTimeFrameAggregator {
                         )
                         .await;
                     });
-                }
+                // }
             }
         }
     }

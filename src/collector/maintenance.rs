@@ -4,7 +4,7 @@ use crate::db::types::ClickHouseDatabase;
 use crate::global::{get_ck_db, get_futures_market};
 use crate::model::TimeFrame;
 use crate::model::cex::kline::{MarketKline, MinMaxCloseTime};
-use crate::trade_consumer::maintenance::types::{
+use crate::collector::maintenance::types::{
     ArchiveDirection, ArchiveError, ArchiveTask, ArchiveWindow,
 };
 use anyhow::Result;
@@ -135,6 +135,9 @@ pub async fn run_archive_task(
     }
     // 按时间排序以提升 ClickHouse 插入性能（可选）
     all_klines.sort_by_key(|k| k.close_time);
+
+    // TODO all_klines 当批次任务处理数据量如果小于1000条则先放入缓存，延迟/累积入库
+    // TODO get_flush_controller().push(exchange,symbol,tf.to_str(),SEGMENT_RECENT,&market_kline).await
 
     // === 批量写入 ClickHouse ===
     writer
@@ -303,7 +306,7 @@ pub fn should_skip_archiving_due_to_old_data(
 ) -> bool {
     let five_years_ago = Utc::now().timestamp_millis() - (5 * 365 * 24 * 60 * 60 * 1000);
     if min_close_time <= five_years_ago {
-        tracing::info!(
+        info!(
             "Min close time {:?} is earlier than 5 years ago, skipping archive for {} - {} - {}",
             min_close_time,
             symbol,

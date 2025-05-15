@@ -3,7 +3,7 @@ mod macros;
 mod db;
 mod model;
 mod server;
-mod trade_consumer;
+mod collector;
 mod util;
 
 mod global;
