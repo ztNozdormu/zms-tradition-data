@@ -1,7 +1,7 @@
 use crate::infra::db::ckdb::ClickhouseDb;
 use crate::infra::cache::flush_controller::FlushController;
 use crate::infra::cache::kv_store::RedisKVStore;
-use crate::utils::{make_binace_client, make_db, make_kv_store};
+use crate::common::utils::{make_binace_client, make_db, make_kv_store};
 use barter::barter_xchange::exchange::binance::futures::market::FuturesMarket;
 use once_cell::sync::OnceCell;
 use std::sync::Arc;
