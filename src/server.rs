@@ -1,4 +1,3 @@
-use crate::global::init_global_services;
 use crate::collector::handle_trade_aggregation;
 use listen_tracing::{LogCache, LogEntry};
 use std::env;
@@ -7,6 +6,7 @@ use std::sync::Arc;
 use tokio::sync::broadcast;
 use tracing::info;
 use warp::Filter;
+use crate::global::init_global_services;
 
 mod response;
 mod routes;

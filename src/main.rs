@@ -1,12 +1,4 @@
-#[macro_use]
-mod macros;
-mod db;
-mod model;
-mod server;
-mod collector;
-mod util;
-
-mod global;
+use zms_tradition_data::server;
 
 #[tokio::main]
 async fn main() {
