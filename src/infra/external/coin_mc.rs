@@ -1,1 +1,1 @@
-/// https://coinmarketcap.com/api/documentation/v1/#operation/getV1ExchangeAssets
+// https://coinmarketcap.com/api/documentation/v1/#operation/getV1ExchangeAssets

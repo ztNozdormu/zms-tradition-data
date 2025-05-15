@@ -3,7 +3,7 @@ use bb8_redis::{RedisConnectionManager, bb8, redis::cmd};
 use serde::{Serialize, de::DeserializeOwned};
 use tracing::{debug, info};
 
-use crate::util::create_redis_pool;
+use crate::utils::create_redis_pool;
 
 #[derive(Debug, Clone)]
 pub struct RedisKVStore {
