@@ -13,6 +13,7 @@ use reqwest::{RequestBuilder, StatusCode};
 use serde::Deserialize;
 use thiserror::Error;
 use crate::common::utils::must_get_env;
+use crate::infra::external::cgecko::coin_latest::get_coin_latest;
 
 pub struct CgeckoSigner;
 impl BuildStrategy for CgeckoSigner {
@@ -20,7 +21,8 @@ impl BuildStrategy for CgeckoSigner {
     where
         Request: RestRequest
     {
-        builder.header("X-CMC_PRO_API_KEY", must_get_env("COIN_GECKO_KEY").as_str()).build().map_err(SocketError::from)
+        // must_get_env("COIN_GECKO_KEY").as_str() CG-ZPtQ47VNptmc4zkZDU8ZTQBz
+        builder.header("x-cg-demo-api-key", "CG-ZPtQ47VNptmc4zkZDU8ZTQBz").build().map_err(SocketError::from)
     }
 }
 
@@ -29,11 +31,11 @@ pub struct CgeckoParser;
 
 impl HttpParser for CgeckoParser {
     type ApiError = serde_json::Value;
-    type OutputError = crate::infra::external::cmc::ExecutionError;
+    type OutputError = ExecutionError;
 
     fn parse_api_error(&self, status: StatusCode, api_error: Self::ApiError) -> Self::OutputError {
         let error = api_error.to_string();
-        crate::infra::external::cmc::ExecutionError::Socket(SocketError::HttpResponse(status, error))
+        ExecutionError::Socket(SocketError::HttpResponse(status, error))
     }
 }
 
@@ -54,8 +56,8 @@ pub struct CoinGecko;
 
 impl CoinGecko {
     pub fn new () -> Self { CoinGecko }
-    pub fn get_coin_latest(){
-        todo!()
+    pub async fn get_coin_latest(){
+        get_coin_latest().await;
     }
 }
 
@@ -65,6 +67,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_coin_latest() {
-        CoinGecko::get_coin_latest();
+        listen_tracing::setup_tracing();
+        CoinGecko::get_coin_latest().await;
     }
 }

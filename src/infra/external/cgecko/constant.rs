@@ -1,6 +1,6 @@
 /// CoinMarketCap API. All requests should target domain
-pub const BASE_URL: &str = "https://pro-api.coinmarketcap.com";
+pub const BASE_URL: &str = "https://api.coingecko.com";
 
-/// https://coinmarketcap.com/api/documentation/v1/#operation/getV2CryptocurrencyInfo
-///  返回历史 UTC 日期的所有加密货币的排名和排序列表。
-pub const COIN_LATEST: &str = "/cryptocurrency/listings/latest";
+/// https://docs.coingecko.com/v3.0.1/reference/coins-markets
+/// This endpoint allows you to query all the supported coins with price, market cap, volume and market related data
+pub const COIN_LATEST: &str = "/api/v3/coins/markets";
