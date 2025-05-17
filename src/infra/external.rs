@@ -1,1 +1,1 @@
-mod coin_mc;
+mod cmc;

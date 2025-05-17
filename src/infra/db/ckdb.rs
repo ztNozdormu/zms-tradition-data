@@ -416,8 +416,7 @@ impl Paginatable<MarketKline> for ClickhouseDb {
 
 #[cfg(test)]
 mod tests {
-    use crate::util::make_db;
-
+    use crate::common::utils::make_db;
     use super::*;
 
     #[tokio::test]
