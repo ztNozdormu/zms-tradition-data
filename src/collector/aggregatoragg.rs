@@ -1,8 +1,8 @@
+use crate::collector::maintenance::historical_maintenance_process;
+use crate::collector::types::{CusCandle, to_agg_trade};
 use crate::global::{get_ck_db, get_flush_controller};
 use crate::model::cex::kline::MarketKline;
 use crate::model::{DEFAULT_TIMEFRAMES, TimeFrame};
-use crate::collector::maintenance::historical_maintenance_process;
-use crate::collector::types::{CusCandle, to_agg_trade};
 use async_trait::async_trait;
 use barter::barter_data::subscription::trade::PublicTrade;
 use std::collections::HashSet;
@@ -151,7 +151,7 @@ impl CusAggregator for MultiTimeFrameAggregator {
 
         let mut aggrs = self.aggregators.write().await;
 
-        let ck_db = get_ck_db();
+        // let ck_db = get_ck_db();
 
         for tf in timeframes.iter() {
             let aggr = self.get_or_create_aggregator(&mut aggrs, symbol, tf);
@@ -168,20 +168,20 @@ impl CusAggregator for MultiTimeFrameAggregator {
                 // if let Err(e) = get_flush_controller().push(exchange,symbol,tf.to_str(),SEGMENT_RECENT,&market_kline).await {
                 //     error!("Insert market_kline failed: {:?}", e);
                 // } else {
-                    let symbol_clone = symbol.to_string();
-                    let exchange_clone = exchange.to_string();
-                    let tf_clone = tf.clone();
-                    let close_time = trade.timestamp;
-                    // 插入成功后，执行历史数据维护
-                    tokio::spawn(async move {
-                        historical_maintenance_process(
-                            symbol_clone,
-                            exchange_clone,
-                            close_time,
-                            Arc::new(tf_clone),
-                        )
-                        .await;
-                    });
+                let symbol_clone = symbol.to_string();
+                let exchange_clone = exchange.to_string();
+                let tf_clone = tf.clone();
+                let close_time = trade.timestamp;
+                // 插入成功后，执行历史数据维护
+                tokio::spawn(async move {
+                    historical_maintenance_process(
+                        symbol_clone,
+                        exchange_clone,
+                        close_time,
+                        Arc::new(tf_clone),
+                    )
+                    .await;
+                });
                 // }
             }
         }

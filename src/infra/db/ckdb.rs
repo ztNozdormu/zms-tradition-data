@@ -416,8 +416,8 @@ impl Paginatable<MarketKline> for ClickhouseDb {
 
 #[cfg(test)]
 mod tests {
-    use crate::common::utils::make_db;
     use super::*;
+    use crate::common::utils::make_db;
 
     #[tokio::test]
     async fn test_health_check() {

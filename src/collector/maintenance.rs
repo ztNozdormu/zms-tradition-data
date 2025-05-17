@@ -1,19 +1,18 @@
 mod types;
 
-use crate::infra::db::types::ClickHouseDatabase;
-use crate::global::{get_ck_db, get_futures_market};
-use crate::model::TimeFrame;
-use crate::model::cex::kline::{MarketKline, MinMaxCloseTime};
 use crate::collector::maintenance::types::{
     ArchiveDirection, ArchiveError, ArchiveTask, ArchiveWindow,
 };
+use crate::global::{get_ck_db, get_futures_market};
+use crate::infra::db::types::ClickHouseDatabase;
+use crate::model::TimeFrame;
+use crate::model::cex::kline::{MarketKline, MinMaxCloseTime};
 use anyhow::Result;
 use backoff::{ExponentialBackoff, future::retry};
 /// This file contains the implementation of the maintenance module of the trade consumer.
 /// 对历史数据进行清理、归档、缓存等操作
 use barter::barter_xchange::exchange::binance::model::{KlineSummaries, KlineSummary};
 use chrono::Utc;
-use futures_util::TryFutureExt;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
@@ -321,9 +320,6 @@ pub fn should_skip_archiving_due_to_old_data(
 
 /// 获取默认起始时间（如果有配置或其他数据源）
 fn get_default_start_time(close_time: i64, tf: &TimeFrame) -> Option<i64> {
-    // 获取时间周期的毫秒数
-    let tf_ms = tf.to_millis(); // 返回该周期的毫秒数
-
     // 计算一个周期之前的时间点，排除掉已计算的最新K线
     let start_time = close_time;
 

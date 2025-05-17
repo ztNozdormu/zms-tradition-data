@@ -1,13 +1,12 @@
 use crate::infra::external::cmc::constant::{BASE_URL, COIN_LATEST};
 use crate::infra::external::cmc::{CmcParser, CmcSigner, CmcStatus, ExecutionError};
+use barter::barter_integration;
+use barter::barter_integration::protocol::http::private::RequestSigner;
+use barter::barter_integration::protocol::http::private::encoder::HexEncoder;
 use barter::barter_integration::protocol::http::rest::RestRequest;
+use barter::barter_integration::protocol::http::rest::client::RestClient;
 use serde::Deserialize;
 use std::borrow::Cow;
-use barter::barter_integration;
-use barter::barter_integration::protocol::http::private::encoder::HexEncoder;
-use barter::barter_integration::protocol::http::private::RequestSigner;
-use barter::barter_integration::protocol::http::rest::client::RestClient;
-use hmac::{Hmac, Mac};
 use tracing::info;
 
 /// Request for CMC /v1/cryptocurrency/map
@@ -33,8 +32,6 @@ pub struct CoinMapResponse {
     pub data: Vec<CoinInfo>,
 }
 
-
-
 #[derive(Debug, Deserialize)]
 pub struct CoinInfo {
     pub id: u64,
@@ -46,9 +43,7 @@ pub struct CoinInfo {
     pub platform: Option<serde_json::Value>,
 }
 
-
 async fn get_coin_latest() {
-
     // Build Ftx configured RequestSigner for signing http requests with hex encoding
     let request_signer = CmcSigner;
 
@@ -56,10 +51,8 @@ async fn get_coin_latest() {
     let rest_client = RestClient::new(BASE_URL, request_signer, CmcParser);
 
     // Fetch Result<FetchBalancesResponse, ExecutionError>
-    let response: Result<
-        (CoinMapResponse, barter_integration::metric::Metric),
-        ExecutionError,
-    > = rest_client.execute(FetchCoinMapRequest).await;
+    let response: Result<(CoinMapResponse, barter_integration::metric::Metric), ExecutionError> =
+        rest_client.execute(FetchCoinMapRequest).await;
 
     info!("response: {:}", response.is_ok());
 }

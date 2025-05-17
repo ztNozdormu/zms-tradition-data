@@ -17,3 +17,6 @@ zms-tradition-data
  4. 机器人更敏感的数据监听狙击，跟单，套利
 ## 
 https://coinmarketcap.com/api/documentation/v1/#section/Authentication
+1. 板块划分
+2. 热力图
+3. 资金流向?

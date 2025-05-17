@@ -1,10 +1,10 @@
 #[macro_use]
 pub mod macros;
-mod model;
-pub mod server;
 mod collector;
+mod common;
 mod global;
 mod infra;
-mod tasks;
+mod model;
+pub mod server;
 mod service;
-mod common;
+mod tasks;

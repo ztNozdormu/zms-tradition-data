@@ -1,8 +1,8 @@
 mod coin_latest;
 mod constant;
 
+use crate::common::utils::must_get_env;
 /// CoinMarketCap API key signer using header injection only (no HMAC)
-
 use barter::barter_integration::error::SocketError;
 use barter::barter_integration::protocol::http::private::Signer;
 use barter::barter_integration::protocol::http::rest::RestRequest;
@@ -11,15 +11,24 @@ use hmac::Mac;
 use reqwest::{RequestBuilder, StatusCode};
 use serde::Deserialize;
 use thiserror::Error;
-use crate::common::utils::must_get_env;
 
 pub struct CmcSigner;
 impl BuildStrategy for CmcSigner {
-    fn build<Request>(&self, _request: Request, builder: RequestBuilder) -> Result<reqwest::Request, SocketError>
+    fn build<Request>(
+        &self,
+        _request: Request,
+        builder: RequestBuilder,
+    ) -> Result<reqwest::Request, SocketError>
     where
-        Request: RestRequest
+        Request: RestRequest,
     {
-        builder.header("X-CMC_PRO_API_KEY", must_get_env("COIN_MARKET_KEY").as_str()).build().map_err(SocketError::from)
+        builder
+            .header(
+                "X-CMC_PRO_API_KEY",
+                must_get_env("COIN_MARKET_KEY").as_str(),
+            )
+            .build()
+            .map_err(SocketError::from)
     }
 }
 
@@ -73,7 +82,6 @@ impl BuildStrategy for CmcSigner {
 //     }
 // }
 
-
 /// Parser for CoinMarketCap responses
 pub struct CmcParser;
 
@@ -103,8 +111,10 @@ pub struct CmcStatus {
 pub struct CoinMarketCap;
 
 impl CoinMarketCap {
-    pub fn new () -> Self { CoinMarketCap }
-    pub fn get_coin_latest(){
+    pub fn new() -> Self {
+        CoinMarketCap
+    }
+    pub fn get_coin_latest() {
         todo!()
     }
 }

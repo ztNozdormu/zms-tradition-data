@@ -2,8 +2,8 @@ mod aggregatoragg;
 mod maintenance;
 mod types;
 
-use crate::model::TimeFrame;
 use crate::collector::aggregatoragg::{CusAggregator, MultiTimeFrameAggregator};
+use crate::model::TimeFrame;
 use anyhow::Result;
 use barter::barter_data::error::DataError;
 use barter::barter_data::event::MarketEvent;
@@ -36,7 +36,7 @@ pub async fn handle_trade_aggregation() {
 }
 
 pub async fn init_trade_streams()
-    -> std::result::Result<Streams<MarketStreamResult<MarketDataInstrument, PublicTrade>>, DataError> {
+-> std::result::Result<Streams<MarketStreamResult<MarketDataInstrument, PublicTrade>>, DataError> {
     let streams = Streams::<PublicTrades>::builder()
         .subscribe([(
             BinanceFuturesUsd::default(),
@@ -86,18 +86,18 @@ async fn trade_driven_aggregation(
         //     },
         // })])
         if let barter::barter_data::streams::reconnect::Event::Item(MarketEvent {
-                                                                        time_exchange,
-                                                                        time_received: _time_received,
-                                                                        exchange,
-                                                                        instrument,
-                                                                        kind:
-                                                                        PublicTrade {
-                                                                            id,
-                                                                            price,
-                                                                            amount,
-                                                                            side,
-                                                                        },
-                                                                    }) = event
+            time_exchange,
+            time_received: _time_received,
+            exchange,
+            instrument,
+            kind:
+                PublicTrade {
+                    id,
+                    price,
+                    amount,
+                    side,
+                },
+        }) = event
         {
             // 这里最好创建 aggregator 实例在循环外
             multi_aggregator

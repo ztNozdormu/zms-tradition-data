@@ -1,5 +1,5 @@
-use crate::infra::db::types::{ClickHouseDatabase, TableRecord};
 use crate::global::{get_ck_db, get_kv};
+use crate::infra::db::types::{ClickHouseDatabase, TableRecord};
 use anyhow::Result;
 use clickhouse::Row;
 use serde::Serialize;
