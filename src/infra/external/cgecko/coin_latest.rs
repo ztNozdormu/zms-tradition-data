@@ -2,6 +2,7 @@ use crate::infra::external::cgecko::constant::COIN_LATEST;
 use barter::barter_integration::protocol::http::rest::RestRequest;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
+use chrono::{DateTime, Utc};
 
 pub struct FetchCoinRequest(pub CoinQueryParams);
 
@@ -65,12 +66,12 @@ pub struct CoinListInfo {
     pub max_supply: Option<f64>,
     pub ath: f64,
     pub ath_change_percentage: f64,
-    pub ath_date: String, // can also use chrono::DateTime<FixedOffset> if parsing
+    pub ath_date: DateTime<Utc>, // can also use chrono::DateTime<FixedOffset> if parsing
     pub atl: f64,
     pub atl_change_percentage: f64,
     pub atl_date: String,
     pub roi: Option<RoiInfo>, // Can replace with typed struct if known
-    pub last_updated: String,
+    pub last_updated: DateTime<Utc>,
 }
 
 
