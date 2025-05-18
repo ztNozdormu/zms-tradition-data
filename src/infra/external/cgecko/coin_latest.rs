@@ -69,7 +69,14 @@ pub struct CoinListInfo {
     pub atl: f64,
     pub atl_change_percentage: f64,
     pub atl_date: String,
-    pub roi: Option<serde_json::Value>, // Can replace with typed struct if known
+    pub roi: Option<RoiInfo>, // Can replace with typed struct if known
     pub last_updated: String,
 }
 
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RoiInfo {
+    pub times: f64,
+    pub currency: String,
+    pub percentage: f64,
+}
