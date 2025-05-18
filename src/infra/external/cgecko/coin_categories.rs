@@ -28,11 +28,11 @@ pub struct CoinCategoriesResponse(pub Vec<CoinCategories>);
 pub struct CoinCategories {
     pub id: String,                        // category ID
     pub name: String,                      // category name
-    pub market_cap: f64,                   // category market cap
-    pub market_cap_change_24h: f64,        // market cap change in 24h
+    pub market_cap: Option<f64>,                   // category market cap
+    pub market_cap_change_24h: Option<f64>,        // market cap change in 24h
     pub content: Option<String>,           // description, nullable
     pub top_3_coins_id: Option<Vec<String>>, // coin IDs (if available)
-    pub top_3_coins: Vec<String>,          // image URLs of top 3 coins
-    pub volume_24h: f64,                   // 24h volume
-    pub updated_at: String,                // last update time
+    pub top_3_coins: Option<Vec<String>>,          // image URLs of top 3 coins
+    pub volume_24h: Option<f64>,                   // 24h volume
+    pub updated_at: Option<String>,                // last update time
 }

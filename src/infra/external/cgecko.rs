@@ -151,8 +151,8 @@ mod tests {
         match conin_data {
             Some(conin_data) => {
                 info!(
-                "{} ({}) - categories: ${}, Market Cap Rank: {}",
-                conin_data.name, conin_data.symbol, conin_data.categories, conin_data.market_cap_rank,
+                "({})- symbol: {}, categories len : {}, Market Cap Rank: {}",
+                conin_data.name, conin_data.symbol, conin_data.categories.len(), conin_data.market_cap_rank.unwrap(),
             );
             },
             None => {
@@ -168,8 +168,8 @@ mod tests {
         let categories = dcg.get_categories().await;
         for categorie in &categories {
             info!(
-                "{} ({}) - top_3_coins_id: ${}, Market Cap: {}",
-                categorie.name, categorie.top_3_coins_id, categorie.market_cap,
+                "({}) - id: ${}, Market Cap: {}",
+                categorie.name, categorie.id, categorie.market_cap.unwrap_or(0f64),
             );
         }
     }
