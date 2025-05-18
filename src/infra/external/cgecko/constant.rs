@@ -9,3 +9,7 @@ pub const COIN_LATEST: &str = "/api/v3/coins/markets";
 /// This endpoint allows you to query all the metadata (image, websites, socials, description, contract address, etc.)
 /// and market data (price, ATH, exchange tickers, etc.) of a coin from the CoinGecko coin page based on a particular coin ID
 pub const COIN_DATA: &str = "/api/v3/coins";
+
+/// https://api.coingecko.com/api/v3/coins/categories
+/// This endpoint allows you to query all the coins categories with market data (market cap, volume, ...) on CoinGecko
+pub const COIN_CATEGORIES: &str = "/api/v3/coins/categories";

@@ -1,6 +1,7 @@
 mod coin_latest;
 mod constant;
 mod coin_data;
+mod coin_categories;
 
 /// https://docs.coingecko.com/v3.0.1/reference/introduction
 /// CoinGecko API key signer using header injection only (no HMAC)

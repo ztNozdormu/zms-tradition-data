@@ -4,10 +4,8 @@ mod constant;
 use crate::common::utils::must_get_env;
 /// CoinMarketCap API key signer using header injection only (no HMAC)
 use barter::barter_integration::error::SocketError;
-use barter::barter_integration::protocol::http::private::Signer;
 use barter::barter_integration::protocol::http::rest::RestRequest;
 use barter::barter_integration::protocol::http::{BuildStrategy, HttpParser};
-use hmac::Mac;
 use reqwest::{RequestBuilder, StatusCode};
 use serde::Deserialize;
 use thiserror::Error;

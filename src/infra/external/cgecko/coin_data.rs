@@ -9,7 +9,7 @@ pub struct FetchCoinDataRequest {
     pub query_params: CoinDataQueryParams,
 }
 
-#[derive(Debug, Default, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct CoinDataQueryParams {
     /// Include all localized languages in the response
     pub localization: bool,
@@ -49,7 +49,9 @@ impl RestRequest for FetchCoinDataRequest {
     type Body = ();
 
     fn path(&self) -> Cow<'static, str> {
-        Cow::Borrowed(format!("{}/{}", COIN_DATA, self.coin_id).as_str())
+        // let url = format!("{}/{}", COIN_DATA, self.coin_id).as_str();
+        // Cow::Borrowed(url)
+        Cow::Owned(format!("{}/{}", COIN_DATA, self.coin_id))
     }
 
     fn method() -> reqwest::Method {
