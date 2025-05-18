@@ -1,13 +1,15 @@
 mod coin_latest;
 mod constant;
+mod coin_data;
 
+/// https://docs.coingecko.com/v3.0.1/reference/introduction
+/// CoinGecko API key signer using header injection only (no HMAC)
 use crate::infra::external::cgecko::coin_latest::{
     CoinListInfo, CoinQueryParams, CoinResponse, FetchCoinRequest,
 };
 use crate::infra::external::cgecko::constant::BASE_URL;
 use crate::infra::external::{CommonExternalParser, ExecutionError};
 use barter::barter_integration;
-/// CoinGecko API key signer using header injection only (no HMAC)
 use barter::barter_integration::error::SocketError;
 use barter::barter_integration::protocol::http::private::Signer;
 use barter::barter_integration::protocol::http::rest::RestRequest;
