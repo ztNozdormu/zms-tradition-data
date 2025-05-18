@@ -20,6 +20,7 @@ use reqwest::RequestBuilder;
 use serde::Deserialize;
 use std::fmt::Debug;
 use tracing::{error, info};
+use crate::infra::external::cgecko::coin_data::{CoinDataInfo, CoinDataQueryParams, FetchCoinDataRequest};
 
 pub struct CgeckoSigner;
 impl BuildStrategy for CgeckoSigner {
@@ -93,6 +94,21 @@ where
             }
         }
     }
+
+    pub async fn get_coin_data(&self,coin_id: &str) -> Option<CoinDataInfo> {
+        let fetch_request = FetchCoinDataRequest {
+            coin_id: coin_id.to_string(),
+            query_params: CoinDataQueryParams::default(),
+        };
+
+        match self.rest_client.execute(fetch_request).await {
+            Ok((coin_response, _)) => Some(coin_response.0,),
+            Err(err) => {
+                error!("Failed to fetch coin data: {:?}", err);
+                None
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -109,6 +125,25 @@ mod tests {
                 "{} ({}) - Price: ${}, Market Cap: {}",
                 coin.name, coin.symbol, coin.current_price, coin.market_cap,
             );
+        }
+    }
+
+    #[tokio::test]
+    async fn test_get_coin_data() {
+        listen_tracing::setup_tracing();
+        let dcg = DefaultCoinGecko::default();
+        let coin_id = "bitcoin";
+        let conin_data = dcg.get_coin_data(coin_id).await;
+        match conin_data {
+            Some(conin_data) => {
+                info!(
+                "{} ({}) - categories: ${}, Market Cap Rank: {}",
+                conin_data.name, conin_data.symbol, conin_data.categories, conin_data.market_cap_rank,
+            );
+            },
+            None => {
+                error!("Failed to fetch coin data");
+            }
         }
     }
 }

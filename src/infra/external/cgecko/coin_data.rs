@@ -5,7 +5,7 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 
 pub struct FetchCoinDataRequest {
-    pub coin_id: str,
+    pub coin_id: String,
     pub query_params: CoinDataQueryParams,
 }
 
