@@ -21,6 +21,7 @@ use reqwest::RequestBuilder;
 use serde::Deserialize;
 use std::fmt::Debug;
 use tracing::{error, info};
+use crate::infra::external::cgecko::coin_categories::{CoinCategories, FetchCoinCategoriesRequest};
 use crate::infra::external::cgecko::coin_data::{CoinDataInfo, CoinDataQueryParams, FetchCoinDataRequest};
 
 pub struct CgeckoSigner;
@@ -88,7 +89,7 @@ where
         });
 
         match self.rest_client.execute(fetch_request).await {
-            Ok((coin_response, _)) => coin_response.0,
+            Ok((response, _)) => response.0,
             Err(err) => {
                 error!("Failed to fetch coin data: {:?}", err);
                 Vec::new()
@@ -103,10 +104,22 @@ where
         };
 
         match self.rest_client.execute(fetch_request).await {
-            Ok((coin_response, _)) => Some(coin_response.0,),
+            Ok((response, _)) => Some(response.0,),
             Err(err) => {
                 error!("Failed to fetch coin data: {:?}", err);
                 None
+            }
+        }
+    }
+
+    pub async fn get_categories(&self) -> Vec<CoinCategories> {
+        let fetch_request = FetchCoinCategoriesRequest;
+
+        match self.rest_client.execute(fetch_request).await {
+            Ok((response, _)) => response.0,
+            Err(err) => {
+                error!("Failed to fetch coin data: {:?}", err);
+                Vec::new()
             }
         }
     }
@@ -145,6 +158,19 @@ mod tests {
             None => {
                 error!("Failed to fetch coin data");
             }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_get_categories() {
+        listen_tracing::setup_tracing();
+        let dcg = DefaultCoinGecko::default();
+        let categories = dcg.get_categories().await;
+        for categorie in &categories {
+            info!(
+                "{} ({}) - top_3_coins_id: ${}, Market Cap: {}",
+                categorie.name, categorie.top_3_coins_id, categorie.market_cap,
+            );
         }
     }
 }
