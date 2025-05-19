@@ -8,3 +8,4 @@ mod model;
 pub mod server;
 mod service;
 mod tasks;
+mod schema;
