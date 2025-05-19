@@ -6,7 +6,7 @@ use thiserror::Error;
 mod cgecko;
 mod cmc;
 
-/// Parser for third service responses
+/// Parser for third domain responses
 #[derive(Debug)]
 pub struct CommonExternalParser;
 

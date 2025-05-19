@@ -36,7 +36,7 @@ pub async fn start() {
     }
     info!("Starting zms-tradition indexer...");
 
-    // init global comments service
+    // init global comments domain
     init_global_services().await;
 
     //  trade driven aggregator update klines async
