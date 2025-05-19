@@ -29,7 +29,7 @@ docker-compose -f docker-compose.yml up -d
 ### desiel
 
 ```bash
-cargo install diesel_cli --no-default-features --features sqlite
+cargo install diesel_cli --no-default-features --features mysql
 ```
 * diesel setup
 * diesel migration generate create_tableName
