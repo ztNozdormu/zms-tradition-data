@@ -21,6 +21,11 @@ https://coinmarketcap.com/api/documentation/v1/#section/Authentication
 2. 热力图
 3. 资金流向?
 
+### dev env
+```bash
+docker-compose -f docker-compose.yml down -v
+docker-compose -f docker-compose.yml up -d
+```
 ### desiel
 
 ```bash
