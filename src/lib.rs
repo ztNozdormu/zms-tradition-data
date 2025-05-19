@@ -5,7 +5,7 @@ mod common;
 mod global;
 mod infra;
 mod model;
+pub mod schema;
 pub mod server;
 mod service;
 mod tasks;
-mod schema;

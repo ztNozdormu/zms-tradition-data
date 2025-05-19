@@ -1,8 +1,8 @@
+use diesel::mysql::MysqlConnection;
+use diesel::r2d2::{ConnectionManager, Pool, PoolError, PooledConnection};
+use dotenv::dotenv;
 use std::env;
 use std::time::Duration;
-use diesel::mysql::MysqlConnection;
-use diesel::r2d2::{ConnectionManager, Pool, PooledConnection, PoolError};
-use dotenv::dotenv;
 
 pub type MySqlPool = Pool<ConnectionManager<MysqlConnection>>;
 pub type MySqlPooledConnection = PooledConnection<ConnectionManager<MysqlConnection>>;
@@ -23,5 +23,4 @@ pub fn make_mysql_pool() -> Result<MySqlPool, PoolError> {
         .connection_timeout(Duration::from_secs(5))
         .idle_timeout(Some(Duration::from_secs(300)))
         .build(manager)
-
 }

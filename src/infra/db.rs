@@ -1,3 +1,3 @@
 pub mod ckdb;
-pub mod types;
 pub mod mysql;
+pub mod types;

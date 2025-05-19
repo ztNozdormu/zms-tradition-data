@@ -1,8 +1,12 @@
+mod coin_categories;
+mod coin_data;
 mod coin_latest;
 mod constant;
-mod coin_data;
-mod coin_categories;
 
+use crate::infra::external::cgecko::coin_categories::{CoinCategories, FetchCoinCategoriesRequest};
+use crate::infra::external::cgecko::coin_data::{
+    CoinDataInfo, CoinDataQueryParams, FetchCoinDataRequest,
+};
 /// https://docs.coingecko.com/v3.0.1/reference/introduction
 /// CoinGecko API key signer using header injection only (no HMAC)
 use crate::infra::external::cgecko::coin_latest::{
@@ -21,8 +25,6 @@ use reqwest::RequestBuilder;
 use serde::Deserialize;
 use std::fmt::Debug;
 use tracing::{error, info};
-use crate::infra::external::cgecko::coin_categories::{CoinCategories, FetchCoinCategoriesRequest};
-use crate::infra::external::cgecko::coin_data::{CoinDataInfo, CoinDataQueryParams, FetchCoinDataRequest};
 
 pub struct CgeckoSigner;
 impl BuildStrategy for CgeckoSigner {
@@ -97,14 +99,14 @@ where
         }
     }
 
-    pub async fn get_coin_data(&self,coin_id: &str) -> Option<CoinDataInfo> {
+    pub async fn get_coin_data(&self, coin_id: &str) -> Option<CoinDataInfo> {
         let fetch_request = FetchCoinDataRequest {
             coin_id: coin_id.to_string(),
             query_params: CoinDataQueryParams::default(),
         };
 
         match self.rest_client.execute(fetch_request).await {
-            Ok((response, _)) => Some(response.0,),
+            Ok((response, _)) => Some(response.0),
             Err(err) => {
                 error!("Failed to fetch coin data: {:?}", err);
                 None
@@ -151,10 +153,13 @@ mod tests {
         match conin_data {
             Some(conin_data) => {
                 info!(
-                "({})- symbol: {}, categories len : {}, Market Cap Rank: {}",
-                conin_data.name, conin_data.symbol, conin_data.categories.len(), conin_data.market_cap_rank.unwrap(),
-            );
-            },
+                    "({})- symbol: {}, categories len : {}, Market Cap Rank: {}",
+                    conin_data.name,
+                    conin_data.symbol,
+                    conin_data.categories.len(),
+                    conin_data.market_cap_rank.unwrap(),
+                );
+            }
             None => {
                 error!("Failed to fetch coin data");
             }
@@ -169,7 +174,9 @@ mod tests {
         for categorie in &categories {
             info!(
                 "({}) - id: ${}, Market Cap: {}",
-                categorie.name, categorie.id, categorie.market_cap.unwrap_or(0f64),
+                categorie.name,
+                categorie.id,
+                categorie.market_cap.unwrap_or(0f64),
             );
         }
     }

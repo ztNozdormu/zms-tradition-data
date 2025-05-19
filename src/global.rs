@@ -2,10 +2,10 @@ use crate::common::utils::{make_binace_client, make_db, make_kv_store};
 use crate::infra::cache::flush_controller::FlushController;
 use crate::infra::cache::kv_store::RedisKVStore;
 use crate::infra::db::ckdb::ClickhouseDb;
+use crate::infra::db::mysql::{MySqlPool, make_mysql_pool};
 use barter::barter_xchange::exchange::binance::futures::market::FuturesMarket;
 use once_cell::sync::OnceCell;
 use std::sync::Arc;
-use crate::infra::db::mysql::{make_mysql_pool, MySqlPool};
 
 // Use Arc to avoid cloning actual instances and allow shared ownership
 pub static CK_DB: OnceCell<Arc<ClickhouseDb>> = OnceCell::new();
@@ -66,7 +66,6 @@ pub fn set_flush_controller(instance: Arc<FlushController>) -> Result<(), Arc<Fl
     FLUSH_CONTROLLER.set(instance)
 }
 
-
 /// Get shared ClickHouse instance (panics if not initialized)
 pub fn get_ck_db() -> Arc<ClickhouseDb> {
     CK_DB.get().expect("ClickhouseDb not initialized").clone()
@@ -78,7 +77,10 @@ pub fn get_kv() -> Arc<RedisKVStore> {
 }
 
 pub fn get_mysql_pool() -> Arc<MySqlPool> {
-    MYSQL_POOL.get().expect("MYSQL_POOL not initialized").clone()
+    MYSQL_POOL
+        .get()
+        .expect("MYSQL_POOL not initialized")
+        .clone()
 }
 
 /// Get shared KV store instance (panics if not initialized)
