@@ -1,3 +1,4 @@
+use crate::common::serde_fun::option_vec_to_value;
 use crate::domain::model::coin_rank_info::{CoinRankInfo, NewCoinRankInfo};
 use crate::infra::external::cgecko::coin_categories::CoinCategories;
 use bigdecimal::BigDecimal;
@@ -62,11 +63,10 @@ impl From<CoinCategories> for NewCoinCategory {
             market_cap: info.market_cap.clone(),
             market_cap_change_24h: info.market_cap_change_24h.clone(),
             content: info.content.clone(),
-            top_3_coins_id: Default::default(),
-            top_3_coins: Default::default(),
+            top_3_coins_id: option_vec_to_value(info.top_3_coins_id),
+            top_3_coins: option_vec_to_value(info.top_3_coins),
             volume_24h: info.volume_24h.clone(),
-            // updated_at: info.updated_at.clone(),
-            updated_at: None,
+            updated_at: info.updated_at.clone(),
         }
     }
 }

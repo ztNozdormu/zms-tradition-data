@@ -1,6 +1,7 @@
 use bigdecimal::BigDecimal;
 use chrono::{DateTime, NaiveDateTime};
 use serde::{self, Deserialize, Deserializer};
+use serde_json::Value;
 use std::str::FromStr;
 
 pub fn deserialize<'de, D>(deserializer: D) -> Result<BigDecimal, D::Error>
@@ -90,5 +91,16 @@ where
         )))
     } else {
         Ok(None)
+    }
+}
+
+/// 通用函数：将 Option<Vec<T>> 转换为 JSON Value，其中 T: Into<serde_json::Value>
+pub fn option_vec_to_value<T>(input: Option<Vec<T>>) -> Value
+where
+    T: Into<Value>,
+{
+    match input {
+        Some(vec) => Value::Array(vec.into_iter().map(Into::into).collect()),
+        None => Value::Null,
     }
 }
