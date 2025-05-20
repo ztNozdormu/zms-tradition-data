@@ -1,11 +1,11 @@
+use crate::common::serde_fun;
 use crate::infra::external::cgecko::constant::COIN_DATA;
 use barter::barter_integration::protocol::http::rest::RestRequest;
+use bigdecimal::BigDecimal;
+use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::HashMap;
-use bigdecimal::BigDecimal;
-use chrono::NaiveDateTime;
-use crate::common::serde_fun;
 
 pub struct FetchCoinDataRequest {
     pub coin_id: String,
