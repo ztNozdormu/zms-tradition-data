@@ -1,5 +1,7 @@
+use crate::common::serde_fun::{option_map_to_value, option_vec_to_value};
+use crate::infra::external::cgecko::coin_data::CoinData;
 use bigdecimal::BigDecimal;
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::NaiveDateTime;
 use diesel::{Identifiable, Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 
@@ -61,7 +63,7 @@ pub struct CoinDataInfo {
     pub country_origin: Option<String>,
 
     /// 创世日期
-    pub genesis_date: Option<NaiveDate>,
+    pub genesis_date: Option<NaiveDateTime>,
 
     /// 正面情绪投票百分比(%)
     pub sentiment_votes_up_percentage: Option<BigDecimal>,
@@ -92,7 +94,6 @@ pub struct NewCoinDataInfo {
     pub web_slug: Option<String>,
     pub asset_platform_id: Option<String>,
     pub platforms: Option<serde_json::Value>,
-    pub detail_platforms: Option<serde_json::Value>,
     pub block_time_in_minutes: Option<u32>,
     pub hashing_algorithm: Option<String>,
     pub categories: Option<serde_json::Value>,
@@ -100,14 +101,39 @@ pub struct NewCoinDataInfo {
     pub public_notice: Option<String>,
     pub additional_notices: Option<serde_json::Value>,
     pub description: Option<serde_json::Value>,
-    pub links: Option<serde_json::Value>,
-    pub image: Option<serde_json::Value>,
     pub country_origin: Option<String>,
-    pub genesis_date: Option<NaiveDate>,
+    pub genesis_date: Option<NaiveDateTime>,
     pub sentiment_votes_up_percentage: Option<BigDecimal>,
     pub sentiment_votes_down_percentage: Option<BigDecimal>,
     pub watchlist_portfolio_users: Option<u32>,
     pub market_cap_rank: Option<u32>,
-    pub status_updates: Option<serde_json::Value>,
     pub last_updated: Option<NaiveDateTime>,
+}
+
+// 实现从 CoinDataInfo 到 NewCoinDataInfo 的转换
+impl From<CoinData> for NewCoinDataInfo {
+    fn from(data: CoinData) -> Self {
+        NewCoinDataInfo {
+            id: data.id,
+            symbol: data.symbol,
+            name: data.name,
+            web_slug: data.web_slug,
+            asset_platform_id: data.asset_platform_id,
+            platforms: option_map_to_value(data.platforms),
+            block_time_in_minutes: data.block_time_in_minutes.map(|v| v),
+            hashing_algorithm: data.hashing_algorithm,
+            categories: Some(option_vec_to_value(data.categories)),
+            preview_listing: Some(data.preview_listing),
+            public_notice: data.public_notice,
+            additional_notices: Some(option_vec_to_value(data.additional_notices)),
+            description: option_map_to_value(data.description),
+            country_origin: Some(data.country_origin),
+            genesis_date: data.genesis_date,
+            sentiment_votes_up_percentage: data.sentiment_votes_up_percentage,
+            sentiment_votes_down_percentage: data.sentiment_votes_down_percentage,
+            watchlist_portfolio_users: data.watchlist_portfolio_users,
+            market_cap_rank: data.market_cap_rank,
+            last_updated: data.last_updated,
+        }
+    }
 }

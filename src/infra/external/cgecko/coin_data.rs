@@ -3,6 +3,9 @@ use barter::barter_integration::protocol::http::rest::RestRequest;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::HashMap;
+use bigdecimal::BigDecimal;
+use chrono::NaiveDateTime;
+use crate::common::serde_fun;
 
 pub struct FetchCoinDataRequest {
     pub coin_id: String,
@@ -64,69 +67,32 @@ impl RestRequest for FetchCoinDataRequest {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct CoinDataResponse(pub CoinDataInfo);
+pub struct CoinDataResponse(pub CoinData);
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct CoinDataInfo {
+pub struct CoinData {
     pub id: String,
     pub symbol: String,
     pub name: String,
     pub web_slug: Option<String>,
     pub asset_platform_id: Option<String>,
     pub platforms: HashMap<String, String>,
-    pub detail_platforms: HashMap<String, DetailPlatform>,
-    pub block_time_in_minutes: Option<u64>,
+    pub block_time_in_minutes: Option<u32>,
     pub hashing_algorithm: Option<String>,
-    pub categories: Vec<String>,
+    pub categories: Option<Vec<String>>,
     pub preview_listing: bool,
     pub public_notice: Option<String>,
-    pub additional_notices: Vec<String>,
+    pub additional_notices: Option<Vec<String>>,
     pub description: HashMap<String, String>,
-    pub links: CoinLinks,
-    pub image: CoinImage,
     pub country_origin: String,
-    pub genesis_date: Option<String>,
-    pub sentiment_votes_up_percentage: Option<f64>,
-    pub sentiment_votes_down_percentage: Option<f64>,
-    pub watchlist_portfolio_users: Option<u64>,
+    #[serde(deserialize_with = "serde_fun::deserialize_datetime_option")]
+    pub genesis_date: Option<NaiveDateTime>,
+    #[serde(deserialize_with = "serde_fun::deserialize_option_string2bigdcimal")]
+    pub sentiment_votes_up_percentage: Option<BigDecimal>,
+    #[serde(deserialize_with = "serde_fun::deserialize_option_string2bigdcimal")]
+    pub sentiment_votes_down_percentage: Option<BigDecimal>,
+    pub watchlist_portfolio_users: Option<u32>,
     pub market_cap_rank: Option<u32>,
-    pub status_updates: Vec<serde_json::Value>, // 若需要可以进一步定义结构
-    pub last_updated: Option<String>,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct DetailPlatform {
-    pub decimal_place: Option<u32>,
-    pub contract_address: String,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct CoinLinks {
-    pub homepage: Vec<String>,
-    pub whitepaper: Option<String>,
-    #[serde(default)]
-    pub blockchain_site: Vec<String>,
-    pub official_forum_url: Vec<String>,
-    pub chat_url: Vec<String>,
-    pub announcement_url: Vec<String>,
-    pub snapshot_url: Option<String>,
-    pub twitter_screen_name: Option<String>,
-    pub facebook_username: Option<String>,
-    pub bitcointalk_thread_identifier: Option<u64>,
-    pub telegram_channel_identifier: Option<String>,
-    pub subreddit_url: Option<String>,
-    pub repos_url: ReposUrl,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct ReposUrl {
-    pub github: Vec<String>,
-    pub bitbucket: Vec<String>,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct CoinImage {
-    pub thumb: String,
-    pub small: String,
-    pub large: String,
+    #[serde(deserialize_with = "serde_fun::deserialize_datetime_option")]
+    pub last_updated: Option<NaiveDateTime>,
 }

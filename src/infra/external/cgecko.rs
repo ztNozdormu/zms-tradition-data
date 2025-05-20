@@ -5,7 +5,7 @@ mod constant;
 
 use crate::infra::external::cgecko::coin_categories::{CoinCategories, FetchCoinCategoriesRequest};
 use crate::infra::external::cgecko::coin_data::{
-    CoinDataInfo, CoinDataQueryParams, FetchCoinDataRequest,
+    CoinData, CoinDataQueryParams, FetchCoinDataRequest,
 };
 /// https://docs.coingecko.com/v3.0.1/reference/introduction
 /// CoinGecko API key signer using header injection only (no HMAC)
@@ -99,7 +99,7 @@ where
         }
     }
 
-    pub async fn get_coin_data(&self, coin_id: &str) -> Option<CoinDataInfo> {
+    pub async fn get_coin_data(&self, coin_id: &str) -> Option<CoinData> {
         let fetch_request = FetchCoinDataRequest {
             coin_id: coin_id.to_string(),
             query_params: CoinDataQueryParams::default(),

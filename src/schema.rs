@@ -42,7 +42,7 @@ diesel::table! {
         image -> Nullable<Json>,
         #[max_length = 64]
         country_origin -> Nullable<Varchar>,
-        genesis_date -> Nullable<Date>,
+        genesis_date -> Nullable<Datetime>,
         sentiment_votes_up_percentage -> Nullable<Decimal>,
         sentiment_votes_down_percentage -> Nullable<Decimal>,
         watchlist_portfolio_users -> Nullable<Unsigned<Integer>>,

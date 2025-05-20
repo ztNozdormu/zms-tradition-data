@@ -1,6 +1,6 @@
 use bigdecimal::BigDecimal;
 use chrono::{DateTime, NaiveDateTime};
-use serde::{self, Deserialize, Deserializer};
+use serde::{self, Deserialize, Deserializer, Serialize};
 use serde_json::Value;
 use std::str::FromStr;
 
@@ -103,4 +103,10 @@ where
         Some(vec) => Value::Array(vec.into_iter().map(Into::into).collect()),
         None => Value::Null,
     }
+}
+
+/// 将可序列化的值转换为 Option<serde_json::Value>
+/// 如果序列化失败则返回 None
+pub fn option_map_to_value<T: Serialize>(val: T) -> Option<Value> {
+    serde_json::to_value(val).ok()
 }
