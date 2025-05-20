@@ -1,4 +1,4 @@
-use crate::common::serde_fun::{option_map_to_value, option_vec_to_value};
+use crate::common::serde_fun::{option_obj_to_value, option_vec_to_value};
 use crate::infra::external::cgecko::coin_data::CoinData;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
@@ -119,14 +119,14 @@ impl From<CoinData> for NewCoinDataInfo {
             name: data.name,
             web_slug: data.web_slug,
             asset_platform_id: data.asset_platform_id,
-            platforms: option_map_to_value(data.platforms),
+            platforms: option_obj_to_value(data.platforms),
             block_time_in_minutes: data.block_time_in_minutes.map(|v| v),
             hashing_algorithm: data.hashing_algorithm,
             categories: Some(option_vec_to_value(data.categories)),
             preview_listing: Some(data.preview_listing),
             public_notice: data.public_notice,
             additional_notices: Some(option_vec_to_value(data.additional_notices)),
-            description: option_map_to_value(data.description),
+            description: option_obj_to_value(data.description),
             country_origin: Some(data.country_origin),
             genesis_date: data.genesis_date,
             sentiment_votes_up_percentage: data.sentiment_votes_up_percentage,

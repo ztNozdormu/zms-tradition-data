@@ -1,3 +1,5 @@
+use crate::common::serde_fun::option_obj_to_value;
+use crate::infra::external::cgecko::coin_rank::CoinRank;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use diesel::{Identifiable, Insertable, Queryable};
@@ -95,7 +97,7 @@ pub struct NewCoinRankInfo {
     pub id: String,
     pub symbol: String,
     pub name: String,
-    pub image: Option<String>,
+    pub image: String,
     pub current_price: Option<BigDecimal>,
     pub price_change_24h: Option<BigDecimal>,
     pub price_change_percentage_24h: Option<BigDecimal>,
@@ -120,9 +122,9 @@ pub struct NewCoinRankInfo {
     pub last_updated: Option<NaiveDateTime>,
 }
 
-// 实现从 CoinRankInfo 到 NewCoinRankInfo 的转换
-impl From<CoinRankInfo> for NewCoinRankInfo {
-    fn from(info: CoinRankInfo) -> Self {
+// 实现从 CoinRank 到 NewCoinRankInfo 的转换
+impl From<CoinRank> for NewCoinRankInfo {
+    fn from(info: CoinRank) -> Self {
         NewCoinRankInfo {
             id: info.id,
             symbol: info.symbol,
@@ -148,7 +150,7 @@ impl From<CoinRankInfo> for NewCoinRankInfo {
             atl: info.atl,
             atl_change_percentage: info.atl_change_percentage,
             atl_date: info.atl_date,
-            roi: info.roi,
+            roi: option_obj_to_value(info.roi),
             last_updated: info.last_updated,
         }
     }
