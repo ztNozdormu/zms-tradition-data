@@ -1,6 +1,6 @@
-mod coin_categories;
-mod coin_data;
-mod coin_latest;
+pub mod coin_categories;
+pub mod coin_data;
+pub mod coin_latest;
 mod constant;
 
 use crate::infra::external::cgecko::coin_categories::{CoinCategories, FetchCoinCategoriesRequest};
@@ -130,6 +130,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use bigdecimal::BigDecimal;
 
     #[tokio::test]
     async fn test_get_coin_latest() {
@@ -176,8 +177,13 @@ mod tests {
                 "({}) - id: ${}, Market Cap: {}",
                 categorie.name,
                 categorie.id,
-                categorie.market_cap.unwrap_or(0f64),
+                format_opt_decimal(&categorie.market_cap),
             );
         }
+    }
+    fn format_opt_decimal(val: &Option<BigDecimal>) -> String {
+        val.as_ref()
+            .map(ToString::to_string)
+            .unwrap_or_else(|| "N/A".to_string())
     }
 }

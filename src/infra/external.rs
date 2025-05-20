@@ -3,8 +3,8 @@ use barter::barter_integration::protocol::http::HttpParser;
 use reqwest::StatusCode;
 use thiserror::Error;
 
-mod cgecko;
-mod cmc;
+pub mod cgecko;
+pub mod cmc;
 
 /// Parser for third domain responses
 #[derive(Debug)]
