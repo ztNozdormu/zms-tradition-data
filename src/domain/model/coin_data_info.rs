@@ -2,7 +2,7 @@ use crate::common::serde_fun::{option_obj_to_value, option_vec_to_value};
 use crate::infra::external::cgecko::coin_data::CoinData;
 use bigdecimal::BigDecimal;
 use chrono::{NaiveDate, NaiveDateTime};
-use diesel::{Identifiable, Insertable, Queryable};
+use diesel::{AsChangeset, Identifiable, Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 
 /// 加密货币详细信息表模型
@@ -85,7 +85,7 @@ pub struct CoinDataInfo {
 }
 
 /// 用于创建新加密货币详细信息的模型
-#[derive(Debug, Insertable, Serialize, Deserialize, Clone)]
+#[derive(Debug, Insertable, AsChangeset, Serialize, Deserialize, Clone)]
 #[diesel(table_name = crate::schema::coin_data_info)]
 pub struct NewCoinDataInfo {
     pub id: String,

@@ -46,7 +46,6 @@ fn insert_or_update_coin_ranks(
     // Ok(())
 }
 
-
 async fn get_coins_by_rank() {
     todo!()
 }

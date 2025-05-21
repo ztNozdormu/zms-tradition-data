@@ -43,4 +43,3 @@ fn insert_or_update_coin_categories(
         Ok(())
     })
 }
-
