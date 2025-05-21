@@ -141,13 +141,13 @@ mod tests {
         let dcg = DefaultCoinGecko::default();
         let conin_list = dcg.get_coin_latest().await;
         for coin in &conin_list {
-            info!(
-                "{} ({}) - Price: ${}, Market Cap: {}",
-                coin.name,
-                coin.symbol,
-                format_opt_decimal(&coin.current_price),
-                format_opt_decimal(&coin.market_cap),
-            );
+            log_fields!(info,
+                     "id" => coin.id,
+                     "name" => coin.name,
+                     "symbol" => coin.symbol,
+                     "current_price" => format_opt_decimal(&coin.current_price),
+                     "market_cap" => format_opt_decimal(&coin.market_cap),
+                );
         }
     }
 
@@ -180,12 +180,11 @@ mod tests {
         let dcg = DefaultCoinGecko::default();
         let categories = dcg.get_categories().await;
         for categorie in &categories {
-            info!(
-                "({}) - id: ${}, Market Cap: {}",
-                categorie.name,
-                categorie.id,
-                format_opt_decimal(&categorie.market_cap),
-            );
+            log_fields!(info,
+                     "id" => categorie.id,
+                     "name" => categorie.name,
+                     "market_cap" => format_opt_decimal(&categorie.market_cap),
+                );
         }
     }
 }
