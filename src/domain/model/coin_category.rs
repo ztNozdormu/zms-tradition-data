@@ -1,5 +1,4 @@
 use crate::common::serde_fun::option_vec_to_value;
-use crate::domain::model::coin_rank_info::{CoinRankInfo, NewCoinRankInfo};
 use crate::infra::external::cgecko::coin_categories::CoinCategories;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
