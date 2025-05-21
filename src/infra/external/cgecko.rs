@@ -78,7 +78,7 @@ where
         }
     }
 
-    pub async fn get_coin_latest(&self) -> Vec<CoinRank> {
+    pub async fn get_coin_rank(&self) -> Vec<CoinRank> {
         let fetch_request = FetchCoinRequest(CoinQueryParams {
             vs_currency: "usd".to_string(),
             ids: None,
@@ -139,7 +139,7 @@ mod tests {
     async fn test_get_coin_rank() {
         listen_tracing::setup_tracing();
         let dcg = DefaultCoinGecko::default();
-        let conin_list = dcg.get_coin_latest().await;
+        let conin_list = dcg.get_coin_rank().await;
         for coin in &conin_list {
             trace_fields!(info,
                  "id" => coin.id,

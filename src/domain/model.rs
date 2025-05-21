@@ -19,7 +19,7 @@ mod tests {
     async fn test_get_coin_rank() {
         listen_tracing::setup_tracing();
         let dcg = DefaultCoinGecko::default();
-        let conin_list = dcg.get_coin_latest().await;
+        let conin_list = dcg.get_coin_rank().await;
 
         let conin_rank_infos: Vec<NewCoinRankInfo> = conin_list.convert_vec();
 
