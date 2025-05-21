@@ -6,13 +6,15 @@ mod coin_rank_info;
 mod tests {
     use super::*;
     use crate::common::VecConvert;
-    use crate::common::log_utils::{fmt_bigdecimal, fmt_naive_date};
     use crate::common::utils::format_opt_decimal;
+    use crate::domain::model::coin_category::{CoinCategory, NewCoinCategory};
+    use crate::domain::model::coin_data_info::NewCoinDataInfo;
     use crate::domain::model::coin_rank_info::{CoinRankInfo, NewCoinRankInfo};
     use crate::infra::external::cgecko::DefaultCoinGecko;
     use crate::infra::external::cgecko::coin_rank::CoinRank;
-    use crate::trace_fields;
     use bigdecimal::BigDecimal;
+    use listen_tracing::trace_kv;
+    use listen_tracing::tracing_utils::{fmt_bigdecimal, fmt_json_value, fmt_naive_date};
     use tracing::{error, info};
 
     #[tokio::test]
@@ -41,21 +43,17 @@ mod tests {
         let dcg = DefaultCoinGecko::default();
         let coin_id = "bitcoin";
         let coin_data = dcg.get_coin_data(coin_id).await;
-        match coin_data {
-            Some(coin_data) => {
-                trace_fields!(info,
-                     "id" => coin_data.id,
-                     "name" => coin_data.name,
-                     "symbol" => coin_data.symbol,
-                     "categories len" => coin_data.categories.unwrap_or(Vec::new()).len(),
-                     "market_cap_rank" => fmt_bigdecimal(&coin_data.sentiment_votes_up_percentage),
-                     "genesis_date" => fmt_naive_date(&coin_data.genesis_date),
-                );
-            }
-            None => {
-                error!("Failed to fetch coin data");
-            }
-        }
+
+        let coin_data_info: NewCoinDataInfo = coin_data.unwrap().into();
+
+        trace_kv!(info,
+             "id" => coin_data_info.id,
+             "name" => coin_data_info.name,
+             "symbol" => coin_data_info.symbol,
+             "categories" => fmt_json_value(&coin_data_info.categories),
+             "market_cap_rank" => fmt_bigdecimal(&coin_data_info.sentiment_votes_up_percentage),
+             "genesis_date" => fmt_naive_date(&coin_data_info.genesis_date),
+        );
     }
 
     #[tokio::test]
@@ -63,11 +61,14 @@ mod tests {
         listen_tracing::setup_tracing();
         let dcg = DefaultCoinGecko::default();
         let categories = dcg.get_categories().await;
-        for categorie in &categories {
-            trace_fields!(info,
-                 "id" => categorie.id,
-                 "name" => categorie.name,
-                 "market_cap" => format_opt_decimal(&categorie.market_cap),
+
+        let new_coin_category_list: Vec<NewCoinCategory> = categories.convert_vec();
+
+        for new_coin_category in &new_coin_category_list {
+            trace_kv!(info,
+                 "id" => new_coin_category.id,
+                 "name" => new_coin_category.name,
+                 "market_cap" => format_opt_decimal(&new_coin_category.market_cap),
             );
         }
     }
