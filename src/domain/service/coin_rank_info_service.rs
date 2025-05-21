@@ -17,7 +17,6 @@ pub async fn save_coin_rank_info() -> anyhow::Result<()> {
 
     insert_or_update_coin_ranks(&mut conn, coin_rank_infos)?;
 
-    // log_coin_ranks(coin_rank_infos);
     Ok(())
 }
 
@@ -47,20 +46,6 @@ fn insert_or_update_coin_ranks(
     // Ok(())
 }
 
-/// 输出日志（结构化）
-fn log_coin_ranks(coin_rank_infos: &[NewCoinRankInfo]) {
-    for info in coin_rank_infos {
-        info!(
-            id = %info.id,
-            name = %info.name,
-            symbol = %info.symbol,
-            current_price = %format_opt_decimal(&info.current_price),
-            market_cap = %format_opt_decimal(&info.market_cap),
-            market_cap_rank = ?info.market_cap_rank,
-            "Inserted coin_rank_info"
-        );
-    }
-}
 
 async fn get_coins_by_rank() {
     todo!()

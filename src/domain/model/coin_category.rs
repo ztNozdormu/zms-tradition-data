@@ -2,7 +2,7 @@ use crate::common::serde_fun::option_vec_to_value;
 use crate::infra::external::cgecko::coin_categories::CoinCategories;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
-use diesel::{Identifiable, Insertable, Queryable};
+use diesel::{AsChangeset, Identifiable, Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 
 /// 加密货币分类表模型
@@ -39,7 +39,7 @@ pub struct CoinCategory {
 }
 
 /// 用于创建新加密货币分类的模型
-#[derive(Debug, Insertable, Serialize, Deserialize, Clone)]
+#[derive(Debug, Insertable, AsChangeset, Serialize, Deserialize, Clone)]
 #[diesel(table_name = crate::schema::coin_categories)]
 pub struct NewCoinCategory {
     pub id: String,
