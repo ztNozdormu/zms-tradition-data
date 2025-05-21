@@ -132,7 +132,7 @@ mod tests {
     use super::*;
     use crate::common::log_utils::{fmt_bigdecimal, fmt_naive_date};
     use crate::common::utils::format_opt_decimal;
-    use crate::log_fields;
+    use crate::trace_fields;
     use bigdecimal::BigDecimal;
 
     #[tokio::test]
@@ -141,13 +141,13 @@ mod tests {
         let dcg = DefaultCoinGecko::default();
         let conin_list = dcg.get_coin_latest().await;
         for coin in &conin_list {
-            log_fields!(info,
-                     "id" => coin.id,
-                     "name" => coin.name,
-                     "symbol" => coin.symbol,
-                     "current_price" => format_opt_decimal(&coin.current_price),
-                     "market_cap" => format_opt_decimal(&coin.market_cap),
-                );
+            trace_fields!(info,
+                 "id" => coin.id,
+                 "name" => coin.name,
+                 "symbol" => coin.symbol,
+                 "current_price" => format_opt_decimal(&coin.current_price),
+                 "market_cap" => format_opt_decimal(&coin.market_cap),
+            );
         }
     }
 
@@ -159,7 +159,7 @@ mod tests {
         let coin_data = dcg.get_coin_data(coin_id).await;
         match coin_data {
             Some(coin_data) => {
-                log_fields!(info,
+                trace_fields!(info,
                      "id" => coin_data.id,
                      "name" => coin_data.name,
                      "symbol" => coin_data.symbol,
@@ -180,11 +180,11 @@ mod tests {
         let dcg = DefaultCoinGecko::default();
         let categories = dcg.get_categories().await;
         for categorie in &categories {
-            log_fields!(info,
-                     "id" => categorie.id,
-                     "name" => categorie.name,
-                     "market_cap" => format_opt_decimal(&categorie.market_cap),
-                );
+            trace_fields!(info,
+                 "id" => categorie.id,
+                 "name" => categorie.name,
+                 "market_cap" => format_opt_decimal(&categorie.market_cap),
+            );
         }
     }
 }

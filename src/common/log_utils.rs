@@ -1,6 +1,7 @@
 use bigdecimal::BigDecimal;
 use chrono::{NaiveDate, NaiveDateTime};
 use std::fmt::Display;
+use tracing::info;
 
 /// 通用 Option<T> 格式化为 String（ToString 实现类型）
 pub fn fmt_opt<T: ToString>(v: &Option<T>) -> String {
@@ -35,13 +36,29 @@ pub fn fmt_bigdecimal(v: &Option<BigDecimal>) -> String {
         .unwrap_or_else(|| "null".to_string())
 }
 
-/// 简洁日志输出宏（支持多字段）
+/// 简洁结构化日志输出宏，使用 tracing 实现
+/// 基于 tracing 的多字段日志输出宏（拼接字符串形式）
 #[macro_export]
-macro_rules! log_fields {
+macro_rules! trace_fields {
     ($level:ident, $( $label:expr => $value:expr ),+ $(,)?) => {
-        log::$level!(
+        tracing::$level!(
             "{}",
             vec![$(format!("{}: {}", $label, $value)),+].join(", ")
         );
     };
 }
+/// 使用方式
+/// trace_fields!(info, "symbol" => symbol, "rank" => fmt_opt(&rank));
+/// kv
+#[macro_export]
+macro_rules! trace_kv {
+    ($level:ident, $( $key:ident = $val:expr ),+ $(,)?) => {
+        tracing::$level!( $( $key = %$val ),+ );
+    };
+}
+
+// 使用方式
+// trace_kv!(info, symbol = symbol, rank = fmt_opt(&rank));
+
+// tracing，它支持原生的结构化 key-value 日志
+// info!(symbol = %symbol, rank = %fmt_opt(&rank), "Coin info");
