@@ -5,6 +5,7 @@ use barter::barter_xchange::exchange::binance::api::Binance;
 use barter::barter_xchange::exchange::binance::futures::market::FuturesMarket;
 use bb8_redis::{RedisConnectionManager, bb8};
 use std::{fs::File, io::BufWriter, sync::Arc};
+use bigdecimal::BigDecimal;
 
 pub fn is_local() -> bool {
     std::env::var("LOCAL").is_ok()
@@ -69,6 +70,12 @@ pub async fn create_redis_pool(redis_url: &str) -> Result<bb8::Pool<RedisConnect
         .build(manager)
         .await?;
     Ok(pool)
+}
+
+pub fn format_opt_decimal(val: &Option<BigDecimal>) -> String {
+    val.as_ref()
+        .map(ToString::to_string)
+        .unwrap_or_else(|| "N/A".to_string())
 }
 
 #[cfg(test)]

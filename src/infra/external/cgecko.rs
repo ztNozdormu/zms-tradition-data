@@ -131,16 +131,17 @@ where
 mod tests {
     use super::*;
     use bigdecimal::BigDecimal;
+    use crate::common::utils::format_opt_decimal;
 
     #[tokio::test]
-    async fn test_get_coin_latest() {
+    async fn test_get_coin_rank() {
         listen_tracing::setup_tracing();
         let dcg = DefaultCoinGecko::default();
         let conin_list = dcg.get_coin_latest().await;
         for coin in &conin_list {
             info!(
                 "{} ({}) - Price: ${}, Market Cap: {}",
-                coin.name, coin.symbol, coin.current_price, coin.market_cap,
+                coin.name, coin.symbol, format_opt_decimal(&coin.current_price), format_opt_decimal(&coin.market_cap),
             );
         }
     }
@@ -157,7 +158,7 @@ mod tests {
                     "({})- symbol: {}, categories len : {}, Market Cap Rank: {}",
                     conin_data.name,
                     conin_data.symbol,
-                    conin_data.categories.len(),
+                    conin_data.categories.unwrap_or(Vec::new()).len(),
                     conin_data.market_cap_rank.unwrap(),
                 );
             }
@@ -181,9 +182,5 @@ mod tests {
             );
         }
     }
-    fn format_opt_decimal(val: &Option<BigDecimal>) -> String {
-        val.as_ref()
-            .map(ToString::to_string)
-            .unwrap_or_else(|| "N/A".to_string())
-    }
+
 }
