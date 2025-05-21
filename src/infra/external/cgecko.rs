@@ -130,8 +130,10 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bigdecimal::BigDecimal;
+    use crate::common::log_utils::{fmt_bigdecimal, fmt_naive_date};
     use crate::common::utils::format_opt_decimal;
+    use crate::log_fields;
+    use bigdecimal::BigDecimal;
 
     #[tokio::test]
     async fn test_get_coin_rank() {
@@ -141,7 +143,10 @@ mod tests {
         for coin in &conin_list {
             info!(
                 "{} ({}) - Price: ${}, Market Cap: {}",
-                coin.name, coin.symbol, format_opt_decimal(&coin.current_price), format_opt_decimal(&coin.market_cap),
+                coin.name,
+                coin.symbol,
+                format_opt_decimal(&coin.current_price),
+                format_opt_decimal(&coin.market_cap),
             );
         }
     }
@@ -154,13 +159,13 @@ mod tests {
         let coin_data = dcg.get_coin_data(coin_id).await;
         match coin_data {
             Some(coin_data) => {
-                info!(
-                    "({})- symbol: {}, categories len : {}, Market Cap Rank: {} , Genesis Date: {}",
-                    coin_data.name,
-                    coin_data.symbol,
-                    coin_data.categories.unwrap_or(Vec::new()).len(),
-                    coin_data.market_cap_rank.unwrap(),
-                    coin_data.genesis_date, // 2009-01-03
+                log_fields!(info,
+                     "id" => coin_data.id,
+                     "name" => coin_data.name,
+                     "symbol" => coin_data.symbol,
+                     "categories len" => coin_data.categories.unwrap_or(Vec::new()).len(),
+                     "market_cap_rank" => fmt_bigdecimal(&coin_data.sentiment_votes_up_percentage),
+                     "genesis_date" => fmt_naive_date(&coin_data.genesis_date),
                 );
             }
             None => {
@@ -183,5 +188,4 @@ mod tests {
             );
         }
     }
-
 }

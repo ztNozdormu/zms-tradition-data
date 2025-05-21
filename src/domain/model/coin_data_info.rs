@@ -128,7 +128,7 @@ impl From<CoinData> for NewCoinDataInfo {
             additional_notices: Some(option_vec_to_value(data.additional_notices)),
             description: option_obj_to_value(data.description),
             country_origin: Some(data.country_origin),
-            genesis_date: None ,//data.genesis_date,
+            genesis_date: None, //data.genesis_date,
             sentiment_votes_up_percentage: data.sentiment_votes_up_percentage,
             sentiment_votes_down_percentage: data.sentiment_votes_down_percentage,
             watchlist_portfolio_users: data.watchlist_portfolio_users,
