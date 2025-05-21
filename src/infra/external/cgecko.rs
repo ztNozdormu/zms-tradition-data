@@ -151,15 +151,16 @@ mod tests {
         listen_tracing::setup_tracing();
         let dcg = DefaultCoinGecko::default();
         let coin_id = "bitcoin";
-        let conin_data = dcg.get_coin_data(coin_id).await;
-        match conin_data {
-            Some(conin_data) => {
+        let coin_data = dcg.get_coin_data(coin_id).await;
+        match coin_data {
+            Some(coin_data) => {
                 info!(
-                    "({})- symbol: {}, categories len : {}, Market Cap Rank: {}",
-                    conin_data.name,
-                    conin_data.symbol,
-                    conin_data.categories.unwrap_or(Vec::new()).len(),
-                    conin_data.market_cap_rank.unwrap(),
+                    "({})- symbol: {}, categories len : {}, Market Cap Rank: {} , Genesis Date: {}",
+                    coin_data.name,
+                    coin_data.symbol,
+                    coin_data.categories.unwrap_or(Vec::new()).len(),
+                    coin_data.market_cap_rank.unwrap(),
+                    coin_data.genesis_date, // 2009-01-03
                 );
             }
             None => {

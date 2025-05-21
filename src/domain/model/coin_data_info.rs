@@ -1,7 +1,7 @@
 use crate::common::serde_fun::{option_obj_to_value, option_vec_to_value};
 use crate::infra::external::cgecko::coin_data::CoinData;
 use bigdecimal::BigDecimal;
-use chrono::NaiveDateTime;
+use chrono::{NaiveDate, NaiveDateTime};
 use diesel::{Identifiable, Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 
@@ -63,7 +63,7 @@ pub struct CoinDataInfo {
     pub country_origin: Option<String>,
 
     /// 创世日期
-    pub genesis_date: Option<NaiveDateTime>,
+    pub genesis_date: Option<NaiveDate>,
 
     /// 正面情绪投票百分比(%)
     pub sentiment_votes_up_percentage: Option<BigDecimal>,
@@ -102,7 +102,7 @@ pub struct NewCoinDataInfo {
     pub additional_notices: Option<serde_json::Value>,
     pub description: Option<serde_json::Value>,
     pub country_origin: Option<String>,
-    pub genesis_date: Option<NaiveDateTime>,
+    pub genesis_date: Option<NaiveDate>,
     pub sentiment_votes_up_percentage: Option<BigDecimal>,
     pub sentiment_votes_down_percentage: Option<BigDecimal>,
     pub watchlist_portfolio_users: Option<u32>,
@@ -128,7 +128,7 @@ impl From<CoinData> for NewCoinDataInfo {
             additional_notices: Some(option_vec_to_value(data.additional_notices)),
             description: option_obj_to_value(data.description),
             country_origin: Some(data.country_origin),
-            genesis_date: data.genesis_date,
+            genesis_date: None ,//data.genesis_date,
             sentiment_votes_up_percentage: data.sentiment_votes_up_percentage,
             sentiment_votes_down_percentage: data.sentiment_votes_down_percentage,
             watchlist_portfolio_users: data.watchlist_portfolio_users,

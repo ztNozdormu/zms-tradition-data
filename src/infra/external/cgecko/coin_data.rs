@@ -2,7 +2,7 @@ use crate::common::serde_fun;
 use crate::infra::external::cgecko::constant::COIN_DATA;
 use barter::barter_integration::protocol::http::rest::RestRequest;
 use bigdecimal::BigDecimal;
-use chrono::NaiveDateTime;
+use chrono::{NaiveDate, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -85,8 +85,8 @@ pub struct CoinData {
     pub additional_notices: Option<Vec<String>>,
     pub description: Option<HashMap<String, String>>,
     pub country_origin: String,
-    #[serde(deserialize_with = "serde_fun::deserialize_datetime_option")]
-    pub genesis_date: Option<NaiveDateTime>,
+    // #[serde(deserialize_with = "serde_fun::deserialize_datetime_option")]
+    pub genesis_date: Option<NaiveDate>,
     #[serde(deserialize_with = "serde_fun::deserialize_option_string2bigdcimal")]
     pub sentiment_votes_up_percentage: Option<BigDecimal>,
     #[serde(deserialize_with = "serde_fun::deserialize_option_string2bigdcimal")]
