@@ -2,7 +2,7 @@ use crate::common::serde_fun::option_obj_to_value;
 use crate::infra::external::cgecko::coin_rank::CoinRank;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
-use diesel::{Identifiable, Insertable, Queryable};
+use diesel::{AsChangeset, Identifiable, Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 
 /// 加密货币市场排名信息模型
@@ -91,7 +91,7 @@ pub struct CoinRankInfo {
 }
 
 /// 用于创建新加密货币排名信息的模型
-#[derive(Debug, Insertable, Serialize, Deserialize, Clone)]
+#[derive(Debug, Insertable, AsChangeset, Serialize, Deserialize, Clone)]
 #[diesel(table_name = crate::schema::coin_rank_info)]
 pub struct NewCoinRankInfo {
     pub id: String,

@@ -20,7 +20,6 @@ use barter::barter_integration::protocol::http::private::Signer;
 use barter::barter_integration::protocol::http::rest::RestRequest;
 use barter::barter_integration::protocol::http::rest::client::RestClient;
 use barter::barter_integration::protocol::http::{BuildStrategy, HttpParser};
-use hmac::Mac;
 use reqwest::RequestBuilder;
 use serde::Deserialize;
 use std::fmt::Debug;

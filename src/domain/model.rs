@@ -1,6 +1,6 @@
-mod coin_category;
-mod coin_data_info;
-mod coin_rank_info;
+pub(crate) mod coin_category;
+pub(crate) mod coin_data_info;
+pub(crate) mod coin_rank_info;
 
 #[cfg(test)]
 mod tests {
