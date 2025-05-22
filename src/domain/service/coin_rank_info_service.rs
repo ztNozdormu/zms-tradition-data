@@ -1,13 +1,10 @@
 use crate::common::VecConvert;
-use crate::common::utils::format_opt_decimal;
 use crate::domain::model::coin_rank_info::NewCoinRankInfo;
 use crate::global::get_mysql_pool;
 use crate::infra::external::cgecko::DefaultCoinGecko;
 use crate::schema::coin_rank_info;
-use diesel::ExpressionMethods;
-use diesel::dsl::insert_into;
 use diesel::{Connection, MysqlConnection, RunQueryDsl};
-use tracing::{info, instrument};
+use tracing::instrument;
 
 /// 主入口：获取并保存 Coin 排名数据
 #[instrument(name = "save_coin_rank_info")]
