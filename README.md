@@ -55,13 +55,13 @@ cargo install diesel_cli --no-default-features --features mysql
         -- 价格数据
         current_price DECIMAL(30, 8) COMMENT '当前价格(USD)',
         price_change_24h DECIMAL(30, 8) COMMENT '24小时价格变化(USD)',
-        price_change_percentage_24h DECIMAL(10, 4) COMMENT '24小时价格变化百分比(%)',
+        price_change_percentage_24h DECIMAL(30, 8) COMMENT '24小时价格变化百分比(%)',
         
         -- 市值数据
         market_cap DECIMAL(30, 8) COMMENT '当前市值(USD)',
         market_cap_rank INT UNSIGNED COMMENT '市值排名',
         market_cap_change_24h DECIMAL(30, 8) COMMENT '24小时市值变化(USD)',
-        market_cap_change_percentage_24h DECIMAL(10, 4) COMMENT '24小时市值变化百分比(%)',
+        market_cap_change_percentage_24h DECIMAL(30, 8) COMMENT '24小时市值变化百分比(%)',
         fully_diluted_valuation DECIMAL(30, 8) COMMENT '完全稀释估值(USD)',
         
         -- 交易数据
@@ -76,11 +76,11 @@ cargo install diesel_cli --no-default-features --features mysql
         
         -- 历史价格数据
         ath DECIMAL(30, 8) COMMENT '历史最高价(USD)',
-        ath_change_percentage DECIMAL(10, 4) COMMENT '距历史最高价变化百分比(%)',
+        ath_change_percentage DECIMAL(30, 8) COMMENT '距历史最高价变化百分比(%)',
         ath_date DATETIME(3) COMMENT '历史最高价达成时间',
         
         atl DECIMAL(30, 8) COMMENT '历史最低价(USD)',
-        atl_change_percentage DECIMAL(10, 4) COMMENT '距历史最低价变化百分比(%)',
+        atl_change_percentage DECIMAL(30, 8) COMMENT '距历史最低价变化百分比(%)',
         atl_date DATETIME(3) COMMENT '历史最低价达成时间',
         
         -- 投资回报率(JSON格式)
@@ -213,7 +213,7 @@ cargo install diesel_cli --no-default-features --features mysql
         id VARCHAR(64) PRIMARY KEY COMMENT '分类ID(如"world-liberty-financial-portfolio")',
         name VARCHAR(128) NOT NULL COMMENT '分类名称',
         market_cap DECIMAL(30, 8) COMMENT '总市值',
-        market_cap_change_24h DECIMAL(10, 4) COMMENT '24小时市值变化百分比',
+        market_cap_change_24h DECIMAL(30, 8) COMMENT '24小时市值变化百分比',
         content TEXT COMMENT '分类描述内容',
         top_3_coins_id JSON NOT NULL COMMENT '前三币种ID数组',
         top_3_coins JSON NOT NULL COMMENT '前三币种图片URL数组',

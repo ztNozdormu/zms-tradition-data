@@ -5,7 +5,7 @@ CREATE TABLE coin_categories (
                                  id VARCHAR(64) PRIMARY KEY COMMENT '分类ID(如"world-liberty-financial-portfolio")',
                                  name VARCHAR(128) NOT NULL COMMENT '分类名称',
                                  market_cap DECIMAL(30, 8) COMMENT '总市值',
-                                 market_cap_change_24h DECIMAL(10, 4) COMMENT '24小时市值变化百分比',
+                                 market_cap_change_24h DECIMAL(30, 8) COMMENT '24小时市值变化百分比',
                                  content TEXT COMMENT '分类描述内容',
                                  top_3_coins_id JSON NOT NULL COMMENT '前三币种ID数组',
                                  top_3_coins JSON NOT NULL COMMENT '前三币种图片URL数组',
