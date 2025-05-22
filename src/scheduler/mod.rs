@@ -1,4 +1,4 @@
-mod tasks;
+pub mod tasks;
 
 use std::time::Duration;
 use tokio::{select, time};

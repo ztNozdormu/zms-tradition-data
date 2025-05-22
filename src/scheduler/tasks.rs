@@ -1,6 +1,6 @@
-mod fetch_cgecko;
-mod clean_data;
-mod notify_info;
+pub mod fetch_cgecko;
+pub mod clean_data;
+pub mod notify_info;
 
 use std::time::Duration;
 
@@ -25,7 +25,7 @@ macro_rules! task {
 /// 所有需要定时执行的任务列表
 pub fn get_all_tasks() -> Vec<ScheduledTask> {
     vec![
-        task!("save_coin_rank_info", Duration::from_secs(60), save_coin_rank_info),
+        task!("save_coin_rank_info", Duration::from_secs(60), fetch_cgecko::save_coin_rank_info_task),
         // task!("clean_data", Duration::from_secs(300), clean_data),
         // task!("push_data", Duration::from_secs(120), push_data),
     ]

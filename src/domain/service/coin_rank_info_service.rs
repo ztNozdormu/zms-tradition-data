@@ -8,7 +8,7 @@ use tracing::instrument;
 
 /// 主入口：获取并保存 Coin 排名数据
 #[instrument(name = "save_coin_rank_info")]
-pub async fn save_coin_rank_info() -> anyhow::Result<()> {
+pub async fn save_coin_rank_info() -> Result<(), anyhow::Error> {
     let coin_rank_infos = fetch_coin_rank_data().await;
     let mut conn = get_mysql_pool().get()?;
 
