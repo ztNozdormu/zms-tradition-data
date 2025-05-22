@@ -40,11 +40,12 @@ pub async fn start() {
     // init global comments domain
     init_global_services().await;
 
+    let scheduler = Scheduler::new();
     // 启动调度器
-    tokio::spawn(async {
-        let scheduler = Scheduler::new();
+    tokio::spawn(async move {
         scheduler.run().await;
     });
+
     //  trade driven aggregator update klines async
     // handle_trade_aggregation().await;
 
