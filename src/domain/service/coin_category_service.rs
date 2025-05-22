@@ -11,7 +11,7 @@ use tracing::instrument;
 
 /// 主入口：获取并保存 Coin 板块分类
 #[instrument(name = "save_categorys")]
-pub async fn save_categorys() -> anyhow::Result<()> {
+pub async fn save_categorys() -> Result<(), anyhow::Error> {
     let coin_categories = fetch_coin_categories().await;
     let mut conn = get_mysql_pool().get()?;
 
