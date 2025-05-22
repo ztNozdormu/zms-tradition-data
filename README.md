@@ -231,8 +231,8 @@ cargo install diesel_cli --no-default-features --features mysql
         
         -- 检查约束确保数组长度为3
         CONSTRAINT chk_top3_length CHECK (
-            JSON_LENGTH(top_3_coins_id) = 3 AND 
-            JSON_LENGTH(top_3_coins) = 3
+            JSON_LENGTH(top_3_coins_id) <= 3 AND 
+            JSON_LENGTH(top_3_coins) <= 3
         )
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='加密货币分类表';
 

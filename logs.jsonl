@@ -656,3 +656,12 @@
 {"timestamp":"2025-05-22T08:56:36.301258+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Running scheduled task..."}
 {"timestamp":"2025-05-22T08:56:37.507094+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Scheduled task completed"}
 {"timestamp":"2025-05-22T08:56:37.568319+00:00","level":"ERROR","target":"zms_tradition_data::scheduler","message":"Scheduled task failed"}
+{"timestamp":"2025-05-22T09:25:32.152646+00:00","level":"INFO","target":"zms_tradition_data::server","message":"Starting zms-tradition indexer..."}
+{"timestamp":"2025-05-22T09:25:32.153225+00:00","level":"INFO","target":"zms_tradition_data::infra::db::ckdb","message":"Connecting to ClickHouse at http://localhost:8123"}
+{"timestamp":"2025-05-22T09:25:32.374799+00:00","level":"INFO","target":"zms_tradition_data::infra::cache::kv_store","message":"Connected to Redis KV store at redis://default:123456@localhost:6379"}
+{"timestamp":"2025-05-22T09:25:32.415298+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Scheduler started..."}
+{"timestamp":"2025-05-22T09:25:32.415508+00:00","level":"INFO","target":"warp::server","message":"listening on http://127.0.0.1:10099"}
+{"timestamp":"2025-05-22T09:25:32.415514+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Running scheduled task..."}
+{"timestamp":"2025-05-22T09:25:32.416718+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Running scheduled task..."}
+{"timestamp":"2025-05-22T09:25:33.580043+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Scheduled task completed"}
+{"timestamp":"2025-05-22T09:25:33.731799+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Scheduled task completed"}
