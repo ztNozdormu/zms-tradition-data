@@ -7,6 +7,7 @@ use std::sync::Arc;
 use tokio::sync::broadcast;
 use tracing::info;
 use warp::Filter;
+use crate::scheduler::Scheduler;
 
 mod response;
 mod routes;
@@ -39,8 +40,13 @@ pub async fn start() {
     // init global comments domain
     init_global_services().await;
 
+    // 启动调度器
+    tokio::spawn(async {
+        let scheduler = Scheduler::new();
+        scheduler.run().await;
+    });
     //  trade driven aggregator update klines async
-    handle_trade_aggregation().await;
+    // handle_trade_aggregation().await;
 
     let bind_address: SocketAddr = "127.0.0.1:10099".parse().unwrap();
 
