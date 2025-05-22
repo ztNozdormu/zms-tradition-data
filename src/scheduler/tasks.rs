@@ -27,7 +27,7 @@ pub fn get_all_tasks() -> Vec<ScheduledTask> {
     vec![
         // every three days execute
         task!("save_coin_rank_info", Duration::from_secs(259200), fetch_cgecko::save_coin_rank_info_task),
-        task!("save_coin_category_info", Duration::from_secs(259200), fetch_cgecko::save_categorys_task()),
+        task!("save_coin_category_info", Duration::from_secs(259200), fetch_cgecko::save_categorys_task),
         // task!("clean_data", Duration::from_secs(300), clean_data),
         // task!("push_data", Duration::from_secs(120), push_data),
     ]
