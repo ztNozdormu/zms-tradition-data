@@ -1,3 +1,4 @@
+use crate::impl_table_record;
 use crate::model::cex::kline::MarketKline;
 
 pub mod kline;

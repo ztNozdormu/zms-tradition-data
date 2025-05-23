@@ -1,3 +1,4 @@
+use crate::impl_table_record;
 use crate::model::dex::price::PriceUpdate;
 
 pub mod price;

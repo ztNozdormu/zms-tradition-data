@@ -91,7 +91,7 @@ pub struct CoinRankInfo {
 }
 
 /// 用于创建新加密货币排名信息的模型
-#[derive(Debug, Insertable, AsChangeset, Serialize, Deserialize, Clone)]
+#[derive(Debug, Identifiable, Insertable, AsChangeset, Serialize, Deserialize, Clone)]
 #[diesel(table_name = crate::schema::coin_rank_info)]
 pub struct NewCoinRankInfo {
     pub id: String,

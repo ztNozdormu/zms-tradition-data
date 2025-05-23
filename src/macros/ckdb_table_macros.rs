@@ -1,3 +1,4 @@
+#[macro_export]
 macro_rules! impl_table_record {
     ($ty:ty, $variant:ident, $table:expr) => {
         impl crate::infra::db::types::TableRecord for $ty {
