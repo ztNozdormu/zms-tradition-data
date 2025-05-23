@@ -6,7 +6,7 @@ use diesel::{AsChangeset, Identifiable, Insertable, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
 
 /// 加密货币市场排名信息模型
-#[derive(Debug, Insertable, Queryable, Selectable, Serialize, Deserialize, Identifiable, Clone)]
+#[derive(Debug, Queryable, Selectable, Serialize, Deserialize, Identifiable, Clone)]
 #[diesel(table_name = crate::schema::coin_rank_info)]
 pub struct CoinRankInfo {
     /// 币种唯一标识符(如"ethereum")
