@@ -1,4 +1,4 @@
-use crate::domain::model::coin_rank_info::{CoinRankInfo, NewCoinRankInfo};
+use crate::domain::model::coin_rank_info::{CoinRankInfo, NewOrUpdateCoinRankInfo};
 use crate::domain::model::{AppError, AppResult};
 use crate::domain::repository::Repository;
 use crate::impl_full_repository;
@@ -17,11 +17,11 @@ impl<'a> CoinRankInfoRepository<'a> {
 }
 
 impl_full_repository!(
-    CoinRankInfoRepository,       // Repository struct
-    coin_rank_info,               // Table name from schema.rs
-    CoinRankInfo,                 // Model
-    NewCoinRankInfo,              // Insert model
-    NewCoinRankInfo               // Update model
+    CoinRankInfoRepository,  // Repository struct
+    coin_rank_info,          // Table name from schema.rs
+    CoinRankInfo,            // Model
+    NewOrUpdateCoinRankInfo, // Insert model
+    NewOrUpdateCoinRankInfo  // Update model
 );
 
 // pub struct CoinRankInfoRepository<'a> {

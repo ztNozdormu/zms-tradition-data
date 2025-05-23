@@ -179,7 +179,8 @@ mod tests {
         let dcg = DefaultCoinGecko::default();
         let categories = dcg.get_categories().await;
         for categorie in &categories {
-            if let Some(coins) = &categorie.top_3_coins {  //.as_ref().and_then(|v| v.as_array()
+            if let Some(coins) = &categorie.top_3_coins {
+                //.as_ref().and_then(|v| v.as_array()
                 if coins.len() < 3 {
                     tracing::warn!(task = "save_coin_category_info", id = %categorie.id, len = coins.len(), "top_3_coins 超过3项，自动截断");
                 }

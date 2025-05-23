@@ -6,7 +6,6 @@ mod domain;
 mod global;
 mod infra;
 mod model;
+mod scheduler;
 pub mod schema;
 pub mod server;
-mod scheduler;
-

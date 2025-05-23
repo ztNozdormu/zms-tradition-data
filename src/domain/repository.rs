@@ -16,4 +16,3 @@ pub trait InsertableRepository<E> {
 pub trait UpdatableRepository<E> {
     fn update(&mut self, entity: &E) -> AppResult<usize>;
 }
-

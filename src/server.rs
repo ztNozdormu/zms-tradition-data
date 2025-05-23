@@ -1,5 +1,6 @@
 use crate::collector::handle_trade_aggregation;
 use crate::global::init_global_services;
+use crate::scheduler::Scheduler;
 use listen_tracing::{LogCache, LogEntry};
 use std::env;
 use std::net::SocketAddr;
@@ -7,7 +8,6 @@ use std::sync::Arc;
 use tokio::sync::broadcast;
 use tracing::info;
 use warp::Filter;
-use crate::scheduler::Scheduler;
 
 mod response;
 mod routes;

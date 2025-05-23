@@ -5,8 +5,6 @@ pub(crate) mod coin_category;
 pub(crate) mod coin_data_info;
 pub(crate) mod coin_rank_info;
 
-
-
 pub type AppResult<T> = Result<T, AppError>;
 
 #[derive(Debug, Error)]
@@ -23,7 +21,6 @@ pub enum AppError {
     #[error("Internal error: {0}")]
     Internal(String),
 }
-
 
 #[cfg(test)]
 mod tests {

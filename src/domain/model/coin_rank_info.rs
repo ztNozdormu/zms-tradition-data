@@ -93,7 +93,7 @@ pub struct CoinRankInfo {
 /// 用于创建新加密货币排名信息的模型
 #[derive(Debug, Identifiable, Insertable, AsChangeset, Serialize, Deserialize, Clone)]
 #[diesel(table_name = crate::schema::coin_rank_info)]
-pub struct NewCoinRankInfo {
+pub struct NewOrUpdateCoinRankInfo {
     pub id: String,
     pub symbol: String,
     pub name: String,
@@ -122,10 +122,10 @@ pub struct NewCoinRankInfo {
     pub last_updated: Option<NaiveDateTime>,
 }
 
-// 实现从 CoinRank 到 NewCoinRankInfo 的转换
-impl From<CoinRank> for NewCoinRankInfo {
+// 实现从 CoinRank 到 NewOrUpdateCoinRankInfo 的转换
+impl From<CoinRank> for NewOrUpdateCoinRankInfo {
     fn from(info: CoinRank) -> Self {
-        NewCoinRankInfo {
+        NewOrUpdateCoinRankInfo {
             id: info.id,
             symbol: info.symbol,
             name: info.name,

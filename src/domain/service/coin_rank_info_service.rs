@@ -1,22 +1,22 @@
 use crate::common::VecConvert;
-use crate::domain::model::coin_rank_info::{CoinRankInfo, NewCoinRankInfo};
+use crate::domain::model::AppResult;
+use crate::domain::model::coin_rank_info::{CoinRankInfo, NewOrUpdateCoinRankInfo};
+use crate::domain::repository::InsertableRepository;
+use crate::domain::repository::Repository;
+use crate::domain::repository::UpdatableRepository;
+use crate::domain::repository::coin_rank_info_repository::CoinRankInfoRepository;
+use crate::impl_full_service;
 use crate::infra::external::cgecko::DefaultCoinGecko;
 use crate::schema::coin_rank_info;
 use diesel::{Connection, MysqlConnection, RunQueryDsl};
 use tracing::instrument;
-use crate::domain::model::AppResult;
-use crate::domain::repository::coin_rank_info_repository::CoinRankInfoRepository;
-use crate::domain::repository::Repository;
-use crate::domain::repository::InsertableRepository;
-use crate::domain::repository::UpdatableRepository;
-use crate::impl_full_service;
 
 impl_full_service!(
     CoinRankInfoService,
     CoinRankInfoRepository,
     CoinRankInfo,
-    NewCoinRankInfo,
-    NewCoinRankInfo
+    NewOrUpdateCoinRankInfo,
+    NewOrUpdateCoinRankInfo
 );
 
 impl<'a> CoinRankInfoService<'a> {
@@ -29,7 +29,7 @@ impl<'a> CoinRankInfoService<'a> {
 }
 
 /// 从 CoinGecko 获取并转换为结构化数据
-async fn fetch_coin_rank_data() -> Vec<NewCoinRankInfo> {
+async fn fetch_coin_rank_data() -> Vec<NewOrUpdateCoinRankInfo> {
     let dcg = DefaultCoinGecko::default();
     let raw_list = dcg.get_coin_rank().await;
     raw_list.convert_vec()
@@ -37,7 +37,7 @@ async fn fetch_coin_rank_data() -> Vec<NewCoinRankInfo> {
 
 fn insert_or_update_coin_ranks(
     conn: &mut MysqlConnection,
-    new_ranks: Vec<NewCoinRankInfo>,
+    new_ranks: Vec<NewOrUpdateCoinRankInfo>,
 ) -> anyhow::Result<()> {
     conn.transaction(|conn| {
         for rank_info in &new_ranks {
@@ -51,4 +51,3 @@ fn insert_or_update_coin_ranks(
         Ok(())
     })
 }
-

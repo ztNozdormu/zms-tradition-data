@@ -8,7 +8,7 @@ use crate::global::get_mysql_pool;
 pub async fn save_coin_rank_info_task() -> Result<(), anyhow::Error> {
     let mut conn = get_mysql_pool().get()?;
     let repo = CoinRankInfoRepository::new(&mut conn);
-    let mut coin_rank_info_service = CoinRankInfoService{repo};
+    let mut coin_rank_info_service = CoinRankInfoService { repo };
     coin_rank_info_service.save_coin_rank_info().await
 }
 
@@ -22,4 +22,3 @@ pub async fn save_coin_data_info_task() -> Result<(), anyhow::Error> {
     let coin_id = "bitcoin";
     save_coin_data_info(coin_id).await
 }
-
