@@ -1,6 +1,29 @@
+use diesel::result::Error as DieselError;
+use thiserror::Error;
+
 pub(crate) mod coin_category;
 pub(crate) mod coin_data_info;
 pub(crate) mod coin_rank_info;
+
+
+
+pub type AppResult<T> = Result<T, AppError>;
+
+#[derive(Debug, Error)]
+pub enum AppError {
+    #[error("Database error: {0}")]
+    DatabaseError(#[from] DieselError),
+
+    #[error("Not found")]
+    NotFound,
+
+    #[error("Invalid input: {0}")]
+    InvalidInput(String),
+
+    #[error("Internal error: {0}")]
+    Internal(String),
+}
+
 
 #[cfg(test)]
 mod tests {

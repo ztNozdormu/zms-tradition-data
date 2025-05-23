@@ -1,20 +1,44 @@
 use crate::common::VecConvert;
-use crate::domain::model::coin_rank_info::NewCoinRankInfo;
-use crate::global::get_mysql_pool;
+use crate::domain::model::coin_rank_info::{CoinRankInfo, NewCoinRankInfo};
 use crate::infra::external::cgecko::DefaultCoinGecko;
 use crate::schema::coin_rank_info;
 use diesel::{Connection, MysqlConnection, RunQueryDsl};
 use tracing::instrument;
+use crate::domain::model::AppResult;
+use crate::domain::repository::coin_rank_info_repository::CoinRankInfoRepository;
+use crate::domain::repository::Repository;
+pub struct CoinRankInfoService<'a> {
+    pub(crate) repo: CoinRankInfoRepository<'a>,
+}
 
-/// 主入口：获取并保存 Coin 排名数据
-#[instrument(name = "save_coin_rank_info")]
-pub async fn save_coin_rank_info() -> Result<(), anyhow::Error> {
-    let coin_rank_infos = fetch_coin_rank_data().await;
-    let mut conn = get_mysql_pool().get()?;
+impl<'a> std::fmt::Debug for CoinRankInfoService<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CoinRankInfoService")
+            .field("field_name", &"<redacted>") // for sensitive fields
+            .finish()
+    }
+}
 
-    insert_or_update_coin_ranks(&mut conn, coin_rank_infos)?;
+impl<'a> CoinRankInfoService<'a> {
+    pub fn new(conn: &'a mut MysqlConnection) -> Self {
+        Self {
+            repo: CoinRankInfoRepository::new(conn),
+        }
+    }
+    // default order by rank
+    pub fn fetch_all(&mut self) -> AppResult<Vec<CoinRankInfo>> {
+        self.repo.get_all()
+    }
 
-    Ok(())
+    /// 主入口：获取并保存 Coin 排名数据
+    #[instrument(name = "save_coin_rank_info")]
+    pub async fn save_coin_rank_info(&mut self) -> Result<(), anyhow::Error> {
+        let coin_rank_infos = fetch_coin_rank_data().await;
+        insert_or_update_coin_ranks(&mut self.repo.conn, coin_rank_infos)?;
+
+        Ok(())
+    }
+
 }
 
 /// 从 CoinGecko 获取并转换为结构化数据
@@ -39,10 +63,5 @@ fn insert_or_update_coin_ranks(
         }
         Ok(())
     })
-
-    // Ok(())
 }
 
-async fn get_coins_by_rank() {
-    todo!()
-}
