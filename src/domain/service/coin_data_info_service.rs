@@ -8,7 +8,7 @@ use tracing::instrument;
 // get_coin_by_id
 /// 主入口：获取并保存 Coin_data_info 信息包含所属板块
 #[instrument(name = "save_coin_data_info")]
-pub async fn save_coin_data_info(coin_id: &str) -> anyhow::Result<()> {
+pub async fn save_coin_data_info(coin_id: &str) -> Result<(), anyhow::Error>{
     let new_coin_data_info = fetch_coin_data_info(coin_id).await;
     let mut conn = get_mysql_pool().get()?;
 
