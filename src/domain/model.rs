@@ -22,6 +22,40 @@ pub enum AppError {
     Internal(String),
 }
 
+/// 通用分页响应
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct PageResult<T> {
+    pub data: Vec<T>,
+    pub total: i64,
+    pub page: i64,
+    pub per_page: i64,
+}
+
+#[derive(Debug, Clone)]
+pub enum SortOrder {
+    Asc,
+    Desc,
+}
+
+#[derive(Debug, Clone)]
+pub struct PageQuery {
+    pub page: Option<usize>,
+    pub page_size: Option<usize>,
+}
+
+impl PageQuery {
+    pub fn offset(&self) -> i64 {
+        match (self.page, self.page_size) {
+            (Some(p), Some(s)) => ((p.saturating_sub(1)) * s) as i64,
+            _ => 0,
+        }
+    }
+
+    pub fn limit(&self) -> i64 {
+        self.page_size.unwrap_or(20) as i64
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -29,7 +63,7 @@ mod tests {
     use crate::common::utils::format_opt_decimal;
     use crate::domain::model::coin_category::{CoinCategory, NewCoinCategory};
     use crate::domain::model::coin_data_info::NewCoinDataInfo;
-    use crate::domain::model::coin_rank_info::{CoinRankInfo, NewCoinRankInfo};
+    use crate::domain::model::coin_rank_info::{CoinRankInfo, NewOrUpdateCoinRankInfo};
     use crate::infra::external::cgecko::DefaultCoinGecko;
     use crate::infra::external::cgecko::coin_rank::CoinRank;
     use bigdecimal::BigDecimal;
@@ -43,7 +77,7 @@ mod tests {
         let dcg = DefaultCoinGecko::default();
         let conin_list = dcg.get_coin_rank().await;
 
-        let conin_rank_infos: Vec<NewCoinRankInfo> = conin_list.convert_vec();
+        let conin_rank_infos: Vec<NewOrUpdateCoinRankInfo> = conin_list.convert_vec();
 
         for coin_rank_info in &conin_rank_infos {
             info!(id= %coin_rank_info.id,

@@ -16,3 +16,11 @@ pub trait InsertableRepository<E> {
 pub trait UpdatableRepository<E> {
     fn update(&mut self, entity: &E) -> AppResult<usize>;
 }
+
+pub trait FilterableRepository<F, T> {
+    fn filter_paginated(&mut self, filter: &F, page: i64, per_page: i64) -> AppResult<Vec<T>>;
+
+    fn count_filtered(&mut self, filter: &F) -> AppResult<i64> {
+        Ok(0) // 可重写，如需要计数
+    }
+}

@@ -1,4 +1,5 @@
 use crate::common::serde_fun::option_obj_to_value;
+use crate::domain::model::SortOrder;
 use crate::infra::external::cgecko::coin_rank::CoinRank;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
@@ -154,4 +155,15 @@ impl From<CoinRank> for NewOrUpdateCoinRankInfo {
             last_updated: info.last_updated,
         }
     }
+}
+
+#[derive(Debug, Clone)]
+pub struct CoinRankInfoFilter {
+    pub symbol: Option<String>,
+    pub symbol_like: Option<String>,
+    pub min_rank: Option<u32>,
+    pub max_rank: Option<u32>,
+    pub sort_by_rank: Option<SortOrder>,
+    pub page: Option<usize>,
+    pub page_size: Option<usize>,
 }

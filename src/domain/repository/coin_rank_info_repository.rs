@@ -1,9 +1,13 @@
-use crate::domain::model::coin_rank_info::{CoinRankInfo, NewOrUpdateCoinRankInfo};
-use crate::domain::model::{AppError, AppResult};
+use crate::domain::model::coin_rank_info::{
+    CoinRankInfo, CoinRankInfoFilter, NewOrUpdateCoinRankInfo,
+};
+use crate::domain::model::{AppError, AppResult, SortOrder};
 use crate::domain::repository::Repository;
-use crate::impl_full_repository;
 use crate::schema::coin_rank_info::dsl::coin_rank_info;
-use diesel::{MysqlConnection, OptionalExtension, QueryDsl, RunQueryDsl, SelectableHelper};
+use crate::{impl_full_repository, impl_repository_with_filter};
+use diesel::{
+    ExpressionMethods, MysqlConnection, OptionalExtension, QueryDsl, RunQueryDsl, SelectableHelper,
+};
 
 // coin_rank_info_repository
 pub struct CoinRankInfoRepository<'a> {
@@ -24,42 +28,41 @@ impl_full_repository!(
     NewOrUpdateCoinRankInfo  // Update model
 );
 
-// pub struct CoinRankInfoRepository<'a> {
-//     pub(crate) conn: &'a mut MysqlConnection,
-// }
-//
-// impl<'a> CoinRankInfoRepository<'a> {
-//     pub fn new(conn: &'a mut MysqlConnection) -> Self {
-//         Self { conn }
-//     }
-// }
-//
-// impl<'a> Repository<CoinRankInfo> for CoinRankInfoRepository<'a> {
-//     fn get_all(&mut self) -> AppResult<Vec<CoinRankInfo>> {
-//         coin_rank_info::table()
-//             .select(CoinRankInfo::as_select())
-//             .load(self.conn)
-//             .map_err(AppError::from)
-//     }
-//
-//     fn get_by_id(&mut self, id: &str) -> AppResult<Option<CoinRankInfo>> {
-//         coin_rank_info::table()
-//             .find(id)
-//             .select(CoinRankInfo::as_select())
-//             .first(self.conn)
-//             .optional()
-//             .map_err(AppError::from)
-//     }
-//
-//     fn insert(&mut self, entity: &CoinRankInfo) -> AppResult<usize> {
-//         diesel::insert_into(coin_rank_info::table())
-//             .values(entity)
-//             .execute(self.conn)
-//             .map_err(AppError::from)  // Convert QueryResult to AppResult
-//     }
-//
-//     fn delete(&mut self, id: &str) -> AppResult<usize> {
-//         diesel::delete(coin_rank_info::table().find(id)).execute(self.conn).map_err(AppError::from) // Convert QueryResult to AppResult
-//     }
-//
-// }
+impl_repository_with_filter!(
+    CoinRankInfoRepository,
+    coin_rank_info,
+    CoinRankInfo,
+    CoinRankInfoFilter,
+    @filter_var = filter,
+    {
+        use crate::schema::coin_rank_info::dsl::*;
+        let mut q = coin_rank_info.into_boxed();
+
+        if let Some(ref keyword) = filter.symbol_like {
+            q = q.filter(symbol.like(format!("%{}%", keyword)));
+        }
+
+        if let Some(ref exact) = filter.symbol {
+            q = q.filter(symbol.eq(exact));
+        }
+
+        if let Some(min) = filter.min_rank {
+            q = q.filter(market_cap_rank.ge(min));
+        }
+
+        if let Some(max) = filter.max_rank {
+            q = q.filter(market_cap_rank.le(max));
+        }
+
+         if let Some(order) = &filter.sort_by_rank {
+            q = {
+                match order {
+                    SortOrder::Asc => q.order(market_cap_rank.asc()),
+                    SortOrder::Desc => q.order(market_cap_rank.desc()),
+                }
+            };
+        }
+        q
+    },
+    composite_pk = [id]
+);

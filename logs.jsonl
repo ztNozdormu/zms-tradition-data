@@ -698,3 +698,14 @@
 {"timestamp":"2025-05-23T08:13:45.988598+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Scheduled task completed"}
 {"timestamp":"2025-05-23T08:13:46.321835+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Scheduled task completed"}
 {"timestamp":"2025-05-23T08:13:46.567172+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Scheduled task completed"}
+{"timestamp":"2025-05-23T08:23:12.198083+00:00","level":"INFO","target":"zms_tradition_data::server","message":"Starting zms-tradition indexer..."}
+{"timestamp":"2025-05-23T08:23:12.198739+00:00","level":"INFO","target":"zms_tradition_data::infra::db::ckdb","message":"Connecting to ClickHouse at http://localhost:8123"}
+{"timestamp":"2025-05-23T08:23:12.440914+00:00","level":"INFO","target":"zms_tradition_data::infra::cache::kv_store","message":"Connected to Redis KV store at redis://default:123456@localhost:6379"}
+{"timestamp":"2025-05-23T08:23:12.491452+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Scheduler started..."}
+{"timestamp":"2025-05-23T08:23:12.491747+00:00","level":"INFO","target":"warp::server","message":"listening on http://127.0.0.1:10099"}
+{"timestamp":"2025-05-23T08:23:12.493046+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Running scheduled task..."}
+{"timestamp":"2025-05-23T08:23:12.493038+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Running scheduled task..."}
+{"timestamp":"2025-05-23T08:23:12.493043+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Running scheduled task..."}
+{"timestamp":"2025-05-23T08:23:13.130349+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Scheduled task completed"}
+{"timestamp":"2025-05-23T08:23:13.381039+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Scheduled task completed"}
+{"timestamp":"2025-05-23T08:23:13.633408+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Scheduled task completed"}

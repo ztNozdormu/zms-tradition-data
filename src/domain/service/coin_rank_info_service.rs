@@ -1,10 +1,12 @@
 use crate::common::VecConvert;
-use crate::domain::model::AppResult;
-use crate::domain::model::coin_rank_info::{CoinRankInfo, NewOrUpdateCoinRankInfo};
-use crate::domain::repository::InsertableRepository;
+use crate::domain::model::coin_rank_info::{
+    CoinRankInfo, CoinRankInfoFilter, NewOrUpdateCoinRankInfo,
+};
+use crate::domain::model::{AppResult, PageResult};
 use crate::domain::repository::Repository;
 use crate::domain::repository::UpdatableRepository;
 use crate::domain::repository::coin_rank_info_repository::CoinRankInfoRepository;
+use crate::domain::repository::{FilterableRepository, InsertableRepository};
 use crate::impl_full_service;
 use crate::infra::external::cgecko::DefaultCoinGecko;
 use crate::schema::coin_rank_info;
@@ -25,6 +27,22 @@ impl<'a> CoinRankInfoService<'a> {
         let list = fetch_coin_rank_data().await;
         insert_or_update_coin_ranks(&mut self.repo.conn, list)?;
         Ok(())
+    }
+
+    pub fn query_page_with_total(
+        &mut self,
+        filter: CoinRankInfoFilter,
+        page: i64,
+        per_page: i64,
+    ) -> AppResult<PageResult<CoinRankInfo>> {
+        let data = self.repo.filter_paginated(&filter, page, per_page)?;
+        let total = self.repo.count_filtered(&filter)?;
+        Ok(PageResult {
+            data,
+            total,
+            page,
+            per_page,
+        })
     }
 }
 
