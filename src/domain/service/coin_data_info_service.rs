@@ -10,7 +10,7 @@ use crate::impl_full_service;
 use crate::infra::external::cgecko::DefaultCoinGecko;
 use crate::schema::coin_data_info;
 use diesel::{Connection, MysqlConnection, RunQueryDsl};
-use tracing::instrument;
+use tracing::{info, instrument};
 
 impl_full_service!(
     CoinDataInfoService,
@@ -25,9 +25,12 @@ impl<'a> CoinDataInfoService<'a> {
     #[instrument(name = "save_coin_data_info")]
     pub async fn save_coin_data_info(&mut self, coin_id: &str) -> Result<(), anyhow::Error> {
         let new_coin_data_info = fetch_coin_data_info(coin_id).await;
-
-        insert_or_update_coin_data_info(&mut self.repo.conn, &new_coin_data_info)?;
-
+        if let Ok(data_info) = fetch_coin_data_info(coin_id).await {
+            insert_or_update_coin_data_info(&mut self.repo.conn, &data_info)?;
+        } else {
+            // 记录错误或忽略
+            info!("Coin {} not found", coin_id);
+        }
         Ok(())
     }
 
@@ -49,12 +52,14 @@ impl<'a> CoinDataInfoService<'a> {
 }
 
 /// 从 CoinGecko 获取并转换为结构化数据
-async fn fetch_coin_data_info(coin_id: &str) -> NewOrUpdateCoinDataInfo {
+pub async fn fetch_coin_data_info(coin_id: &str) -> Result<NewOrUpdateCoinDataInfo, anyhow::Error> {
     let dcg = DefaultCoinGecko::default();
     let coin_data = dcg.get_coin_data(coin_id).await;
-    coin_data.unwrap().into()
+    // info!("Coin {} data: {:?}", coin_id, coin_data);
+    let coin_data_res =
+        coin_data.ok_or_else(|| anyhow::anyhow!("Coin data not found: {coin_id}"))?;
+    Ok(coin_data_res.into())
 }
-
 fn insert_or_update_coin_data_info(
     conn: &mut MysqlConnection,
     new_coin_data_info: &NewOrUpdateCoinDataInfo,

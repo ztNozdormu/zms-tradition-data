@@ -80,11 +80,11 @@ pub struct CoinData {
     pub block_time_in_minutes: Option<u32>,
     pub hashing_algorithm: Option<String>,
     pub categories: Option<Vec<String>>,
-    pub preview_listing: bool,
+    pub preview_listing: Option<bool>,
     pub public_notice: Option<String>,
     pub additional_notices: Option<Vec<String>>,
     pub description: Option<HashMap<String, String>>,
-    pub country_origin: String,
+    pub country_origin: Option<String>,
     // #[serde(deserialize_with = "serde_fun::deserialize_datetime_option")]
     pub genesis_date: Option<NaiveDate>,
     #[serde(deserialize_with = "serde_fun::deserialize_option_string2bigdcimal")]

@@ -1,9 +1,9 @@
 use diesel::result::Error as DieselError;
 use thiserror::Error;
 
-pub(crate) mod coin_category;
-pub(crate) mod coin_data_info;
-pub(crate) mod coin_rank_info;
+pub mod coin_category;
+pub mod coin_data_info;
+pub mod coin_rank_info;
 
 pub type AppResult<T> = Result<T, AppError>;
 

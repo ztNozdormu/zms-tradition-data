@@ -68,16 +68,8 @@ CREATE TABLE coin_data_info (
     -- JSON字段索引(MySQL 8.0+)
                                 INDEX idx_web_slug ((CAST(web_slug AS CHAR(64)))) COMMENT '网页后缀索引',
                                 INDEX idx_twitter ((CAST(links->>'$.twitter_screen_name' AS CHAR(64)))) COMMENT 'Twitter账号索引',
-                                INDEX idx_facebook ((CAST(links->>'$.facebook_username' AS CHAR(64)))) COMMENT 'Facebook账号索引',
+                                INDEX idx_facebook ((CAST(links->>'$.facebook_username' AS CHAR(64)))) COMMENT 'Facebook账号索引'
 
-    -- 约束条件
-                                CONSTRAINT chk_sentiment_percentage CHECK (
-                                    sentiment_votes_up_percentage BETWEEN 0 AND 100 AND
-                                    sentiment_votes_down_percentage BETWEEN 0 AND 100
-                                    ),
-                                CONSTRAINT chk_sentiment_sum CHECK (
-                                    sentiment_votes_up_percentage + sentiment_votes_down_percentage <= 100
-                                    )
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_0900_ai_ci
     COMMENT='加密货币详细信息表';

@@ -17,7 +17,6 @@ macro_rules! impl_repository_with_filter {
                 per_page: i64,
             ) -> AppResult<Vec<$entity>> {
                 use diesel::prelude::*;
-                use diesel::dsl::*;
 
                 let q = {
                             $($body)*
@@ -31,7 +30,7 @@ macro_rules! impl_repository_with_filter {
 
             fn count_filtered(&mut self, $filter_var: &$filter) -> AppResult<i64> {
                 use diesel::prelude::*;
-                use diesel::dsl::*;
+
 
                let q = {
                             $($body)*

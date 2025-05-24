@@ -1,12 +1,8 @@
 use crate::domain::model::coin_data_info::{
     CoinDataInfo, CoinDataInfoFilter, NewOrUpdateCoinDataInfo,
 };
-use crate::domain::model::coin_rank_info::{
-    CoinRankInfo, CoinRankInfoFilter, NewOrUpdateCoinRankInfo,
-};
 use crate::domain::model::{AppError, AppResult, SortOrder};
 use crate::domain::repository::Repository;
-use crate::schema::coin_rank_info::dsl::coin_rank_info;
 use crate::{impl_full_repository, impl_repository_with_filter};
 use diesel::{
     ExpressionMethods, MysqlConnection, OptionalExtension, QueryDsl, RunQueryDsl, SelectableHelper,

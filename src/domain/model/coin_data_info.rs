@@ -111,7 +111,7 @@ pub struct NewOrUpdateCoinDataInfo {
     pub last_updated: Option<NaiveDateTime>,
 }
 
-// 实现从 CoinDataInfo 到 NewOrUpdateCoinDataInfo 的转换
+// 实现从 CoinData 到 NewOrUpdateCoinDataInfo 的转换
 impl From<CoinData> for NewOrUpdateCoinDataInfo {
     fn from(data: CoinData) -> Self {
         NewOrUpdateCoinDataInfo {
@@ -121,15 +121,15 @@ impl From<CoinData> for NewOrUpdateCoinDataInfo {
             web_slug: data.web_slug,
             asset_platform_id: data.asset_platform_id,
             platforms: option_obj_to_value(data.platforms),
-            block_time_in_minutes: data.block_time_in_minutes.map(|v| v),
+            block_time_in_minutes: data.block_time_in_minutes,
             hashing_algorithm: data.hashing_algorithm,
             categories: Some(option_vec_to_value(data.categories)),
-            preview_listing: Some(data.preview_listing),
+            preview_listing: data.preview_listing,
             public_notice: data.public_notice,
             additional_notices: Some(option_vec_to_value(data.additional_notices)),
             description: option_obj_to_value(data.description),
-            country_origin: Some(data.country_origin),
-            genesis_date: None, //data.genesis_date,
+            country_origin: data.country_origin,
+            genesis_date: data.genesis_date,
             sentiment_votes_up_percentage: data.sentiment_votes_up_percentage,
             sentiment_votes_down_percentage: data.sentiment_votes_down_percentage,
             watchlist_portfolio_users: data.watchlist_portfolio_users,
