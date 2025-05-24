@@ -19,7 +19,7 @@ macro_rules! impl_repository_with_filter {
                 use diesel::prelude::*;
                 use diesel::dsl::*;
 
-                let mut q = {
+                let q = {
                             $($body)*
                           };
 
@@ -33,7 +33,7 @@ macro_rules! impl_repository_with_filter {
                 use diesel::prelude::*;
                 use diesel::dsl::*;
 
-               let mut q = {
+               let q = {
                             $($body)*
                           };
                 q.count()

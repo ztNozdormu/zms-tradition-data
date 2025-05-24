@@ -2,11 +2,12 @@ use crate::common::serde_fun::option_vec_to_value;
 use crate::infra::external::cgecko::coin_categories::CoinCategories;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
-use diesel::{AsChangeset, Identifiable, Insertable, Queryable};
+use diesel::{AsChangeset, Identifiable, Insertable, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
+use crate::domain::model::SortOrder;
 
 /// 加密货币分类表模型
-#[derive(Debug, Queryable, Serialize, Deserialize, Identifiable, Clone)]
+#[derive(Debug, Queryable, Selectable, Serialize, Deserialize, Identifiable, Clone)]
 #[diesel(table_name = crate::schema::coin_categories)]
 pub struct CoinCategory {
     /// 分类ID(如"world-liberty-financial-portfolio")
@@ -41,7 +42,7 @@ pub struct CoinCategory {
 /// 用于创建新加密货币分类的模型
 #[derive(Debug, Insertable, AsChangeset, Serialize, Deserialize, Clone)]
 #[diesel(table_name = crate::schema::coin_categories)]
-pub struct NewCoinCategory {
+pub struct NewOrUpdateCoinCategory {
     pub id: String,
     pub name: String,
     pub market_cap: Option<BigDecimal>,
@@ -54,9 +55,9 @@ pub struct NewCoinCategory {
 }
 
 // 实现从 CoinCategories 到 NewCoinCategory 的转换
-impl From<CoinCategories> for NewCoinCategory {
+impl From<CoinCategories> for NewOrUpdateCoinCategory {
     fn from(info: CoinCategories) -> Self {
-        NewCoinCategory {
+        NewOrUpdateCoinCategory {
             id: info.id.clone(),
             name: info.name.clone(),
             market_cap: info.market_cap.clone(),
@@ -68,4 +69,16 @@ impl From<CoinCategories> for NewCoinCategory {
             updated_at: info.updated_at.clone(),
         }
     }
+}
+
+
+#[derive(Debug, Clone)]
+pub struct CoinCategoriesFilter {
+    pub name: Option<String>,
+    pub name_like: Option<String>,
+    pub market_cap: Option<BigDecimal>, // category market cap
+    pub volume_24h: Option<BigDecimal>, // 24h volume
+    pub sort_by_rank: Option<SortOrder>,
+    pub page: Option<usize>,
+    pub page_size: Option<usize>,
 }

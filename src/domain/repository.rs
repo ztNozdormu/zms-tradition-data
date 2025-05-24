@@ -1,6 +1,7 @@
 use crate::domain::model::AppResult;
 
 pub mod coin_rank_info_repository;
+pub mod coin_category_repository;
 
 // 定义 Repository trait
 pub trait Repository<T> {
