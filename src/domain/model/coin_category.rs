@@ -1,10 +1,10 @@
 use crate::common::serde_fun::option_vec_to_value;
+use crate::domain::model::SortOrder;
 use crate::infra::external::cgecko::coin_categories::CoinCategories;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use diesel::{AsChangeset, Identifiable, Insertable, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
-use crate::domain::model::SortOrder;
 
 /// 加密货币分类表模型
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize, Identifiable, Clone)]
@@ -70,7 +70,6 @@ impl From<CoinCategories> for NewOrUpdateCoinCategory {
         }
     }
 }
-
 
 #[derive(Debug, Clone)]
 pub struct CoinCategoriesFilter {

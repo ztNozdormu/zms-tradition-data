@@ -1,12 +1,13 @@
 use crate::common::serde_fun::{option_obj_to_value, option_vec_to_value};
+use crate::domain::model::SortOrder;
 use crate::infra::external::cgecko::coin_data::CoinData;
 use bigdecimal::BigDecimal;
 use chrono::{NaiveDate, NaiveDateTime};
-use diesel::{AsChangeset, Identifiable, Insertable, Queryable};
+use diesel::{AsChangeset, Identifiable, Insertable, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
 
 /// 加密货币详细信息表模型
-#[derive(Debug, Queryable, Serialize, Deserialize, Identifiable, Clone)]
+#[derive(Debug, Queryable, Selectable, Serialize, Deserialize, Identifiable, Clone)]
 #[diesel(table_name = crate::schema::coin_data_info)]
 pub struct CoinDataInfo {
     /// 币种唯一标识符(如"bitcoin")
@@ -87,7 +88,7 @@ pub struct CoinDataInfo {
 /// 用于创建新加密货币详细信息的模型
 #[derive(Debug, Insertable, AsChangeset, Serialize, Deserialize, Clone)]
 #[diesel(table_name = crate::schema::coin_data_info)]
-pub struct NewCoinDataInfo {
+pub struct NewOrUpdateCoinDataInfo {
     pub id: String,
     pub symbol: String,
     pub name: String,
@@ -110,10 +111,10 @@ pub struct NewCoinDataInfo {
     pub last_updated: Option<NaiveDateTime>,
 }
 
-// 实现从 CoinDataInfo 到 NewCoinDataInfo 的转换
-impl From<CoinData> for NewCoinDataInfo {
+// 实现从 CoinDataInfo 到 NewOrUpdateCoinDataInfo 的转换
+impl From<CoinData> for NewOrUpdateCoinDataInfo {
     fn from(data: CoinData) -> Self {
-        NewCoinDataInfo {
+        NewOrUpdateCoinDataInfo {
             id: data.id,
             symbol: data.symbol,
             name: data.name,
@@ -136,4 +137,15 @@ impl From<CoinData> for NewCoinDataInfo {
             last_updated: data.last_updated,
         }
     }
+}
+
+#[derive(Debug, Clone)]
+pub struct CoinDataInfoFilter {
+    pub name: Option<String>,
+    pub name_like: Option<String>,
+    pub symbol: Option<String>,
+    pub market_cap_rank: Option<u32>,
+    pub sort_by_rank: Option<SortOrder>,
+    pub page: Option<usize>,
+    pub page_size: Option<usize>,
 }

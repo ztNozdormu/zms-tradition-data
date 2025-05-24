@@ -1,11 +1,13 @@
 use crate::common::VecConvert;
-use crate::domain::model::coin_category::{CoinCategoriesFilter, CoinCategory, NewOrUpdateCoinCategory};
+use crate::domain::model::coin_category::{
+    CoinCategoriesFilter, CoinCategory, NewOrUpdateCoinCategory,
+};
 use crate::domain::model::{AppResult, PageResult};
-use crate::domain::repository::coin_category_repository::CoinCategoryRepository;
 use crate::domain::repository::FilterableRepository;
+use crate::domain::repository::InsertableRepository;
 use crate::domain::repository::Repository;
 use crate::domain::repository::UpdatableRepository;
-use crate::domain::repository::InsertableRepository;
+use crate::domain::repository::coin_category_repository::CoinCategoryRepository;
 use crate::impl_full_service;
 use crate::infra::external::cgecko::DefaultCoinGecko;
 use crate::schema::coin_categories;
@@ -21,11 +23,9 @@ impl_full_service!(
 );
 
 impl<'a> CoinCategoryService<'a> {
-
     /// 主入口：获取并保存 Coin 板块分类
     #[instrument(name = "save_categorys")]
     pub async fn save_categorys(&mut self) -> Result<(), anyhow::Error> {
-
         let coin_categories = fetch_coin_categories().await;
 
         insert_or_update_coin_categories(&mut self.repo.conn, coin_categories)?;
@@ -48,7 +48,6 @@ impl<'a> CoinCategoryService<'a> {
         })
     }
 }
-
 
 /// 从 CoinGecko 获取并转换为结构化数据
 async fn fetch_coin_categories() -> Vec<NewOrUpdateCoinCategory> {

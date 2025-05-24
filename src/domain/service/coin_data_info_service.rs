@@ -1,24 +1,55 @@
-use crate::domain::model::coin_data_info::NewCoinDataInfo;
+use crate::domain::model::coin_data_info::{
+    CoinDataInfo, CoinDataInfoFilter, NewOrUpdateCoinDataInfo,
+};
+use crate::domain::model::{AppResult, PageResult};
+use crate::domain::repository::Repository;
+use crate::domain::repository::coin_data_info_repository::CoinDataInfoRepository;
+use crate::domain::repository::{FilterableRepository, InsertableRepository, UpdatableRepository};
 use crate::global::get_mysql_pool;
+use crate::impl_full_service;
 use crate::infra::external::cgecko::DefaultCoinGecko;
 use crate::schema::coin_data_info;
 use diesel::{Connection, MysqlConnection, RunQueryDsl};
 use tracing::instrument;
 
-// get_coin_by_id
-/// 主入口：获取并保存 Coin_data_info 信息包含所属板块
-#[instrument(name = "save_coin_data_info")]
-pub async fn save_coin_data_info(coin_id: &str) -> Result<(), anyhow::Error> {
-    let new_coin_data_info = fetch_coin_data_info(coin_id).await;
-    let mut conn = get_mysql_pool().get()?;
+impl_full_service!(
+    CoinDataInfoService,
+    CoinDataInfoRepository,
+    CoinDataInfo,
+    NewOrUpdateCoinDataInfo,
+    NewOrUpdateCoinDataInfo
+);
 
-    insert_or_update_coin_data_info(&mut conn, &new_coin_data_info)?;
+impl<'a> CoinDataInfoService<'a> {
+    /// 主入口：获取并保存 Coin_data_info 信息包含所属板块
+    #[instrument(name = "save_coin_data_info")]
+    pub async fn save_coin_data_info(&mut self, coin_id: &str) -> Result<(), anyhow::Error> {
+        let new_coin_data_info = fetch_coin_data_info(coin_id).await;
 
-    Ok(())
+        insert_or_update_coin_data_info(&mut self.repo.conn, &new_coin_data_info)?;
+
+        Ok(())
+    }
+
+    pub fn query_page_with_total(
+        &mut self,
+        filter: CoinDataInfoFilter,
+        page: i64,
+        per_page: i64,
+    ) -> AppResult<PageResult<CoinDataInfo>> {
+        let data = self.repo.filter_paginated(&filter, page, per_page)?;
+        let total = self.repo.count_filtered(&filter)?;
+        Ok(PageResult {
+            data,
+            total,
+            page,
+            per_page,
+        })
+    }
 }
 
 /// 从 CoinGecko 获取并转换为结构化数据
-async fn fetch_coin_data_info(coin_id: &str) -> NewCoinDataInfo {
+async fn fetch_coin_data_info(coin_id: &str) -> NewOrUpdateCoinDataInfo {
     let dcg = DefaultCoinGecko::default();
     let coin_data = dcg.get_coin_data(coin_id).await;
     coin_data.unwrap().into()
@@ -26,7 +57,7 @@ async fn fetch_coin_data_info(coin_id: &str) -> NewCoinDataInfo {
 
 fn insert_or_update_coin_data_info(
     conn: &mut MysqlConnection,
-    new_coin_data_info: &NewCoinDataInfo,
+    new_coin_data_info: &NewOrUpdateCoinDataInfo,
 ) -> anyhow::Result<()> {
     conn.transaction(|conn| {
         diesel::insert_into(coin_data_info::table)

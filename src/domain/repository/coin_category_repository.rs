@@ -1,4 +1,6 @@
-use crate::domain::model::coin_category::{CoinCategoriesFilter, CoinCategory, NewOrUpdateCoinCategory};
+use crate::domain::model::coin_category::{
+    CoinCategoriesFilter, CoinCategory, NewOrUpdateCoinCategory,
+};
 use crate::domain::model::{AppError, AppResult, SortOrder};
 use crate::domain::repository::Repository;
 use crate::schema::coin_categories::dsl::coin_categories;
@@ -20,7 +22,7 @@ impl<'a> CoinCategoryRepository<'a> {
 
 impl_full_repository!(
     CoinCategoryRepository,  // Repository struct
-    coin_categories,          // Table name from schema.rs
+    coin_categories,         // Table name from schema.rs
     CoinCategory,            // Model
     NewOrUpdateCoinCategory, // Insert model
     NewOrUpdateCoinCategory  // Update model
