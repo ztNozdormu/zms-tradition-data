@@ -87,4 +87,31 @@ diesel::table! {
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(coin_categories, coin_data_info, coin_rank_info,);
+diesel::table! {
+    market_kline (exchange, symbol, time_frame, close_time) {
+        #[max_length = 64]
+        exchange -> Varchar,
+        #[max_length = 64]
+        symbol -> Varchar,
+        #[max_length = 16]
+        time_frame -> Varchar,
+        open_time -> Bigint,
+        open -> Double,
+        high -> Double,
+        low -> Double,
+        close -> Double,
+        volume -> Double,
+        close_time -> Bigint,
+        quote_asset_volume -> Double,
+        number_of_trades -> Unsigned<Bigint>,
+        taker_buy_base_asset_volume -> Double,
+        taker_buy_quote_asset_volume -> Double,
+    }
+}
+
+diesel::allow_tables_to_appear_in_same_query!(
+    coin_categories,
+    coin_data_info,
+    coin_rank_info,
+    market_kline,
+);
