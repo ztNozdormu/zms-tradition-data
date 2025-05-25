@@ -1,5 +1,5 @@
-pub mod clean_data;
 pub mod fetch_cgecko;
+pub mod history_data;
 pub mod notify_info;
 
 use std::time::Duration;
@@ -41,7 +41,11 @@ pub fn get_all_tasks() -> Vec<ScheduledTask> {
             Duration::from_secs(259200),
             fetch_cgecko::save_coin_data_info_task
         ),
-        // task!("clean_data", Duration::from_secs(300), clean_data),
+        task!(
+            "sync_exchange_history_data",
+            Duration::from_secs(300),
+            history_data::exchange_history_data
+        ),
         // task!("push_data", Duration::from_secs(120), push_data),
     ]
 }
