@@ -5,6 +5,7 @@ use thiserror::Error;
 
 pub mod cgecko;
 pub mod cmc;
+mod binance;
 
 /// Parser for third domain responses
 #[derive(Debug)]
