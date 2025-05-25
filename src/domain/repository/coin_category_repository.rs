@@ -63,6 +63,5 @@ impl_repository_with_filter!(
             };
         }
         q
-    },
-    composite_pk = [id]
+    }
 );

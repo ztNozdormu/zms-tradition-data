@@ -88,7 +88,9 @@ diesel::table! {
 }
 
 diesel::table! {
-    market_kline (exchange, symbol, time_frame, close_time) {
+    market_kline (id) {
+        #[max_length = 250]
+        id -> Varchar,
         #[max_length = 64]
         exchange -> Varchar,
         #[max_length = 64]
@@ -102,10 +104,10 @@ diesel::table! {
         close -> Double,
         volume -> Double,
         close_time -> Bigint,
-        quote_asset_volume -> Double,
-        number_of_trades -> Unsigned<Bigint>,
-        taker_buy_base_asset_volume -> Double,
-        taker_buy_quote_asset_volume -> Double,
+        quote_asset_volume -> Nullable<Double>,
+        number_of_trades -> Nullable<Unsigned<Bigint>>,
+        taker_buy_base_asset_volume -> Nullable<Double>,
+        taker_buy_quote_asset_volume -> Nullable<Double>,
     }
 }
 

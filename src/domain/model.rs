@@ -57,6 +57,10 @@ impl PageQuery {
     }
 }
 
+pub trait PrimaryKeyExtractor<PK> {
+    fn primary_key(&self) -> PK;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

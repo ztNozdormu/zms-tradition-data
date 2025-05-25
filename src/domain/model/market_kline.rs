@@ -1,15 +1,16 @@
 use crate::domain::model::SortOrder;
 use barter::barter_xchange::exchange::binance::model::KlineSummary;
-use bigdecimal::BigDecimal;
-use chrono::{NaiveDate, NaiveDateTime};
+use base64::Engine;
 use diesel::{AsChangeset, Identifiable, Insertable, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
 
 /// 加密货币k线数据信息表模型
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize, Identifiable, Clone)]
 #[diesel(table_name = crate::schema::market_kline)]
-#[diesel(primary_key(exchange, symbol, time_frame, close_time))]
 pub struct MarketKline {
+    // 唯一标识符 exchange+symbol+time_frame+close_time base64编码
+    pub id: String,
+
     /// 交易所名称，例如 binance
     pub exchange: String,
 
@@ -54,10 +55,11 @@ pub struct MarketKline {
 }
 
 /// 用于创建新加密货币详细信息的模型
-#[derive(Debug, Insertable, AsChangeset, Serialize, Deserialize, Clone)]
+#[derive(Debug, Identifiable, Insertable, AsChangeset, Serialize, Deserialize, Clone)]
 #[diesel(table_name = crate::schema::market_kline)]
-#[diesel(primary_key(exchange, symbol, time_frame, close_time))]
 pub struct NewOrUpdateMarketKline {
+    // 唯一标识符 exchange+symbol+time_frame+close_time base64编码
+    pub id: String,
     /// 交易所名称，例如 binance
     pub exchange: String,
 
@@ -105,6 +107,7 @@ pub struct NewOrUpdateMarketKline {
 impl From<(&KlineSummary, &str, &str, &str)> for NewOrUpdateMarketKline {
     fn from((s, exchange, symbol, period): (&KlineSummary, &str, &str, &str)) -> Self {
         NewOrUpdateMarketKline {
+            id: encode_market_kline_pk(exchange, symbol, period, s.close_time),
             exchange: exchange.to_string(),
             symbol: symbol.to_string(),
             time_frame: period.to_string(),
@@ -124,6 +127,18 @@ impl From<(&KlineSummary, &str, &str, &str)> for NewOrUpdateMarketKline {
         }
     }
 }
+/// 生成组合主键的 Base64 表示
+pub fn encode_market_kline_pk(
+    exchange: &str,
+    symbol: &str,
+    time_frame: &str,
+    close_time: i64,
+) -> String {
+    // 将各字段用分隔符连接
+    let raw = format!("{}|{}|{}|{}", exchange, symbol, time_frame, close_time);
+    // Base64 编码
+    base64::encode(raw)
+}
 
 #[derive(Debug, Clone)]
 pub struct MarketKlineFilter {
@@ -131,7 +146,7 @@ pub struct MarketKlineFilter {
     pub symbol: Option<String>,
     pub time_frame: Option<String>,
     pub close_time: Option<i64>,
-    pub sort_by_rank: Option<SortOrder>,
+    pub sort_by_close_time: Option<SortOrder>,
     pub page: Option<usize>,
     pub page_size: Option<usize>,
 }
