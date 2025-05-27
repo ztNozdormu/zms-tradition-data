@@ -3,7 +3,6 @@ use barter::barter_integration::protocol::http::HttpParser;
 use reqwest::StatusCode;
 use thiserror::Error;
 
-mod binance;
 pub mod cgecko;
 pub mod cmc;
 
