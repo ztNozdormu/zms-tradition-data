@@ -4,11 +4,11 @@ use crate::infra::cache::flush_controller::FlushController;
 use crate::infra::cache::kv_store::RedisKVStore;
 use crate::infra::db::ckdb::ClickhouseDb;
 use crate::infra::db::mysql::{MySqlPool, make_mysql_pool};
+use barter::barter_xchange::exchange::binance::api::Binance;
+use barter::barter_xchange::exchange::binance::futures::general::FuturesGeneral;
 use barter::barter_xchange::exchange::binance::futures::market::FuturesMarket;
 use once_cell::sync::OnceCell;
 use std::sync::Arc;
-use barter::barter_xchange::exchange::binance::api::Binance;
-use barter::barter_xchange::exchange::binance::futures::general::FuturesGeneral;
 
 // Use Arc to avoid cloning actual instances and allow shared ownership
 pub static CK_DB: OnceCell<Arc<ClickhouseDb>> = OnceCell::new();
@@ -84,7 +84,6 @@ pub fn set_flush_buffer(instance: Arc<KlineBuffer>) -> Result<(), Arc<KlineBuffe
 pub fn set_futures_general(instance: Arc<FuturesGeneral>) -> Result<(), Arc<FuturesGeneral>> {
     FUTURES_GENERAL.set(instance)
 }
-
 
 /// Get shared ClickHouse instance (panics if not initialized)
 pub fn get_ck_db() -> Arc<ClickhouseDb> {

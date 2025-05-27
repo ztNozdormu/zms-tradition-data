@@ -4,6 +4,7 @@ pub mod coin_category_repository;
 pub mod coin_data_info_repository;
 pub mod coin_rank_info_repository;
 pub mod market_kline_repository;
+pub mod market_symbol_repository;
 
 // 定义 Repository trait
 pub trait Repository<T> {

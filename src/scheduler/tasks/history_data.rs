@@ -10,6 +10,13 @@ use tokio::sync::mpsc;
 //     let mut market_kline_service = MarketKlineService { repo };
 //     market_kline_service.exchange_history_data().await
 // }
+
+pub async fn save_binance_symbol() -> Result<(), anyhow::Error> {
+    // todo
+
+    Ok(())
+}
+
 pub async fn exchange_history_data() -> Result<(), anyhow::Error> {
     let (tx, rx) = mpsc::channel(1000);
     let buffer = get_flush_buffer();

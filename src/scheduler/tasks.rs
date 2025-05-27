@@ -9,6 +9,7 @@ pub struct ScheduledTask {
     pub name: &'static str,
     pub interval: Duration,
     pub task_fn: fn() -> futures::future::BoxFuture<'static, Result<(), anyhow::Error>>,
+    pub once: bool,
 }
 
 /// 将异步函数转换为任务类型
@@ -18,6 +19,18 @@ macro_rules! task {
             name: $name,
             interval: $interval,
             task_fn: || Box::pin($func()),
+            once: false,
+        }
+    };
+}
+
+macro_rules! once_task {
+    ($name:expr, $func:expr) => {
+        ScheduledTask {
+            name: $name,
+            interval: Duration::from_secs(0),
+            task_fn: || Box::pin($func()),
+            once: true,
         }
     };
 }
@@ -25,6 +38,7 @@ macro_rules! task {
 /// 所有需要定时执行的任务列表
 pub fn get_all_tasks() -> Vec<ScheduledTask> {
     vec![
+        once_task!("init_coin_rank", fetch_cgecko::save_coin_rank_info_task),
         // every three days execute
         task!(
             "save_coin_rank_info",
@@ -46,6 +60,5 @@ pub fn get_all_tasks() -> Vec<ScheduledTask> {
             Duration::from_secs(300),
             history_data::exchange_history_data
         ),
-        // task!("push_data", Duration::from_secs(120), push_data),
     ]
 }

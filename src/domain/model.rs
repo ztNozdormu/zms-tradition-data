@@ -5,6 +5,7 @@ pub mod coin_category;
 pub mod coin_data_info;
 pub mod coin_rank_info;
 pub mod market_kline;
+pub mod market_symbol;
 
 pub type AppResult<T> = Result<T, AppError>;
 

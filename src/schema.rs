@@ -111,9 +111,34 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    market_symbol (id) {
+        #[max_length = 250]
+        id -> Varchar,
+        #[max_length = 50]
+        exchange -> Varchar,
+        #[max_length = 50]
+        symbol -> Varchar,
+        #[max_length = 32]
+        status -> Varchar,
+        #[max_length = 50]
+        base_asset -> Varchar,
+        base_asset_precision -> Unsigned<Bigint>,
+        #[max_length = 50]
+        quote_asset -> Varchar,
+        quote_precision -> Unsigned<Bigint>,
+        order_types -> Nullable<Json>,
+        iceberg_allowed -> Nullable<Bool>,
+        is_spot_trading_allowed -> Nullable<Bool>,
+        is_margin_trading_allowed -> Nullable<Bool>,
+        filters -> Nullable<Json>,
+    }
+}
+
 diesel::allow_tables_to_appear_in_same_query!(
     coin_categories,
     coin_data_info,
     coin_rank_info,
     market_kline,
+    market_symbol,
 );
