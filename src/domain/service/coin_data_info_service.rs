@@ -24,7 +24,6 @@ impl<'a> CoinDataInfoService<'a> {
     /// 主入口：获取并保存 Coin_data_info 信息包含所属板块
     #[instrument(name = "save_coin_data_info")]
     pub async fn save_coin_data_info(&mut self, coin_id: &str) -> Result<(), anyhow::Error> {
-        let new_coin_data_info = fetch_coin_data_info(coin_id).await;
         if let Ok(data_info) = fetch_coin_data_info(coin_id).await {
             insert_or_update_coin_data_info(&mut self.repo.conn, &data_info)?;
         } else {

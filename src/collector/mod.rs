@@ -1,4 +1,5 @@
 mod aggregatoragg;
+pub mod archive;
 mod maintenance;
 mod types;
 

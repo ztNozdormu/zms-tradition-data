@@ -1,3 +1,4 @@
+use crate::collector::archive::kline_buffer::KlineBuffer;
 use crate::common::utils::{make_binace_client, make_db, make_kv_store};
 use crate::infra::cache::flush_controller::FlushController;
 use crate::infra::cache::kv_store::RedisKVStore;
@@ -13,6 +14,7 @@ pub static KV_STORE: OnceCell<Arc<RedisKVStore>> = OnceCell::new();
 pub static MYSQL_POOL: OnceCell<Arc<MySqlPool>> = OnceCell::new();
 pub static FUTURES_MARKET: OnceCell<Arc<FuturesMarket>> = OnceCell::new();
 pub static FLUSH_CONTROLLER: OnceCell<Arc<FlushController>> = OnceCell::new();
+pub static FLUSH_BUFFER: OnceCell<Arc<KlineBuffer>> = OnceCell::new();
 
 pub async fn init_global_services() {
     let ck_db = make_db().await.expect("Failed to initialize ClickhouseDb");
@@ -30,6 +32,8 @@ pub async fn init_global_services() {
         std::time::Duration::from_secs(7200),
     ));
 
+    let flush_buffer = Arc::new(KlineBuffer::new());
+
     // let _ = CK_DB.set(ck_db);
     // let _ = KV_STORE
     //     .set(redis_store)
@@ -44,6 +48,7 @@ pub async fn init_global_services() {
     let _ = set_mysql_pool(mysql_pool).unwrap();
     let _ = set_futures_market(futures_market);
     let _ = set_flush_controller(flush_controller);
+    let _ = set_flush_buffer(flush_buffer);
 }
 
 pub fn set_ck_db(instance: Arc<ClickhouseDb>) -> Result<(), Arc<ClickhouseDb>> {
@@ -64,6 +69,10 @@ pub fn set_futures_market(instance: Arc<FuturesMarket>) -> Result<(), Arc<Future
 
 pub fn set_flush_controller(instance: Arc<FlushController>) -> Result<(), Arc<FlushController>> {
     FLUSH_CONTROLLER.set(instance)
+}
+
+pub fn set_flush_buffer(instance: Arc<KlineBuffer>) -> Result<(), Arc<KlineBuffer>> {
+    FLUSH_BUFFER.set(instance)
 }
 
 /// Get shared ClickHouse instance (panics if not initialized)
@@ -95,5 +104,12 @@ pub fn get_flush_controller() -> Arc<FlushController> {
     FLUSH_CONTROLLER
         .get()
         .expect("FlushController not initialized")
+        .clone()
+}
+
+pub fn get_flush_buffer() -> Arc<KlineBuffer> {
+    FLUSH_BUFFER
+        .get()
+        .expect("FLUSH_BUFFER not initialized")
         .clone()
 }
