@@ -18,7 +18,7 @@ impl_full_service!(
 );
 
 impl<'a> MarketKlineService<'a> {
-    #[instrument(name = "save_coin_rank_info")]
+    #[instrument(name = "save_market_klines")]
     pub async fn exchange_history_data(&mut self) -> anyhow::Result<()> {
         todo!()
     }

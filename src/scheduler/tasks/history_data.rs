@@ -1,20 +1,16 @@
 use crate::collector::archive::worker::start_worker_pool;
-use crate::global::get_flush_buffer;
+use crate::domain::repository::market_symbol_repository::MarketSymbolRepository;
+use crate::domain::service::market_symbol_service::MarketSymbolService;
+use crate::global::{get_flush_buffer, get_mysql_pool};
 use barter::barter_xchange::exchange::binance::model::KlineSummary;
 use tokio::sync::mpsc;
 
-/// 异步任务：定时维护交易所不同币种不同周期的历史k线数据
-// pub async fn exchange_history_data() -> Result<(), anyhow::Error> {
-//     let mut conn = get_mysql_pool().get()?;
-//     let repo = MarketKlineRepository::new(&mut conn);
-//     let mut market_kline_service = MarketKlineService { repo };
-//     market_kline_service.exchange_history_data().await
-// }
-
+/// 异步任务：系统启动维护交易所币种信息
 pub async fn save_binance_symbol() -> Result<(), anyhow::Error> {
-    // todo
-
-    Ok(())
+    let mut conn = get_mysql_pool().get()?;
+    let repo = MarketSymbolRepository::new(&mut conn);
+    let mut market_kline_service = MarketSymbolService { repo };
+    market_kline_service.save_exchange_symbol_info().await
 }
 
 pub async fn exchange_history_data() -> Result<(), anyhow::Error> {

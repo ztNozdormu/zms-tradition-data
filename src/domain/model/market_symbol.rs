@@ -56,23 +56,23 @@ pub struct NewOrUpdateMarketSymbol {
 }
 
 // 实现从 Symbol 到 NewOrUpdateMarketSymbol 的转换
-impl From<(&Symbol, &str)> for NewOrUpdateMarketSymbol {
-    fn from((s, exchange): (&Symbol, &str)) -> Self {
+impl From<Symbol> for NewOrUpdateMarketSymbol {
+    fn from(s: Symbol) -> Self {
         NewOrUpdateMarketSymbol {
-            id: encode_market_kline_pk(exchange, &s.symbol),
-            exchange: exchange.to_string(),
-            symbol: s.symbol.clone(),
+            id: encode_market_kline_pk("binance", &s.symbol),
+            exchange: "binance".to_string(),
+            symbol: s.symbol,
 
-            status: s.status.clone(),
-            base_asset: s.base_asset.clone(),
-            base_asset_precision: s.base_asset_precision.clone(),
-            quote_asset: s.quote_asset.clone(),
-            quote_precision: s.quote_precision.clone(),
-            order_types: option_obj_to_value(Some(s.order_types.clone())),
+            status: s.status,
+            base_asset: s.base_asset,
+            base_asset_precision: s.base_asset_precision,
+            quote_asset: s.quote_asset,
+            quote_precision: s.quote_precision,
+            order_types: option_obj_to_value(Some(s.order_types)),
             iceberg_allowed: s.iceberg_allowed,
             is_spot_trading_allowed: s.is_spot_trading_allowed,
             is_margin_trading_allowed: s.is_margin_trading_allowed,
-            filters: option_obj_to_value(Some(s.filters.clone())),
+            filters: option_obj_to_value(Some(s.filters)),
         }
     }
 }

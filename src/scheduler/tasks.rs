@@ -38,7 +38,7 @@ macro_rules! once_task {
 /// 所有需要定时执行的任务列表
 pub fn get_all_tasks() -> Vec<ScheduledTask> {
     vec![
-        once_task!("init_coin_rank", fetch_cgecko::save_coin_rank_info_task),
+        once_task!("init_coin_rank", history_data::save_binance_symbol),
         // every three days execute
         task!(
             "save_coin_rank_info",
