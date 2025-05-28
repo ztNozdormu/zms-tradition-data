@@ -5,198 +5,154 @@ use std::borrow::Cow;
 
 /// Binance 交易所返回的交易所基本信息结构
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct BinanceExchangeInfo {
     /// 时区，例如 "UTC"
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub timezone: Option<String>,
 
-    /// 服务器时间戳（通常为字符串类型，也可能为数字）
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        rename = "serverTime"
-    )]
-    pub server_time: Option<String>,
+    /// 服务器时间戳
+    pub server_time: Option<u64>,
+
+    /// 期货类型（通常为字符串类型）
+    pub futures_type: Option<String>,
 
     /// 所有支持的交易对信息
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub symbols: Option<Vec<Symbol>>,
 
     /// 限速策略列表（如请求次数限制等）
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rate_limits: Option<Vec<RateLimit>>,
 
     /// 全局性过滤器列表
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub exchange_filters: Option<Vec<String>>,
-
-    /// 当前账户支持的权限，例如 ["SPOT"]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub permissions: Option<Vec<String>>,
 }
 
-/// 表示 Binance 中的一个交易对（symbol）信息
-#[derive(Debug, Serialize, Deserialize)]
+/// 合约市场信息结构（适用于 Binance Futures）
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Symbol {
-    /// 基础资产，例如 "BTC"
-    #[serde(rename = "baseAsset", default, skip_serializing_if = "Option::is_none")]
-    pub base_asset: Option<String>,
+    /// 交易对，如 "ONEUSDT"
+    pub symbol: String,
 
-    /// 计价资产，例如 "USDT"
-    #[serde(
-        rename = "quoteAsset",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub quote_asset: Option<String>,
+    /// 交易对名称，通常与 symbol 一致
+    pub pair: String,
 
-    /// 交易对名称，例如 "BTCUSDT"
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub symbol: Option<String>,
+    /// 合约类型，如 "PERPETUAL"
+    pub contract_type: String,
 
-    /// 当前交易对状态，例如 "TRADING"
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub status: Option<String>,
+    /// 交割日期（毫秒时间戳）
+    pub delivery_date: i64,
 
-    /// 是否支持冰山单
-    #[serde(
-        rename = "icebergAllowed",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub iceberg_allowed: Option<String>,
+    /// 上线日期（毫秒时间戳）
+    pub onboard_date: i64,
 
-    /// 是否支持 OCO 订单
-    #[serde(
-        rename = "ocoAllowed",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub oco_allowed: Option<String>,
+    /// 状态，如 "TRADING"
+    pub status: String,
 
-    /// 是否允许保证金交易
-    #[serde(
-        rename = "isMarginTradingAllowed",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub is_margin_trading_allowed: Option<String>,
+    /// 维持保证金百分比，字符串表示浮点数
+    pub maint_margin_percent: String,
 
-    /// 是否允许现货交易
-    #[serde(
-        rename = "isSpotTradingAllowed",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub is_spot_trading_allowed: Option<String>,
+    /// 起始保证金百分比
+    pub required_margin_percent: String,
 
-    /// 计价资产的小数精度
-    #[serde(
-        rename = "quotePrecision",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub quote_precision: Option<String>,
+    /// 基础资产，如 "ONE"
+    pub base_asset: String,
 
-    /// 计价资产的精确精度
-    #[serde(
-        rename = "quoteAssetPrecision",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub quote_asset_precision: Option<String>,
+    /// 报价资产，如 "USDT"
+    pub quote_asset: String,
 
-    /// 基础资产的精确精度
-    #[serde(
-        rename = "baseAssetPrecision",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub base_asset_precision: Option<String>,
+    /// 保证金资产
+    pub margin_asset: String,
 
-    /// 该交易对支持的订单类型列表（如 ["LIMIT", "MARKET", ...]）
-    #[serde(
-        rename = "orderTypes",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub order_types: Option<Vec<String>>,
+    /// 价格精度，如 5 表示小数点后 5 位
+    pub price_precision: u32,
 
-    /// 该交易对相关的交易限制信息
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    /// 数量精度（最小下单单位）
+    pub quantity_precision: u32,
+
+    /// 基础资产精度
+    pub base_asset_precision: u32,
+
+    /// 报价资产精度
+    pub quote_precision: u32,
+
+    /// 合约基础类型，如 "COIN"
+    pub underlying_type: String,
+
+    /// 合约子类型，例如 ["Layer-2"]
+    pub underlying_sub_type: Option<Vec<String>>,
+
+    /// 触发保护百分比
+    pub trigger_protect: String,
+
+    /// 清算手续费比例
+    pub liquidation_fee: String,
+
+    /// 市价吃单最大偏移保护
+    pub market_take_bound: String,
+
+    /// 最大移动下单限制
+    pub max_move_order_limit: u32,
+
+    /// 过滤器列表（JSON 类型）
     pub filters: Option<Vec<Filter>>,
 
-    /// 账户对该交易对的权限（如 ["SPOT", "MARGIN"]）
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub permissions: Option<Vec<String>>,
+    /// 支持的下单类型
+    pub order_types: Option<Vec<String>>,
+
+    /// 支持的 TIF 策略，如 GTC、IOC
+    pub time_in_force: Option<Vec<String>>,
+
+    /// 权限集，例如 ["GRID", "COPY"]
+    pub permission_sets: Option<Vec<String>>,
+}
+
+/// 合约市场过滤器定义
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Filter {
+    pub filter_type: String,
+
+    /// 价格过滤器（可选）
+    pub tick_size: Option<String>,
+    pub min_price: Option<String>,
+    pub max_price: Option<String>,
+
+    /// 数量过滤器
+    pub step_size: Option<String>,
+    pub min_qty: Option<String>,
+    pub max_qty: Option<String>,
+
+    /// 数量限制
+    pub limit: Option<u32>,
+
+    /// 最小名义金额
+    pub notional: Option<String>,
+
+    /// 百分比价格限制
+    pub multiplier_decimal: Option<String>,
+    pub multiplier_up: Option<String>,
+    pub multiplier_down: Option<String>,
+
+    /// 风控字段
+    pub position_control_side: Option<String>,
 }
 
 /// 表示 Binance 中的 API 访问速率限制规则
-#[derive(Debug, Serialize, Deserialize)]
+/// API 限速信息（来自 Binance 接口的 rateLimits 字段）
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RateLimit {
-    /// 每个 interval 内允许的最大请求数，例如 "1200"
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub limit: Option<String>,
+    /// 限速类型，如 REQUEST_WEIGHT、ORDERS
+    pub rate_limit_type: Option<String>,
 
-    /// 时间间隔单位（如 "MINUTE", "SECOND", "DAY"）
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    /// 限速区间单位，如 MINUTE、SECOND
     pub interval: Option<String>,
 
-    /// 每个 interval 的数量（例如 "1" 表示每 1 分钟）
-    #[serde(
-        rename = "intervalNum",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub interval_num: Option<String>,
+    /// 区间单位数量，例如 1 表示每 1 分钟/秒
+    pub interval_num: Option<u32>,
 
-    /// 限流类型（如 "REQUEST_WEIGHT", "ORDERS"）
-    #[serde(
-        rename = "rateLimitType",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub rate_limit_type: Option<String>,
-}
-
-/// 表示 Binance 交易对中的过滤器信息（如价格限制、数量限制等）
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Filter {
-    /// 最大价格，例如 "100000.00000000"
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub max_price: Option<String>,
-
-    /// 过滤器类型，如 "PRICE_FILTER"、"LOT_SIZE" 等
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub filter_type: Option<String>,
-
-    /// 价格步长，价格精度的单位，如 "0.01000000"
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub tick_size: Option<String>,
-
-    /// 最小价格
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub min_price: Option<String>,
-
-    /// 最小交易数量
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub min_qty: Option<String>,
-
-    /// 最大交易数量
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub max_qty: Option<String>,
-
-    /// 数量步长，数量精度的单位
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub step_size: Option<String>,
-
-    /// 最小名义价值（如最小成交额）
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub min_notional: Option<String>,
-
-    /// 最大名义价值（如最大成交额）
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub max_notional: Option<String>,
+    /// 在此时间段内的请求上限
+    pub limit: Option<u32>,
 }
 
 pub struct FetchExchangeInfoRequest;

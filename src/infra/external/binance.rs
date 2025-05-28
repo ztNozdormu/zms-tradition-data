@@ -115,7 +115,6 @@ mod tests {
     #[tokio::test]
     async fn test_get_symbols() {
         listen_tracing::setup_tracing();
-        listen_tracing::setup_tracing();
         let dbe = DefaultBinanceExchange::default();
         let exchange_info = dbe.get_exchange_info().await;
         match exchange_info {
@@ -130,6 +129,7 @@ mod tests {
                     trace_kv!(info,
                      "symbol" => symbol.symbol,
                      "quote_asset" => symbol.quote_asset,
+                     "contract_type" => symbol.contract_type,
                     );
                 }
             }
