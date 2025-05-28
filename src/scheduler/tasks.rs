@@ -38,8 +38,13 @@ macro_rules! once_task {
 /// 所有需要定时执行的任务列表
 pub fn get_all_tasks() -> Vec<ScheduledTask> {
     vec![
-        once_task!("init_coin_rank", history_data::save_binance_symbol),
+        // once_task!("init_coin_rank", history_data::save_binance_symbol), 线程冲突 todo
         // every three days execute
+        task!(
+            "save_binance_symbol",
+            Duration::from_secs(259200),
+            history_data::save_binance_symbol
+        ),
         task!(
             "save_coin_rank_info",
             Duration::from_secs(259200),
@@ -55,10 +60,10 @@ pub fn get_all_tasks() -> Vec<ScheduledTask> {
             Duration::from_secs(259200),
             fetch_cgecko::save_coin_data_info_task
         ),
-        task!(
-            "sync_exchange_history_data",
-            Duration::from_secs(300),
-            history_data::exchange_history_data
-        ),
+        // task!(
+        //     "sync_exchange_history_data",
+        //     Duration::from_secs(300),
+        //     history_data::exchange_history_data
+        // ),
     ]
 }

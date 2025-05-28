@@ -781,3 +781,34 @@
 {"timestamp":"2025-05-24T14:26:41.830543+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Scheduled task completed"}
 {"timestamp":"2025-05-24T14:26:42.024082+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Scheduled task completed"}
 {"timestamp":"2025-05-24T14:37:23.666531+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Scheduled task completed"}
+{"timestamp":"2025-05-27T14:13:01.413849+00:00","level":"INFO","target":"zms_tradition_data::server","message":"Starting zms-tradition indexer..."}
+{"timestamp":"2025-05-27T14:13:01.414858+00:00","level":"INFO","target":"zms_tradition_data::infra::db::ckdb","message":"Connecting to ClickHouse at http://localhost:8123"}
+{"timestamp":"2025-05-27T14:13:01.662748+00:00","level":"INFO","target":"zms_tradition_data::infra::cache::kv_store","message":"Connected to Redis KV store at redis://default:123456@localhost:6379"}
+{"timestamp":"2025-05-27T14:13:01.725500+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Scheduler started..."}
+{"timestamp":"2025-05-27T14:13:01.725688+00:00","level":"INFO","target":"warp::server","message":"listening on http://127.0.0.1:10099"}
+{"timestamp":"2025-05-27T14:13:01.726774+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Running scheduled task..."}
+{"timestamp":"2025-05-27T14:13:01.726761+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Running scheduled task..."}
+{"timestamp":"2025-05-27T14:13:01.726765+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Running scheduled task..."}
+{"timestamp":"2025-05-27T14:13:02.786122+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Scheduled task completed"}
+{"timestamp":"2025-05-27T14:13:03.505503+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Scheduled task completed"}
+{"timestamp":"2025-05-27T14:16:05.688110+00:00","level":"INFO","target":"zms_tradition_data::server","message":"Starting zms-tradition indexer..."}
+{"timestamp":"2025-05-27T14:16:05.688707+00:00","level":"INFO","target":"zms_tradition_data::infra::db::ckdb","message":"Connecting to ClickHouse at http://localhost:8123"}
+{"timestamp":"2025-05-27T14:16:05.933688+00:00","level":"INFO","target":"zms_tradition_data::infra::cache::kv_store","message":"Connected to Redis KV store at redis://default:123456@localhost:6379"}
+{"timestamp":"2025-05-27T14:16:05.986863+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Scheduler started..."}
+{"timestamp":"2025-05-27T14:16:05.987130+00:00","level":"INFO","target":"warp::server","message":"listening on http://127.0.0.1:10099"}
+{"timestamp":"2025-05-27T14:16:05.988101+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Running scheduled task..."}
+{"timestamp":"2025-05-27T14:16:05.988110+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Running scheduled task..."}
+{"timestamp":"2025-05-27T14:16:05.988124+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Running scheduled task..."}
+{"timestamp":"2025-05-27T14:16:06.929555+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Scheduled task completed"}
+{"timestamp":"2025-05-27T14:16:07.255379+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Scheduled task completed"}
+{"timestamp":"2025-05-27T14:18:29.207805+00:00","level":"INFO","target":"zms_tradition_data::server","message":"Starting zms-tradition indexer..."}
+{"timestamp":"2025-05-27T14:18:29.208435+00:00","level":"INFO","target":"zms_tradition_data::infra::db::ckdb","message":"Connecting to ClickHouse at http://localhost:8123"}
+{"timestamp":"2025-05-27T14:18:29.450994+00:00","level":"INFO","target":"zms_tradition_data::infra::cache::kv_store","message":"Connected to Redis KV store at redis://default:123456@localhost:6379"}
+{"timestamp":"2025-05-27T14:18:29.498909+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Scheduler started..."}
+{"timestamp":"2025-05-27T14:18:29.499071+00:00","level":"INFO","target":"warp::server","message":"listening on http://127.0.0.1:10099"}
+{"timestamp":"2025-05-27T14:18:29.500310+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Running scheduled task..."}{"timestamp":"2025-05-27T14:18:29.500416+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Running scheduled task..."}
+{"timestamp":"2025-05-27T14:18:29.500409+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Running scheduled task..."}
+
+{"timestamp":"2025-05-27T14:18:29.500311+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Running scheduled task..."}
+{"timestamp":"2025-05-27T14:18:30.467478+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Scheduled task completed"}
+{"timestamp":"2025-05-27T14:18:30.609118+00:00","level":"INFO","target":"zms_tradition_data::scheduler","message":"Scheduled task completed"}
