@@ -12,7 +12,6 @@ use crate::infra::external::cgecko::coin_data::{
 /// CoinGecko API key signer using header injection only (no HMAC)
 use crate::infra::external::cgecko::coin_rank::{CoinQueryParams, CoinRank, FetchCoinRequest};
 use crate::infra::external::cgecko::constant::BASE_URL;
-use barter::barter_integration;
 use barter::barter_integration::error::SocketError;
 use barter::barter_integration::protocol::http::private::Signer;
 use barter::barter_integration::protocol::http::rest::RestRequest;
