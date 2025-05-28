@@ -67,8 +67,8 @@ mod tests {
     use super::*;
     use crate::common::VecConvert;
     use crate::common::utils::format_opt_decimal;
-    use crate::domain::model::coin_category::{CoinCategory, NewCoinCategory};
-    use crate::domain::model::coin_data_info::NewCoinDataInfo;
+    use crate::domain::model::coin_category::{CoinCategory, NewOrUpdateCoinCategory};
+    use crate::domain::model::coin_data_info::NewOrUpdateCoinDataInfo;
     use crate::domain::model::coin_rank_info::{CoinRankInfo, NewOrUpdateCoinRankInfo};
     use crate::infra::external::cgecko::DefaultCoinGecko;
     use crate::infra::external::cgecko::coin_rank::CoinRank;
@@ -104,7 +104,7 @@ mod tests {
         let coin_id = "bitcoin";
         let coin_data = dcg.get_coin_data(coin_id).await;
 
-        let coin_data_info: NewCoinDataInfo = coin_data.unwrap().into();
+        let coin_data_info: NewOrUpdateCoinDataInfo = coin_data.unwrap().into();
 
         trace_kv!(info,
              "id" => coin_data_info.id,
@@ -122,7 +122,7 @@ mod tests {
         let dcg = DefaultCoinGecko::default();
         let categories = dcg.get_categories().await;
 
-        let new_coin_category_list: Vec<NewCoinCategory> = categories.convert_vec();
+        let new_coin_category_list: Vec<NewOrUpdateCoinCategory> = categories.convert_vec();
 
         for new_coin_category in &new_coin_category_list {
             trace_kv!(info,
