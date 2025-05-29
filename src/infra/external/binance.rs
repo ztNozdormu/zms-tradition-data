@@ -116,15 +116,13 @@ mod tests {
     async fn test_get_symbols() {
         listen_tracing::setup_tracing();
         let dbe = DefaultBinanceExchange::default();
-        let exchange_info = dbe.get_exchange_info().await;
-        match exchange_info {
+
+        let symbols = dbe.get_symbols().await;
+        match symbols {
             None => {
                 debug!("Empty exchange info");
             }
-            Some(exchange_info) => {
-                let symbols = exchange_info
-                    .symbols
-                    .map_or_else(Vec::new, |symbols| symbols);
+            Some(symbols) => {
                 for symbol in &symbols {
                     trace_kv!(info,
                      "symbol" => symbol.symbol,
