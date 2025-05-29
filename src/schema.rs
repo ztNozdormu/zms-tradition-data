@@ -105,7 +105,7 @@ diesel::table! {
         volume -> Double,
         close_time -> Bigint,
         quote_asset_volume -> Nullable<Double>,
-        number_of_trades -> Nullable<Unsigned<Bigint>>,
+        number_of_trades -> Nullable<Unsigned<Bigint>> ,
         taker_buy_base_asset_volume -> Nullable<Double>,
         taker_buy_quote_asset_volume -> Nullable<Double>,
     }
@@ -119,19 +119,42 @@ diesel::table! {
         exchange -> Varchar,
         #[max_length = 50]
         symbol -> Varchar,
-        #[max_length = 32]
+        #[max_length = 50]
+        pair -> Varchar,
+        #[max_length = 30]
+        contract_type -> Varchar,
+        delivery_date -> Bigint,
+        onboard_date -> Bigint,
+        #[max_length = 30]
         status -> Varchar,
         #[max_length = 50]
-        base_asset -> Varchar,
-        base_asset_precision -> Unsigned<Bigint>,
+        maint_margin_percent -> Varchar,
         #[max_length = 50]
+        required_margin_percent -> Varchar,
+        #[max_length = 30]
+        base_asset -> Varchar,
+        #[max_length = 30]
         quote_asset -> Varchar,
+        #[max_length = 30]
+        margin_asset -> Varchar,
+        price_precision -> Unsigned<Bigint>,
+        quantity_precision -> Unsigned<Bigint>,
+        base_asset_precision -> Unsigned<Bigint>,
         quote_precision -> Unsigned<Bigint>,
-        order_types -> Nullable<Json>,
-        iceberg_allowed -> Nullable<Bool>,
-        is_spot_trading_allowed -> Nullable<Bool>,
-        is_margin_trading_allowed -> Nullable<Bool>,
+        #[max_length = 50]
+        underlying_type -> Varchar,
+        underlying_sub_type -> Nullable<Json>,
+        #[max_length = 50]
+        trigger_protect -> Varchar,
+        #[max_length = 50]
+        liquidation_fee -> Varchar,
+        #[max_length = 50]
+        market_take_bound -> Varchar,
+        max_move_order_limit -> Unsigned<Bigint>,
         filters -> Nullable<Json>,
+        order_types -> Nullable<Json>,
+        time_in_force -> Nullable<Json>,
+        permission_sets -> Nullable<Json>,
     }
 }
 

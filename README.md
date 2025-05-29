@@ -252,10 +252,10 @@ cargo install diesel_cli --no-default-features --features mysql
                               volume               DOUBLE       NOT NULL COMMENT '成交量（基础资产）',
                               close_time           BIGINT       NOT NULL COMMENT 'K线结束时间戳（毫秒）',
 
-                              quote_asset_volume           DOUBLE       NOT NULL COMMENT '成交量（计价资产）',
-                              number_of_trades             BIGINT UNSIGNED NOT NULL COMMENT '成交笔数',
-                              taker_buy_base_asset_volume  DOUBLE       NOT NULL COMMENT '买方成交量（基础资产）',
-                              taker_buy_quote_asset_volume DOUBLE       NOT NULL COMMENT '买方成交量（计价资产）',
+                              quote_asset_volume           DOUBLE  COMMENT '成交量（计价资产）',
+                              number_of_trades             BIGINT  UNSIGNED  COMMENT '成交笔数',
+                              taker_buy_base_asset_volume  DOUBLE  COMMENT '买方成交量（基础资产）',
+                              taker_buy_quote_asset_volume DOUBLE  COMMENT '买方成交量（计价资产）',
 
     -- 改为唯一约束，确保同一个 exchange+symbol+time_frame 下不重复
                               UNIQUE KEY uq_exchange_symbol_time_frame (exchange, symbol, time_frame,close_time)
@@ -272,30 +272,38 @@ cargo install diesel_cli --no-default-features --features mysql
   2. diesel migration run
     
     DROP TABLE IF EXISTS market_symbol;
-
-    CREATE TABLE market_symbol (
     
-        id VARCHAR(250) NOT NULL PRIMARY KEY COMMENT '唯一ID, 如 binance:BTCUSDT',
-        exchange VARCHAR(50) NOT NULL COMMENT '交易所名称',
-        symbol VARCHAR(50) NOT NULL COMMENT '交易对，例如 BTCUSDT',
-        status VARCHAR(32) NOT NULL COMMENT '交易对状态',
-        base_asset VARCHAR(50) NOT NULL COMMENT '基础资产',
-        base_asset_precision BIGINT UNSIGNED NOT NULL COMMENT '基础资产精度',
-        quote_asset VARCHAR(50) NOT NULL COMMENT '报价资产',
-        quote_precision BIGINT UNSIGNED NOT NULL COMMENT '报价资产精度',
-        order_types JSON NOT NULL COMMENT '订单类型数组',
-        iceberg_allowed BOOLEAN COMMENT '是否允许冰山订单',
-        is_spot_trading_allowed BOOLEAN COMMENT '是否允许现货交易',
-        is_margin_trading_allowed BOOLEAN COMMENT '是否允许杠杆交易',
-        filters JSON NOT NULL COMMENT '过滤器规则',
-    
-        INDEX idx_symbol_exchange (exchange),
-        UNIQUE KEY uq_exchange_symbol (exchange, symbol)
-
-    ) ENGINE=InnoDB
-    DEFAULT CHARSET = utf8mb4
-    COLLATE = utf8mb4_0900_ai_ci
-    COMMENT ='交易对信息表';
+    CREATE TABLE `market_symbol` (
+                                 `id` VARCHAR(250) NOT NULL PRIMARY KEY COMMENT '主键，建议为 symbol 或其派生标识',
+                                 `exchange` VARCHAR(50) NOT NULL COMMENT '交易所名称，如 Binance、OKX',
+                                 `symbol` VARCHAR(50) NOT NULL COMMENT '交易对，如 "ONEUSDT"',
+                                 `pair` VARCHAR(50) NOT NULL COMMENT '交易对名称，通常与 symbol 一致',
+                                 `contract_type` VARCHAR(30) NOT NULL COMMENT '合约类型，如 "PERPETUAL"',
+                                 `delivery_date` BIGINT NOT NULL COMMENT '交割日期（毫秒时间戳）',
+                                 `onboard_date` BIGINT NOT NULL COMMENT '上线日期（毫秒时间戳）',
+                                 `status` VARCHAR(30) NOT NULL COMMENT '状态，如 "TRADING"',
+                                 `maint_margin_percent` VARCHAR(50) NOT NULL COMMENT '维持保证金百分比',
+                                 `required_margin_percent` VARCHAR(50) NOT NULL COMMENT '起始保证金百分比',
+                                 `base_asset` VARCHAR(30) NOT NULL COMMENT '基础资产，如 "ONE"',
+                                 `quote_asset` VARCHAR(30) NOT NULL COMMENT '报价资产，如 "USDT"',
+                                 `margin_asset` VARCHAR(30) NOT NULL COMMENT '保证金资产',
+                                 `price_precision` BIGINT UNSIGNED NOT NULL COMMENT '价格精度',
+                                 `quantity_precision` BIGINT UNSIGNED NOT NULL COMMENT '数量精度',
+                                 `base_asset_precision` BIGINT UNSIGNED NOT NULL COMMENT '基础资产精度',
+                                 `quote_precision` BIGINT UNSIGNED NOT NULL COMMENT '报价资产精度',
+                                 `underlying_type` VARCHAR(50) NOT NULL COMMENT '合约基础类型',
+                                 `underlying_sub_type` JSON DEFAULT NULL COMMENT '合约子类型（JSON数组）',
+                                 `trigger_protect` VARCHAR(50) NOT NULL COMMENT '触发保护百分比',
+                                 `liquidation_fee` VARCHAR(50) NOT NULL COMMENT '清算手续费比例',
+                                 `market_take_bound` VARCHAR(50) NOT NULL COMMENT '市价吃单最大偏移保护',
+                                 `max_move_order_limit` BIGINT UNSIGNED NOT NULL COMMENT '最大移动下单限制',
+                                 `filters` JSON DEFAULT NULL COMMENT '过滤器 JSON 列表',
+                                 `order_types` JSON DEFAULT NULL COMMENT '支持的下单类型',
+                                 `time_in_force` JSON DEFAULT NULL COMMENT '支持的 TIF 策略',
+                                 `permission_sets` JSON DEFAULT NULL COMMENT '权限集',
+                                 INDEX idx_symbol_exchange (exchange),
+                                 UNIQUE KEY uq_exchange_symbol (exchange, symbol)
+                  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT ='交易对信息表';
 
 ```
 

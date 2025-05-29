@@ -64,16 +64,16 @@ pub struct Symbol {
     pub margin_asset: String,
 
     /// 价格精度，如 5 表示小数点后 5 位
-    pub price_precision: u32,
+    pub price_precision: u64,
 
     /// 数量精度（最小下单单位）
-    pub quantity_precision: u32,
+    pub quantity_precision: u64,
 
     /// 基础资产精度
-    pub base_asset_precision: u32,
+    pub base_asset_precision: u64,
 
     /// 报价资产精度
-    pub quote_precision: u32,
+    pub quote_precision: u64,
 
     /// 合约基础类型，如 "COIN"
     pub underlying_type: String,
@@ -91,7 +91,7 @@ pub struct Symbol {
     pub market_take_bound: String,
 
     /// 最大移动下单限制
-    pub max_move_order_limit: u32,
+    pub max_move_order_limit: u64,
 
     /// 过滤器列表（JSON 类型）
     pub filters: Option<Vec<Filter>>,

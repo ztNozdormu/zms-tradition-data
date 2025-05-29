@@ -15,10 +15,10 @@ CREATE TABLE market_kline (
                               volume               DOUBLE       NOT NULL COMMENT '成交量（基础资产）',
                               close_time           BIGINT       NOT NULL COMMENT 'K线结束时间戳（毫秒）',
 
-                              quote_asset_volume           DOUBLE       NOT NULL COMMENT '成交量（计价资产）',
-                              number_of_trades             BIGINT UNSIGNED NOT NULL COMMENT '成交笔数',
-                              taker_buy_base_asset_volume  DOUBLE       NOT NULL COMMENT '买方成交量（基础资产）',
-                              taker_buy_quote_asset_volume DOUBLE       NOT NULL COMMENT '买方成交量（计价资产）',
+                              quote_asset_volume           DOUBLE  COMMENT '成交量（计价资产）',
+                              number_of_trades             BIGINT  UNSIGNED  COMMENT '成交笔数',
+                              taker_buy_base_asset_volume  DOUBLE  COMMENT '买方成交量（基础资产）',
+                              taker_buy_quote_asset_volume DOUBLE  COMMENT '买方成交量（计价资产）',
 
     -- 改为唯一约束，确保同一个 exchange+symbol+time_frame 下不重复
                               UNIQUE KEY uq_exchange_symbol_time_frame (exchange, symbol, time_frame,close_time)

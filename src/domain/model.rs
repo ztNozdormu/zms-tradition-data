@@ -132,4 +132,21 @@ mod tests {
             );
         }
     }
+
+    #[tokio::test]
+    async fn test_get_symbols() {
+        listen_tracing::setup_tracing();
+        let dcg = DefaultCoinGecko::default();
+        let categories = dcg.get_categories().await;
+
+        let new_coin_category_list: Vec<NewOrUpdateCoinCategory> = categories.convert_vec();
+
+        for new_coin_category in &new_coin_category_list {
+            trace_kv!(info,
+                 "id" => new_coin_category.id,
+                 "name" => new_coin_category.name,
+                 "market_cap" => format_opt_decimal(&new_coin_category.market_cap),
+            );
+        }
+    }
 }

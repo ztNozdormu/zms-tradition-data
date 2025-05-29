@@ -12,7 +12,7 @@ use std::fmt::Debug;
 use tracing::error;
 
 mod constant;
-mod meta;
+pub mod meta;
 
 pub struct BinanceSigner;
 impl BuildStrategy for BinanceSigner {

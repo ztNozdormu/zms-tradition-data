@@ -9,9 +9,10 @@ use crate::domain::repository::market_symbol_repository::MarketSymbolRepository;
 use crate::domain::repository::{FilterableRepository, InsertableRepository};
 use crate::global::get_futures_general;
 use crate::impl_full_service;
+use crate::infra::external::binance::DefaultBinanceExchange;
 use crate::infra::external::cgecko::DefaultCoinGecko;
 use crate::schema::market_symbol;
-use diesel::{Connection, MysqlConnection, RunQueryDsl};
+use diesel::{Connection, IntoSql, MysqlConnection, RunQueryDsl};
 use tracing::instrument;
 
 impl_full_service!(
@@ -49,10 +50,12 @@ impl<'a> MarketSymbolService<'a> {
 
 /// 从 交易所(币安) 获取币种数据
 async fn fetch_exchange_symbol_data() -> Vec<NewOrUpdateMarketSymbol> {
-    let futures_general = get_futures_general();
-    match futures_general.get_symbol_infos().await {
-        Ok(symbols) => symbols.convert_vec(),
-        Err(e) => Vec::new(),
+    let dbe = DefaultBinanceExchange::default();
+    if let Some(symbols) = dbe.get_symbols().await {
+        symbols.convert_vec()
+    } else {
+        // 处理 None 的情况
+        Vec::new()
     }
 }
 
