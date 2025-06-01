@@ -144,7 +144,7 @@ mod tests {
             let market_symbol_list:Vec<NewOrUpdateMarketSymbol> = symbols.convert_vec();
             for market_symbol in &market_symbol_list {
                 trace_kv!(info,
-                 "symbol" => market_symbol.symbol,
+                 "base_asset" => market_symbol.base_asset,
                  "exchange" => market_symbol.exchange,
                  "contract_type" => market_symbol.contract_type,
             );
