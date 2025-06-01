@@ -76,6 +76,8 @@ mod tests {
     use listen_tracing::trace_kv;
     use listen_tracing::tracing_utils::{fmt_bigdecimal, fmt_json_value, fmt_naive_date};
     use tracing::{error, info};
+    use crate::domain::model::market_symbol::{MarketSymbol, NewOrUpdateMarketSymbol};
+    use crate::infra::external::binance::DefaultBinanceExchange;
 
     #[tokio::test]
     async fn test_get_coin_rank() {
@@ -136,17 +138,17 @@ mod tests {
     #[tokio::test]
     async fn test_get_symbols() {
         listen_tracing::setup_tracing();
-        let dcg = DefaultCoinGecko::default();
-        let categories = dcg.get_categories().await;
+        let dbe = DefaultBinanceExchange::default();
+        if let Some(symbols) = dbe.get_symbols().await {
 
-        let new_coin_category_list: Vec<NewOrUpdateCoinCategory> = categories.convert_vec();
-
-        for new_coin_category in &new_coin_category_list {
-            trace_kv!(info,
-                 "id" => new_coin_category.id,
-                 "name" => new_coin_category.name,
-                 "market_cap" => format_opt_decimal(&new_coin_category.market_cap),
+            let market_symbol_list:Vec<NewOrUpdateMarketSymbol> = symbols.convert_vec();
+            for market_symbol in &market_symbol_list {
+                trace_kv!(info,
+                 "symbol" => market_symbol.symbol,
+                 "exchange" => market_symbol.exchange,
+                 "contract_type" => market_symbol.contract_type,
             );
+            }
         }
     }
 }
