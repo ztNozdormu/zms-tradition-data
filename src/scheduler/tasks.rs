@@ -60,10 +60,10 @@ pub fn get_all_tasks() -> Vec<ScheduledTask> {
             Duration::from_secs(259200),
             fetch_cgecko::save_coin_data_info_task
         ),
-        // task!(
-        //     "sync_exchange_history_data",
-        //     Duration::from_secs(300),
-        //     history_data::exchange_history_data
-        // ),
+        task!(
+            "sync_exchange_history_data",
+            Duration::from_secs(300),
+            history_data::exchange_history_data
+        ),
     ]
 }
