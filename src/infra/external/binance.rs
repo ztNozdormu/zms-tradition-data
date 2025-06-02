@@ -179,4 +179,24 @@ mod tests {
             }
         }
     }
+
+    #[tokio::test]
+    async fn test_get_klines() {
+        listen_tracing::setup_tracing();
+        let dbe = DefaultBinanceExchange::default();
+        let symbol = "btcusdt";
+        let interval = "5m";
+        let limit = 1;
+        let klines = dbe.get_klines(symbol, interval, limit, None, None).await;
+
+        for kline in &klines {
+            trace_kv!(info,
+             "open" => kline.open,
+             "high" => kline.high,
+             "open" => kline.low,
+             "close" => kline.close,
+             "close_time" => kline.close_time,
+            );
+        }
+    }
 }

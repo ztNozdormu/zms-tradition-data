@@ -1,7 +1,8 @@
+use crate::common::serde_fun::{ParseError, parse_field};
 use crate::infra::external::binance::constant;
-use crate::infra::external::binance::meta::BinanceExchangeInfo;
 use barter::barter_integration::protocol::http::rest::RestRequest;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
+use serde_json::Value;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 
@@ -42,6 +43,26 @@ pub struct KlineSummary {
     pub taker_buy_quote_asset_volume: f64,
 }
 
+impl TryFrom<&Vec<Value>> for KlineSummary {
+    type Error = ParseError;
+
+    fn try_from(row: &Vec<Value>) -> Result<Self, Self::Error> {
+        Ok(Self {
+            open_time: parse_field(row, 0, "open_time")?,
+            open: parse_field(row, 1, "open")?,
+            high: parse_field(row, 2, "high")?,
+            low: parse_field(row, 3, "low")?,
+            close: parse_field(row, 4, "close")?,
+            volume: parse_field(row, 5, "volume")?,
+            close_time: parse_field(row, 6, "close_time")?,
+            quote_asset_volume: parse_field(row, 7, "quote_asset_volume")?,
+            number_of_trades: parse_field(row, 8, "number_of_trades")?,
+            taker_buy_base_asset_volume: parse_field(row, 9, "taker_buy_base_asset_volume")?,
+            taker_buy_quote_asset_volume: parse_field(row, 10, "taker_buy_quote_asset_volume")?,
+        })
+    }
+}
+
 pub struct FetchKlineSummaryRequest {
     pub(crate) query_params: BTreeMap<String, String>,
 }
@@ -64,5 +85,18 @@ impl RestRequest for FetchKlineSummaryRequest {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct BinanceKlineSummaryResponse(pub Vec<KlineSummary>);
+impl<'de> Deserialize<'de> for BinanceKlineSummaryResponse {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let raw: Vec<Vec<Value>> = Vec::deserialize(deserializer)?;
+        let klines = raw
+            .into_iter()
+            .map(|row| KlineSummary::try_from(&row).map_err(serde::de::Error::custom))
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(BinanceKlineSummaryResponse(klines))
+    }
+}
