@@ -60,10 +60,14 @@ pub fn get_all_tasks() -> Vec<ScheduledTask> {
             Duration::from_secs(259200),
             fetch_cgecko::save_coin_data_info_task
         ),
+        // todo mysql追溯数据,从三个月前开始
         task!(
-            "sync_exchange_history_data",
-            Duration::from_secs(300),
+            "sync_exchange_history_data", // clickhouse 回溯数据
+            Duration::from_secs(3600),
             history_data::exchange_history_data
         ),
+        // todo 定期将最新数据合并到clickhouse mysql只保留近三个月数据
+        // todo 定期数据清洗
+
     ]
 }
