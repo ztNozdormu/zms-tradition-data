@@ -3,11 +3,11 @@ use crate::domain::model::coin_category::{
     CoinCategoriesFilter, CoinCategory, NewOrUpdateCoinCategory,
 };
 use crate::domain::model::{AppResult, PageResult};
+use crate::domain::repository::coin_category_repository::CoinCategoryRepository;
 use crate::domain::repository::FilterableRepository;
 use crate::domain::repository::InsertableRepository;
 use crate::domain::repository::Repository;
 use crate::domain::repository::UpdatableRepository;
-use crate::domain::repository::coin_category_repository::CoinCategoryRepository;
 use crate::impl_full_service;
 use crate::infra::external::cgecko::DefaultCoinGecko;
 use crate::schema::coin_categories;

@@ -3,7 +3,7 @@ use crate::infra::db::{ckdb::ClickhouseDb, types::ClickHouseDatabase};
 use anyhow::Result;
 use barter::barter_xchange::exchange::binance::api::Binance;
 use barter::barter_xchange::exchange::binance::futures::market::FuturesMarket;
-use bb8_redis::{RedisConnectionManager, bb8};
+use bb8_redis::{bb8, RedisConnectionManager};
 use bigdecimal::BigDecimal;
 use std::{fs::File, io::BufWriter, sync::Arc};
 

@@ -1,7 +1,7 @@
 use crate::model::cex::kline::MarketKline;
 use crate::model::dex::price::PriceUpdate;
-use clickhouse::Row;
 use clickhouse::inserter::Inserter;
+use clickhouse::Row;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;

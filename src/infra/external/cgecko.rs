@@ -3,7 +3,6 @@ pub mod coin_data;
 pub mod coin_rank;
 mod constant;
 
-use crate::infra::external::CommonExternalParser;
 use crate::infra::external::cgecko::coin_categories::{CoinCategories, FetchCoinCategoriesRequest};
 use crate::infra::external::cgecko::coin_data::{
     CoinData, CoinDataQueryParams, FetchCoinDataRequest,
@@ -12,10 +11,11 @@ use crate::infra::external::cgecko::coin_data::{
 /// CoinGecko API key signer using header injection only (no HMAC)
 use crate::infra::external::cgecko::coin_rank::{CoinQueryParams, CoinRank, FetchCoinRequest};
 use crate::infra::external::cgecko::constant::BASE_URL;
+use crate::infra::external::CommonExternalParser;
 use barter::barter_integration::error::SocketError;
 use barter::barter_integration::protocol::http::private::Signer;
-use barter::barter_integration::protocol::http::rest::RestRequest;
 use barter::barter_integration::protocol::http::rest::client::RestClient;
+use barter::barter_integration::protocol::http::rest::RestRequest;
 use barter::barter_integration::protocol::http::{BuildStrategy, HttpParser};
 use reqwest::RequestBuilder;
 use serde::Deserialize;

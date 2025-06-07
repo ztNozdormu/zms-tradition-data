@@ -1,11 +1,13 @@
 use crate::domain::model::market_kline::{MarketKline, MarketKlineFilter, NewOrUpdateMarketKline};
 use crate::domain::model::{AppResult, PageResult};
+use crate::domain::repository::market_kline_repository::MarketKlineRepository;
 use crate::domain::repository::Repository;
 use crate::domain::repository::UpdatableRepository;
-use crate::domain::repository::market_kline_repository::MarketKlineRepository;
 use crate::domain::repository::{FilterableRepository, InsertableRepository};
 use crate::impl_full_service;
+use crate::model::cex::kline::MinMaxCloseTime;
 use crate::schema::market_kline;
+use anyhow::{Context, Result};
 use diesel::{Connection, MysqlConnection, RunQueryDsl};
 use tracing::instrument;
 
@@ -37,6 +39,33 @@ impl<'a> MarketKlineService<'a> {
             page,
             per_page,
         })
+    }
+
+    /// 查询指定交易所、币对、周期的最早和最晚时间
+    pub fn get_mima_time(
+        &mut self,
+        exchange_val: &str,
+        symbol_val: &str,
+        time_frame_val: &str,
+    ) -> Result<Option<MinMaxCloseTime>, diesel::result::Error> {
+        use crate::schema::market_kline::dsl::*;
+        use diesel::dsl::{max, min};
+        use diesel::prelude::*;
+
+        let result: Option<(Option<i64>, Option<i64>)> = market_kline
+            .filter(exchange.eq(exchange_val))
+            .filter(symbol.eq(symbol_val))
+            .filter(time_frame.eq(time_frame_val))
+            .select((min(close_time), max(close_time)))
+            .first::<(Option<i64>, Option<i64>)>(self.repo.conn)
+            .optional()?; // 返回 Ok(None) 如果没有行
+
+        // 统一处理为 Some(0, 0) 即使没有数据
+        let (min, max) = result.unwrap_or((Some(0), Some(0)));
+        Ok(Some(MinMaxCloseTime {
+            min_close_time: min.unwrap_or(0),
+            max_close_time: max.unwrap_or(0),
+        }))
     }
 }
 

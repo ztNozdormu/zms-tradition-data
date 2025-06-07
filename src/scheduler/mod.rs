@@ -4,7 +4,7 @@ use std::time::Duration;
 use tokio::{select, time};
 use tracing::{error, info};
 
-use crate::scheduler::tasks::{ScheduledTask, get_all_tasks};
+use crate::scheduler::tasks::{get_all_tasks, ScheduledTask};
 
 pub struct Scheduler;
 

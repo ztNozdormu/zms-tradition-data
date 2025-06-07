@@ -2,8 +2,8 @@ use crate::domain::model::coin_data_info::{
     CoinDataInfo, CoinDataInfoFilter, NewOrUpdateCoinDataInfo,
 };
 use crate::domain::model::{AppResult, PageResult};
-use crate::domain::repository::Repository;
 use crate::domain::repository::coin_data_info_repository::CoinDataInfoRepository;
+use crate::domain::repository::Repository;
 use crate::domain::repository::{FilterableRepository, InsertableRepository, UpdatableRepository};
 use crate::global::get_mysql_pool;
 use crate::impl_full_service;

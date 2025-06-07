@@ -1,4 +1,4 @@
-use crate::common::serde_fun::{ParseError, parse_field};
+use crate::common::serde_fun::{parse_field, ParseError};
 use crate::infra::external::binance::constant;
 use barter::barter_integration::protocol::http::rest::RestRequest;
 use serde::{Deserialize, Deserializer, Serialize};

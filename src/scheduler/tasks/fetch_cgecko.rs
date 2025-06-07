@@ -1,8 +1,8 @@
 use crate::domain::model::coin_rank_info::CoinRankInfo;
-use crate::domain::repository::Repository;
 use crate::domain::repository::coin_category_repository::CoinCategoryRepository;
 use crate::domain::repository::coin_data_info_repository::CoinDataInfoRepository;
 use crate::domain::repository::coin_rank_info_repository::CoinRankInfoRepository;
+use crate::domain::repository::Repository;
 use crate::domain::service::coin_category_service::CoinCategoryService;
 use crate::domain::service::coin_data_info_service::CoinDataInfoService;
 use crate::domain::service::coin_rank_info_service::CoinRankInfoService;

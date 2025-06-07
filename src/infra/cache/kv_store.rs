@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
-use bb8_redis::{RedisConnectionManager, bb8, redis::cmd};
-use serde::{Serialize, de::DeserializeOwned};
+use bb8_redis::{bb8, redis::cmd, RedisConnectionManager};
+use serde::{de::DeserializeOwned, Serialize};
 use tracing::{debug, info};
 
 use crate::common::utils::create_redis_pool;

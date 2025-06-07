@@ -65,15 +65,15 @@ pub trait PrimaryKeyExtractor<PK> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::common::VecConvert;
     use crate::common::utils::format_opt_decimal;
+    use crate::common::VecConvert;
     use crate::domain::model::coin_category::{CoinCategory, NewOrUpdateCoinCategory};
     use crate::domain::model::coin_data_info::NewOrUpdateCoinDataInfo;
     use crate::domain::model::coin_rank_info::{CoinRankInfo, NewOrUpdateCoinRankInfo};
     use crate::domain::model::market_symbol::{MarketSymbol, NewOrUpdateMarketSymbol};
     use crate::infra::external::binance::DefaultBinanceExchange;
-    use crate::infra::external::cgecko::DefaultCoinGecko;
     use crate::infra::external::cgecko::coin_rank::CoinRank;
+    use crate::infra::external::cgecko::DefaultCoinGecko;
     use bigdecimal::BigDecimal;
     use listen_tracing::trace_kv;
     use listen_tracing::tracing_utils::{fmt_bigdecimal, fmt_json_value, fmt_naive_date};

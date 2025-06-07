@@ -3,9 +3,9 @@ use crate::domain::model::coin_rank_info::{
     CoinRankInfo, CoinRankInfoFilter, NewOrUpdateCoinRankInfo,
 };
 use crate::domain::model::{AppResult, PageResult};
+use crate::domain::repository::coin_rank_info_repository::CoinRankInfoRepository;
 use crate::domain::repository::Repository;
 use crate::domain::repository::UpdatableRepository;
-use crate::domain::repository::coin_rank_info_repository::CoinRankInfoRepository;
 use crate::domain::repository::{FilterableRepository, InsertableRepository};
 use crate::impl_full_service;
 use crate::infra::external::cgecko::DefaultCoinGecko;

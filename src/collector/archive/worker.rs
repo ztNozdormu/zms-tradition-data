@@ -4,8 +4,8 @@ use crate::infra::db::types::ClickHouseDatabase;
 use crate::model::cex::kline::MarketKline;
 use crate::scheduler::tasks::history_data::KlineMessage;
 use std::sync::Arc;
-use tokio::sync::Mutex;
 use tokio::sync::mpsc::{self, Sender};
+use tokio::sync::Mutex;
 
 pub struct TaskContext {
     pub buffer: KlineBuffer,

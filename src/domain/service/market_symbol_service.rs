@@ -3,14 +3,12 @@ use crate::domain::model::market_symbol::{
     MarketSymbol, MarketSymbolFilter, NewOrUpdateMarketSymbol,
 };
 use crate::domain::model::{AppResult, PageResult};
+use crate::domain::repository::market_symbol_repository::MarketSymbolRepository;
 use crate::domain::repository::Repository;
 use crate::domain::repository::UpdatableRepository;
-use crate::domain::repository::market_symbol_repository::MarketSymbolRepository;
 use crate::domain::repository::{FilterableRepository, InsertableRepository};
-use crate::global::get_futures_general;
 use crate::impl_full_service;
 use crate::infra::external::binance::DefaultBinanceExchange;
-use crate::infra::external::cgecko::DefaultCoinGecko;
 use crate::schema::market_symbol;
 use diesel::{Connection, IntoSql, MysqlConnection, RunQueryDsl};
 use tracing::instrument;

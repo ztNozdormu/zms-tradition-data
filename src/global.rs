@@ -3,7 +3,7 @@ use crate::common::utils::{make_binace_client, make_db, make_kv_store};
 use crate::infra::cache::flush_controller::FlushController;
 use crate::infra::cache::kv_store::RedisKVStore;
 use crate::infra::db::ckdb::ClickhouseDb;
-use crate::infra::db::mysql::{MySqlPool, make_mysql_pool};
+use crate::infra::db::mysql::{make_mysql_pool, MySqlPool};
 use barter::barter_xchange::exchange::binance::api::Binance;
 use barter::barter_xchange::exchange::binance::futures::general::FuturesGeneral;
 use barter::barter_xchange::exchange::binance::futures::market::FuturesMarket;

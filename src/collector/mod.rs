@@ -9,12 +9,12 @@ use anyhow::Result;
 use barter::barter_data::error::DataError;
 use barter::barter_data::event::MarketEvent;
 use barter::barter_data::exchange::binance::futures::BinanceFuturesUsd;
-use barter::barter_data::streams::Streams;
 use barter::barter_data::streams::consumer::MarketStreamResult;
 use barter::barter_data::streams::reconnect::stream::ReconnectingStream;
+use barter::barter_data::streams::Streams;
 use barter::barter_data::subscription::trade::{PublicTrade, PublicTrades};
-use barter::barter_instrument::instrument::market_data::MarketDataInstrument;
 use barter::barter_instrument::instrument::market_data::kind::MarketDataInstrumentKind;
+use barter::barter_instrument::instrument::market_data::MarketDataInstrument;
 use futures_util::StreamExt;
 use std::collections::HashMap;
 use tracing::{error, warn};
@@ -36,8 +36,9 @@ pub async fn handle_trade_aggregation() {
     });
 }
 
-pub async fn init_trade_streams()
--> std::result::Result<Streams<MarketStreamResult<MarketDataInstrument, PublicTrade>>, DataError> {
+pub async fn init_trade_streams(
+) -> std::result::Result<Streams<MarketStreamResult<MarketDataInstrument, PublicTrade>>, DataError>
+{
     let streams = Streams::<PublicTrades>::builder()
         .subscribe([(
             BinanceFuturesUsd::default(),

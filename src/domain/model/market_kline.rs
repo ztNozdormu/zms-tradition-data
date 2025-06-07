@@ -1,8 +1,8 @@
 use crate::domain::model::SortOrder;
+use crate::infra::external::binance::market::KlineSummary;
 use base64::Engine;
 use diesel::{AsChangeset, Identifiable, Insertable, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
-use crate::infra::external::binance::market::KlineSummary;
 
 /// 加密货币k线数据信息表模型
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize, Identifiable, Clone)]

@@ -1,9 +1,9 @@
-use crate::model::TimeFrame;
+use crate::infra::external::binance::market::KlineSummary;
 use crate::model::cex::kline::MarketKline;
+use crate::model::TimeFrame;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::sync::Arc;
-use crate::infra::external::binance::market::KlineSummary;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Copy)]
 #[repr(i8)]

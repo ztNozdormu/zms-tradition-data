@@ -1,4 +1,4 @@
-pub use trade_aggregation::{D1, H1, H2, H4, H8, H12, M1, M5, M15, M30};
+pub use trade_aggregation::{D1, H1, H12, H2, H4, H8, M1, M15, M30, M5};
 
 /// 3 Minute candle period
 pub const M3: i64 = 180;

@@ -1,8 +1,8 @@
 use crate::collector::maintenance::historical_maintenance_process;
-use crate::collector::types::{CusCandle, to_agg_trade};
+use crate::collector::types::{to_agg_trade, CusCandle};
 use crate::global::{get_ck_db, get_flush_controller};
 use crate::model::cex::kline::MarketKline;
-use crate::model::{DEFAULT_TIMEFRAMES, TimeFrame};
+use crate::model::{TimeFrame, DEFAULT_TIMEFRAMES};
 use async_trait::async_trait;
 use barter::barter_data::subscription::trade::PublicTrade;
 use std::collections::HashSet;
