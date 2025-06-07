@@ -2,8 +2,8 @@ use crate::collector::archive::worker::start_worker_pool;
 use crate::domain::repository::market_symbol_repository::MarketSymbolRepository;
 use crate::domain::service::market_symbol_service::MarketSymbolService;
 use crate::global::{get_flush_buffer, get_mysql_pool};
-use tokio::sync::mpsc;
 use crate::infra::external::binance::market::KlineSummary;
+use tokio::sync::mpsc;
 
 /// 异步任务：系统启动维护交易所币种信息
 pub async fn save_binance_symbol() -> Result<(), anyhow::Error> {
@@ -13,7 +13,23 @@ pub async fn save_binance_symbol() -> Result<(), anyhow::Error> {
     market_kline_service.save_exchange_symbol_info().await
 }
 
-pub async fn exchange_history_data() -> Result<(), anyhow::Error> {
+pub async fn exchange_history_data_to_clickhouse() -> Result<(), anyhow::Error> {
+    let (tx, rx) = mpsc::channel(1000);
+    let buffer = get_flush_buffer();
+
+    let symbols = vec!["btcusdt", "ethusdt", "solusdt"];
+    let intervals = vec!["1m", "5m", "1h"];
+
+    // 启动 Worker Pool
+    tokio::spawn(start_worker_pool(rx, 20));
+
+    // 模拟任务投递
+    generate_tasks(tx.clone(), &symbols, &intervals).await;
+
+    Ok(())
+}
+
+pub async fn exchange_history_data_to_mysql() -> Result<(), anyhow::Error> {
     let (tx, rx) = mpsc::channel(1000);
     let buffer = get_flush_buffer();
 

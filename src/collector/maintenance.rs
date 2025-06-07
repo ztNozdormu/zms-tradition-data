@@ -3,12 +3,15 @@ mod types;
 use crate::collector::maintenance::types::{
     ArchiveDirection, ArchiveError, ArchiveTask, ArchiveWindow,
 };
-use crate::global::{get_ck_db, get_futures_market};
+use crate::global::get_ck_db;
 use crate::infra::db::types::ClickHouseDatabase;
-use crate::model::TimeFrame;
+use crate::infra::external::binance::market::KlineSummary;
+use crate::infra::external::binance::DefaultBinanceExchange;
 use crate::model::cex::kline::{MarketKline, MinMaxCloseTime};
+use crate::model::TimeFrame;
+use crate::scheduler::tasks::history_data::KlineMessage;
 use anyhow::Result;
-use backoff::{ExponentialBackoff, future::retry};
+use backoff::{future::retry, ExponentialBackoff};
 /// This file contains the implementation of the maintenance module of the trade consumer.
 /// 对历史数据进行清理、归档、缓存等操作
 use chrono::Utc;
@@ -16,9 +19,6 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{error, info, warn};
-use crate::infra::external::binance::DefaultBinanceExchange;
-use crate::infra::external::binance::market::KlineSummary;
-use crate::scheduler::tasks::history_data::KlineMessage;
 
 // ========== Archive Progress Logic ==========
 pub struct ProgressTracker;
@@ -194,7 +194,10 @@ pub async fn generate_archive_messages(
             };
 
             if start >= end {
-                warn!("Invalid window: start >= end [{} >= {}]. Skipping.", start, end);
+                warn!(
+                    "Invalid window: start >= end [{} >= {}]. Skipping.",
+                    start, end
+                );
                 continue;
             }
 
@@ -214,8 +217,8 @@ pub async fn generate_archive_messages(
                         backoff::Error::transient(e)
                     })
             })
-                .await
-                .map_err(|e| ArchiveError::DataError(e.to_string()))?;
+            .await
+            .map_err(|e| ArchiveError::DataError(e.to_string()))?;
 
             if klines.is_empty() {
                 info!("No Kline data between {} ~ {}.", start, end);
@@ -265,7 +268,9 @@ impl BinanceFetcher {
     ) -> Result<Vec<KlineSummary>> {
         let symbol_with_usdt = format!("{}usdt", symbol);
         let dbe = DefaultBinanceExchange::default();
-        let klines = dbe.get_klines(symbol_with_usdt, tf, limit, start, end).await;
+        let klines = dbe
+            .get_klines(symbol_with_usdt, tf, limit, start, end)
+            .await;
         Ok(klines)
     }
 }
@@ -526,8 +531,6 @@ pub fn build_archive_tasks(
 
     tasks
 }
-
-
 
 /// 时间窗口生成
 fn create_windows(start_time: i64, end_time: i64, chunk_size: i64) -> Vec<ArchiveWindow> {

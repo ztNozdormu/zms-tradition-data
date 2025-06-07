@@ -64,10 +64,9 @@ pub fn get_all_tasks() -> Vec<ScheduledTask> {
         task!(
             "sync_exchange_history_data", // clickhouse 回溯数据
             Duration::from_secs(3600),
-            history_data::exchange_history_data
+            history_data::exchange_history_data_to_clickhouse
         ),
         // todo 定期将最新数据合并到clickhouse mysql只保留近三个月数据
         // todo 定期数据清洗
-
     ]
 }
