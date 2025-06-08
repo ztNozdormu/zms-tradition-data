@@ -7,7 +7,7 @@ use crate::domain::repository::{FilterableRepository, InsertableRepository};
 use crate::impl_full_service;
 use crate::model::cex::kline::MinMaxCloseTime;
 use crate::schema::market_kline;
-use anyhow::{Context, Result};
+use anyhow::Result;
 use diesel::{Connection, MysqlConnection, RunQueryDsl};
 use tracing::instrument;
 
@@ -48,7 +48,7 @@ impl<'a> MarketKlineService<'a> {
     }
 
     /// 查询指定交易所、币对、周期的最早和最晚时间
-    pub fn get_mima_time(
+    pub async fn get_mima_time(
         &mut self,
         exchange_val: &str,
         symbol_val: &str,

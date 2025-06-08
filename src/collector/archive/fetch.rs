@@ -14,6 +14,7 @@ use crate::model::TimeFrame;
 use async_trait::async_trait;
 use backoff::{future::retry, ExponentialBackoff};
 use chrono::Utc;
+use diesel::IntoSql;
 use listen_tracing::trace_kv;
 use std::sync::Arc;
 use std::time::Duration;
@@ -63,34 +64,12 @@ impl KlineFetcher for BinanceFetcher {
 pub async fn kline_fetch_process(
     symbol: String,
     exchange: String,
-    close_time: i64,
     time_frame: Arc<TimeFrame>,
 ) -> Vec<KlineMessage> {
     let tf_str = time_frame.to_str();
 
-    // 1. 获取时间进度
-    let mima_time = ProgressTracker::fetch_or_initialize_progress(
-        &symbol,
-        &exchange,
-        &tf_str,
-        close_time,
-        &time_frame,
-    )
-    .await;
-
-    // 2. 数据太老跳过
-    if should_skip_archiving_due_to_old_data(
-        mima_time.min_close_time,
-        &symbol,
-        &exchange,
-        &time_frame,
-    ) {
-        info!("Skipping old data: {} - {} - {}", symbol, exchange, tf_str);
-        return vec![];
-    }
-
     // 3. 构建归档任务
-    let tasks = build_archive_tasks(&symbol, &exchange, time_frame.clone(), &mima_time);
+    let tasks = build_all_archive_tasks(&symbol, &exchange, time_frame.clone()).await;
 
     // 4. 执行带重试的归档任务
     match run_archive_task_with_retry(&tasks).await {
@@ -115,56 +94,97 @@ pub async fn kline_fetch_process(
     }
 }
 
-/// 构建回溯与追溯的归档任务集合
-pub fn build_archive_tasks(
+/// 构建双向任务
+pub async fn build_all_archive_tasks(
     symbol: &str,
     exchange: &str,
-    time_frame: Arc<TimeFrame>,
-    mima_time: &MinMaxCloseTime,
+    tf: Arc<TimeFrame>,
 ) -> Vec<ArchiveTask> {
-    let period_ms = time_frame.to_millis();
-    let backtrack_count = time_frame.backtrack_count() as i64;
-    let backtrack_ms = backtrack_count * period_ms;
-
-    let default_chunk_size_ms = 1000 * period_ms;
-    // 保证 chunk_size 不超过总回溯区间
-    let actual_chunk_size_ms = default_chunk_size_ms.min(backtrack_ms);
-
     let mut tasks = vec![];
 
-    // 构造任务的闭包函数
-    let try_build_task =
-        |direction: ArchiveDirection, start: i64, end: i64| -> Option<ArchiveTask> {
-            if start < end {
-                Some(ArchiveTask {
-                    symbol: symbol.to_string(),
-                    exchange: exchange.to_string(),
-                    tf: time_frame.clone(),
-                    window: create_windows(start, end, actual_chunk_size_ms),
-                    direction,
-                })
-            } else {
-                None
-            }
-        };
-
-    // === Backward 任务 ===
-    let backward_start = mima_time.min_close_time - backtrack_ms; // 得到追溯开始时间
-    let backward_end = mima_time.min_close_time;
-    if let Some(task) = try_build_task(ArchiveDirection::Backward, backward_start, backward_end) {
-        tasks.push(task);
+    if let Some(backward_task) = build_backward_tasks(symbol, exchange, tf.clone()).await {
+        tasks.push(backward_task);
     }
 
-    // === Forward 任务 ===
-    if mima_time.max_close_time != 0 {
-        let forward_start = mima_time.max_close_time;
-        let forward_end = 0; //todo close_time; // redis缓存如果存在取最小时间
-        if let Some(task) = try_build_task(ArchiveDirection::Forward, forward_start, forward_end) {
-            tasks.push(task);
-        }
+    if let Some(forward_task) = build_forward_tasks(symbol, exchange, tf.clone()).await {
+        tasks.push(forward_task);
     }
 
     tasks
+}
+
+/// 构建回溯任务（Backward）
+pub async fn build_backward_tasks(
+    symbol: &str,
+    exchange: &str,
+    tf: Arc<TimeFrame>,
+) -> Option<ArchiveTask> {
+    let mima_time =
+        ProgressTracker::get_or_init_progress(symbol, exchange, &tf, ArchiveDirection::Backward)
+            .await;
+
+    // 2. 数据太老跳过
+    if should_skip_archiving_due_to_old_data(mima_time.min_close_time, &symbol, &exchange, &tf) {
+        info!(
+            "Skipping old data: {} - {} - {}",
+            symbol,
+            exchange,
+            tf.to_str()
+        );
+        return None;
+    }
+
+    let period_ms = tf.to_millis();
+    let backtrack_count = tf.backtrack_count() as i64;
+    let backtrack_ms = backtrack_count * period_ms;
+    let default_chunk_size_ms = 1000 * period_ms;
+    let actual_chunk_size_ms = default_chunk_size_ms.min(backtrack_ms);
+
+    let start = mima_time.min_close_time - backtrack_ms;
+    let end = mima_time.min_close_time;
+
+    if start < end {
+        Some(ArchiveTask {
+            symbol: symbol.to_string(),
+            exchange: exchange.to_string(),
+            tf,
+            window: create_windows(start, end, actual_chunk_size_ms),
+            direction: ArchiveDirection::Backward,
+        })
+    } else {
+        None
+    }
+}
+
+/// 构建追溯任务（Forward）
+pub async fn build_forward_tasks(
+    symbol: &str,
+    exchange: &str,
+    tf: Arc<TimeFrame>,
+) -> Option<ArchiveTask> {
+    let mima_time =
+        ProgressTracker::get_or_init_progress(symbol, exchange, &tf, ArchiveDirection::Forward)
+            .await;
+
+    let period_ms = tf.to_millis();
+    let backtrack_count = tf.backtrack_count() as i64;
+    let backtrack_ms = backtrack_count * period_ms;
+
+    // 默认1000根[binance]一批次
+    let default_chunk_size_ms = 1000 * period_ms;
+
+    // 保证 chunk_size 不超过总回溯区间
+    let actual_chunk_size_ms = default_chunk_size_ms.min(backtrack_ms);
+
+    let forward_end = mima_time.max_close_time + backtrack_ms;
+
+    Some(ArchiveTask {
+        symbol: symbol.to_string(),
+        exchange: exchange.to_string(),
+        tf,
+        window: create_windows(mima_time.max_close_time, forward_end, actual_chunk_size_ms),
+        direction: ArchiveDirection::Forward,
+    })
 }
 
 /// 封装归档任务重试逻辑

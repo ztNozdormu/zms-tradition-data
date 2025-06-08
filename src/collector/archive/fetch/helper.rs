@@ -1,7 +1,7 @@
 use crate::collector::archive::types::ArchiveWindow;
 use crate::infra::external::binance::market::KlineSummary;
 use crate::model::TimeFrame;
-use chrono::Utc;
+use chrono::{Duration, Utc};
 use tracing::{info, warn};
 
 // ========== Helper & Placeholder Stubs ==========
@@ -51,15 +51,14 @@ pub fn should_skip_archiving_due_to_old_data(
     }
 }
 
-/// 获取默认起始时间（如果有配置或其他数据源）
-pub fn get_default_start_time(close_time: i64, tf: &TimeFrame) -> Option<i64> {
-    // 计算一个周期之前的时间点，排除掉已计算的最新K线
-    let start_time = close_time;
-
-    // 确保返回的时间不>于当前时间，避免归档时间超出范围
+/// 默认起点：当前时间往前推三个月，并对齐到对应时间周期的起点
+pub fn get_default_start_time_with_offset(tf: &TimeFrame, days_offset: i64) -> Option<i64> {
     let now = Utc::now().timestamp_millis();
-    if start_time < now {
-        Some(start_time)
+    let offset_time = now - Duration::days(days_offset).num_milliseconds();
+    let tf_ms = tf.to_millis();
+    let aligned_start = offset_time - (offset_time % tf_ms);
+    if aligned_start < now {
+        Some(aligned_start)
     } else {
         None
     }

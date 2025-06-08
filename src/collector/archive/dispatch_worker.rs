@@ -42,7 +42,6 @@ pub async fn start_fair_task_scheduler() -> Result<(), anyhow::Error> {
                         let messages = kline_fetch_process(
                             task_entry.symbol.clone(),
                             task_entry.exchange.clone(),
-                            chrono::Utc::now().timestamp_millis(),
                             task_entry.time_frame.clone(),
                         )
                         .await;
