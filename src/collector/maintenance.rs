@@ -1,5 +1,6 @@
-mod types;
+pub mod types;
 
+use crate::collector::archive::KlineMessage;
 use crate::collector::maintenance::types::{
     ArchiveDirection, ArchiveError, ArchiveTask, ArchiveWindow,
 };
@@ -9,8 +10,8 @@ use crate::infra::external::binance::market::KlineSummary;
 use crate::infra::external::binance::DefaultBinanceExchange;
 use crate::model::cex::kline::{MarketKline, MinMaxCloseTime};
 use crate::model::TimeFrame;
-use crate::scheduler::tasks::history_data::KlineMessage;
 use anyhow::Result;
+use async_trait::async_trait;
 use backoff::{future::retry, ExponentialBackoff};
 /// This file contains the implementation of the maintenance module of the trade consumer.
 /// 对历史数据进行清理、归档、缓存等操作
@@ -157,108 +158,36 @@ pub async fn run_archive_task(
     Ok(())
 }
 
-pub async fn generate_archive_messages(
-    tasks: &[ArchiveTask],
-) -> Result<Vec<KlineMessage>, ArchiveError> {
-    let fetcher = BinanceFetcher::new();
-
-    let mut messages = Vec::new();
-
-    for task in tasks {
-        let tf_str = task.tf.to_str();
-        let tf_ms = task.tf.to_millis();
-
-        info!(
-            "Starting archive task: {} {} direction={:?}, windows={}",
-            task.exchange,
-            task.symbol,
-            task.direction,
-            task.window.len()
-        );
-
-        for window in &task.window {
-            let start = match window.start_time {
-                Some(t) => t,
-                None => {
-                    warn!("Missing start_time in window. Skipping.");
-                    continue;
-                }
-            };
-
-            let end = match window.end_time {
-                Some(t) => t,
-                None => {
-                    warn!("Missing end_time in window. Skipping.");
-                    continue;
-                }
-            };
-
-            if start >= end {
-                warn!(
-                    "Invalid window: start >= end [{} >= {}]. Skipping.",
-                    start, end
-                );
-                continue;
-            }
-
-            // === 拉取数据（含重试） ===
-            let klines = retry(ExponentialBackoff::default(), || async {
-                fetcher
-                    .klines(
-                        &task.symbol,
-                        tf_str,
-                        Some(1000),
-                        Some(start as u64),
-                        Some(end as u64),
-                    )
-                    .await
-                    .map_err(|e| {
-                        warn!(?e, "Failed to fetch Klines, retrying...");
-                        backoff::Error::transient(e)
-                    })
-            })
-            .await
-            .map_err(|e| ArchiveError::DataError(e.to_string()))?;
-
-            if klines.is_empty() {
-                info!("No Kline data between {} ~ {}.", start, end);
-                continue;
-            }
-
-            // === 连续性检查 ===
-            if !is_kline_continuous(&klines, tf_ms) {
-                warn!("Kline gap detected in range {} ~ {}", start, end);
-            }
-
-            // 封装为 KlineMessage（用于 downstream 阶段入缓存或批量入库）
-            let message = KlineMessage {
-                datas: klines,
-                symbol: task.symbol.clone(),
-                exchange: task.exchange.clone(),
-                time_frame: tf_str.to_string(),
-            };
-
-            messages.push(message);
-        }
-    }
-
-    Ok(messages)
-}
 // ========== Helper & Placeholder Stubs ==========
 
-fn is_kline_continuous(klines: &[KlineSummary], tf_ms: i64) -> bool {
+pub fn is_kline_continuous(klines: &[KlineSummary], tf_ms: i64) -> bool {
     klines
         .windows(2)
         .all(|w| w[1].close_time - w[0].close_time == tf_ms)
 }
 
+#[async_trait]
+pub trait KlineFetcher: Send + Sync {
+    async fn klines(
+        &self,
+        symbol: &str,
+        interval: &str,
+        limit: Option<u16>,
+        start_time: Option<u64>,
+        end_time: Option<u64>,
+    ) -> Result<Vec<KlineSummary>, anyhow::Error>;
+}
+
 pub struct BinanceFetcher;
+
 impl BinanceFetcher {
     pub fn new() -> Self {
         BinanceFetcher
     }
-
-    pub async fn klines(
+}
+#[async_trait]
+impl KlineFetcher for BinanceFetcher {
+    async fn klines(
         &self,
         symbol: &str,
         tf: &str,
@@ -304,118 +233,57 @@ pub async fn historical_maintenance_process(
     close_time: i64,
     time_frame: Arc<TimeFrame>,
 ) {
-    // 获取历史记录最大时间和最小时间
-    let mima_time =
-        match ProgressTracker::get_progress(&symbol, &exchange, &time_frame.to_str()).await {
-            Some(progress) => progress,
-            None => {
-                info!("No existing progress found, initializing the task.");
-
-                // 如果没有进度数据，我们尝试使用某个默认的起始时间（例如过去的某个日期）
-                let fallback_time =
-                    get_default_start_time(close_time, &time_frame).unwrap_or_else(|| {
-                        // 如果无法获取默认时间，则使用当前时间的某个合理的回退时间
-                        Utc::now().timestamp_millis() - 86_400_000 // 一天前
-                    });
-                MinMaxCloseTime {
-                    min_close_time: fallback_time,
-                    max_close_time: 0,
-                }
-            }
-        };
-    // info!("is max_close is {} min close is {}",&mima_time.max_close_time,&mima_time.min_close_time);
-    // 默认只归档不超过五年的数据
-    if should_skip_archiving_due_to_old_data(
-        mima_time.min_close_time,
-        &symbol,
-        &exchange,
-        &time_frame,
-    ) {
-        return;
-    }
-    // 构建回溯/追溯任务集合
-    let tasks = build_archive_tasks(
-        &symbol,
-        &exchange,
-        time_frame.clone(),
-        &mima_time,
-        close_time,
-    );
-
-    // 执行前向归档任务，并加入重试机制
-    if let Err(e) =
-        run_archive_task_with_retry(&tasks, &symbol, &exchange, &time_frame.to_str()).await
-    {
-        error!(?e, "Failed to execute archive task");
-        // 失败后可以考虑通知机制，如通过 Webhook 或邮件通知管理员
-    } else {
-        info!(
-            "archive task completed for {} - {} - {}",
-            symbol,
-            exchange,
-            &time_frame.to_str()
-        );
-    }
-}
-
-pub async fn historical_maintenance_backforward_process(
-    symbol: String,
-    exchange: String,
-    close_time: i64,
-    time_frame: Arc<TimeFrame>,
-) {
-    // 获取历史记录最大时间和最小时间
-    let mima_time =
-        match ProgressTracker::get_progress(&symbol, &exchange, &time_frame.to_str()).await {
-            Some(progress) => progress,
-            None => {
-                info!("No existing progress found, initializing the task.");
-
-                // 如果没有进度数据，我们尝试使用某个默认的起始时间（例如过去的某个日期）
-                let fallback_time =
-                    get_default_start_time(close_time, &time_frame).unwrap_or_else(|| {
-                        // 如果无法获取默认时间，则使用当前时间的某个合理的回退时间
-                        Utc::now().timestamp_millis() - 86_400_000 // 一天前
-                    });
-                MinMaxCloseTime {
-                    min_close_time: fallback_time,
-                    max_close_time: 0,
-                }
-            }
-        };
-    // info!("is max_close is {} min close is {}",&mima_time.max_close_time,&mima_time.min_close_time);
-    // 默认只归档不超过五年的数据
-    if should_skip_archiving_due_to_old_data(
-        mima_time.min_close_time,
-        &symbol,
-        &exchange,
-        &time_frame,
-    ) {
-        return;
-    }
-    // 构建回溯/追溯任务集合
-    let tasks = build_archive_tasks(
-        &symbol,
-        &exchange,
-        time_frame.clone(),
-        &mima_time,
-        close_time,
-    );
-
-    // 执行前向归档任务，并加入重试机制
-    if let Err(e) =
-        run_archive_task_with_retry(&tasks, &symbol, &exchange, &time_frame.to_str()).await
-    {
-        error!(?e, "Failed to execute archive task");
-        // 失败后可以考虑通知机制，如通过 Webhook 或邮件通知管理员
-    } else {
-        info!(
-            "archive task completed for {} - {} - {}",
-            symbol,
-            exchange,
-            &time_frame.to_str()
-        );
-    }
+    //     // 获取历史记录最大时间和最小时间
+    //     let mima_time =
+    //         match ProgressTracker::get_progress(&symbol, &exchange, &time_frame.to_str()).await {
+    //             Some(progress) => progress,
+    //             None => {
+    //                 info!("No existing progress found, initializing the task.");
+    //
+    //                 // 如果没有进度数据，我们尝试使用某个默认的起始时间（例如过去的某个日期）
+    //                 let fallback_time =
+    //                     get_default_start_time(close_time, &time_frame).unwrap_or_else(|| {
+    //                         // 如果无法获取默认时间，则使用当前时间的某个合理的回退时间
+    //                         Utc::now().timestamp_millis() - 86_400_000 // 一天前
+    //                     });
+    //                 MinMaxCloseTime {
+    //                     min_close_time: fallback_time,
+    //                     max_close_time: 0,
+    //                 }
+    //             }
+    //         };
+    //     // info!("is max_close is {} min close is {}",&mima_time.max_close_time,&mima_time.min_close_time);
+    //     // 默认只归档不超过五年的数据
+    //     if should_skip_archiving_due_to_old_data(
+    //         mima_time.min_close_time,
+    //         &symbol,
+    //         &exchange,
+    //         &time_frame,
+    //     ) {
+    //         return;
+    //     }
+    //     // 构建回溯/追溯任务集合
+    //     let tasks = build_archive_tasks(
+    //         &symbol,
+    //         &exchange,
+    //         time_frame.clone(),
+    //         &mima_time,
+    //     );
+    //
+    //     // 执行前向归档任务，并加入重试机制
+    //     if let Err(e) =
+    //         run_archive_task_with_retry(&tasks, &symbol, &exchange, &time_frame.to_str()).await
+    //     {
+    //         error!(?e, "Failed to execute archive task");
+    //         // 失败后可以考虑通知机制，如通过 Webhook 或邮件通知管理员
+    //     } else {
+    //         info!(
+    //             "archive task completed for {} - {} - {}",
+    //             symbol,
+    //             exchange,
+    //             &time_frame.to_str()
+    //         );
+    //     }
 }
 
 async fn run_archive_task_with_retry(
@@ -466,7 +334,7 @@ pub fn should_skip_archiving_due_to_old_data(
 }
 
 /// 获取默认起始时间（如果有配置或其他数据源）
-fn get_default_start_time(close_time: i64, tf: &TimeFrame) -> Option<i64> {
+pub fn get_default_start_time(close_time: i64, tf: &TimeFrame) -> Option<i64> {
     // 计算一个周期之前的时间点，排除掉已计算的最新K线
     let start_time = close_time;
 
@@ -485,7 +353,6 @@ pub fn build_archive_tasks(
     exchange: &str,
     time_frame: Arc<TimeFrame>,
     mima_time: &MinMaxCloseTime,
-    close_time: i64,
 ) -> Vec<ArchiveTask> {
     let period_ms = time_frame.to_millis();
     let backtrack_count = time_frame.backtrack_count() as i64;
@@ -523,7 +390,7 @@ pub fn build_archive_tasks(
     // === Forward 任务 ===
     if mima_time.max_close_time != 0 {
         let forward_start = mima_time.max_close_time;
-        let forward_end = close_time; // redis缓存如果存在取最小时间
+        let forward_end = 0; //todo close_time; // redis缓存如果存在取最小时间
         if let Some(task) = try_build_task(ArchiveDirection::Forward, forward_start, forward_end) {
             tasks.push(task);
         }
@@ -552,60 +419,6 @@ pub fn split_into_chunks(start_time: i64, end_time: i64, chunk_size: i64) -> Vec
         current = next;
     }
     result
-}
-
-/// 构造 Forward(追溯数据) 任务（从 max_close_time 向最新时间方向补齐到 close_time）
-pub fn build_forward_task(
-    symbol: &str,
-    exchange: &str,
-    time_frame: Arc<TimeFrame>,
-    max_close_time: i64,
-    close_time: i64,
-) -> Option<ArchiveTask> {
-    if max_close_time == 0 || max_close_time >= close_time {
-        return None;
-    }
-
-    let period_ms = time_frame.to_millis();
-    let default_chunk_size_ms = 1000 * period_ms;
-
-    Some(ArchiveTask {
-        symbol: symbol.to_string(),
-        exchange: exchange.to_string(),
-        tf: time_frame.clone(),
-        window: create_windows(max_close_time, close_time, default_chunk_size_ms),
-        direction: ArchiveDirection::Forward,
-    })
-}
-
-/// 构造 Backward(回溯数据)（从 min_close_time 向历史时间回退）
-pub fn build_backward_task(
-    symbol: &str,
-    exchange: &str,
-    time_frame: Arc<TimeFrame>,
-    min_close_time: i64,
-) -> Option<ArchiveTask> {
-    let period_ms = time_frame.to_millis();
-    let backtrack_count = time_frame.backtrack_count() as i64;
-    let backtrack_ms = backtrack_count * period_ms;
-
-    let default_chunk_size_ms = 1000 * period_ms;
-    let actual_chunk_size_ms = default_chunk_size_ms.min(backtrack_ms);
-
-    let start = min_close_time - backtrack_ms;
-    let end = min_close_time;
-
-    if start < end {
-        Some(ArchiveTask {
-            symbol: symbol.to_string(),
-            exchange: exchange.to_string(),
-            tf: time_frame,
-            window: create_windows(start, end, actual_chunk_size_ms),
-            direction: ArchiveDirection::Backward,
-        })
-    } else {
-        None
-    }
 }
 
 /*

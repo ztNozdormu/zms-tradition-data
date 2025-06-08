@@ -1,6 +1,6 @@
 mod aggregatoragg;
 pub mod archive;
-mod maintenance;
+pub mod maintenance;
 mod types;
 
 use crate::collector::aggregatoragg::{CusAggregator, MultiTimeFrameAggregator};

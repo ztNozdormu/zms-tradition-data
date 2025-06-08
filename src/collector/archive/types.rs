@@ -1,5 +1,3 @@
-use crate::infra::external::binance::market::KlineSummary;
-use crate::model::cex::kline::MarketKline;
 use crate::model::TimeFrame;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -93,26 +91,26 @@ pub struct ArchiveWindow {
     pub end_time: Option<i64>,
 }
 
-// impl TimeFrame {
-//     // backtrack_count 默认回溯近五年数据即可
-//     pub fn backtrack_count(&self) -> usize {
-//         let base = 1000;
-//         match self {
-//             TimeFrame::M1 => base * 3,
-//             TimeFrame::M3 => base * 3,
-//             TimeFrame::M5 => base * 5,
-//             TimeFrame::M15 => base * 5,
-//             TimeFrame::M30 => base * 5,
-//             TimeFrame::H1 => base * 5,
-//             TimeFrame::H2 => base * 5,
-//             TimeFrame::H4 => base * 5,
-//             TimeFrame::H6 => base,
-//             TimeFrame::H8 => base,
-//             TimeFrame::H12 => base,
-//             TimeFrame::D1 => 700,
-//             TimeFrame::D3 => 700,
-//             TimeFrame::W1 => 240,
-//             TimeFrame::M1L => 60,
-//         }
-//     }
-// }
+impl TimeFrame {
+    // backtrack_count 默认回溯近五年数据即可
+    pub fn backtrack_count(&self) -> usize {
+        let base = 1000;
+        match self {
+            TimeFrame::M1 => base * 3,
+            TimeFrame::M3 => base * 3,
+            TimeFrame::M5 => base * 5,
+            TimeFrame::M15 => base * 5,
+            TimeFrame::M30 => base * 5,
+            TimeFrame::H1 => base * 5,
+            TimeFrame::H2 => base * 5,
+            TimeFrame::H4 => base * 5,
+            TimeFrame::H6 => base,
+            TimeFrame::H8 => base,
+            TimeFrame::H12 => base,
+            TimeFrame::D1 => 700,
+            TimeFrame::D3 => 700,
+            TimeFrame::W1 => 240,
+            TimeFrame::M1L => 60,
+        }
+    }
+}

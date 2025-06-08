@@ -41,6 +41,12 @@ impl<'a> MarketKlineService<'a> {
         })
     }
 
+    #[instrument(name = "save_coin_rank_info")]
+    pub async fn save_coin_rank_info(&mut self, datas: Vec<NewOrUpdateMarketKline>) -> Result<()> {
+        insert_or_update_market_klines(&mut self.repo.conn, datas)?;
+        Ok(())
+    }
+
     /// 查询指定交易所、币对、周期的最早和最晚时间
     pub fn get_mima_time(
         &mut self,
@@ -69,15 +75,10 @@ impl<'a> MarketKlineService<'a> {
     }
 }
 
-/// 从 交易所(币安) 获取历史k线数据
-async fn fetch_exchange_history_data() -> Vec<NewOrUpdateMarketKline> {
-    todo!()
-}
-
 fn insert_or_update_market_klines(
     conn: &mut MysqlConnection,
     new_ranks: Vec<NewOrUpdateMarketKline>,
-) -> anyhow::Result<()> {
+) -> Result<()> {
     conn.transaction(|conn| {
         for market_kline in &new_ranks {
             diesel::insert_into(market_kline::table)

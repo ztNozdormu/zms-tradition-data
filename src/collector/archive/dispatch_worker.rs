@@ -1,0 +1,147 @@
+use crate::collector::archive::fetch::kline_fetch_process;
+use crate::collector::archive::flush::flush_all;
+use crate::collector::archive::KlineMessage;
+use crate::global::get_flush_buffer;
+use crate::model::TimeFrame;
+use std::collections::{HashMap, VecDeque};
+use std::sync::Arc;
+use std::time::Duration;
+use tokio::sync::{mpsc, Mutex};
+use tokio::task;
+
+/// 每个任务
+#[derive(Clone)]
+struct ArchiveTaskEntry {
+    symbol: String,
+    exchange: String,
+    time_frame: Arc<TimeFrame>,
+    priority: u8, // 支持优先级，值越小优先级越高
+}
+
+/// 主调度器（生成任务 + 轮转调度）
+pub async fn start_fair_task_scheduler() -> Result<(), anyhow::Error> {
+    let (tx, rx) = mpsc::channel::<KlineMessage>(1000);
+    let symbols = vec!["btcusdt", "ethusdt", "solusdt"];
+    let timeframes = vec![TimeFrame::M1, TimeFrame::M5, TimeFrame::H1];
+
+    // 启动异步 worker pool
+    tokio::spawn(start_worker_pool(rx, 20));
+
+    // 启动调度器定时生成任务（公平轮询 + 优先级支持）
+    let mut round_robin_queue = build_task_queues(&symbols, &timeframes);
+
+    // 任务投递
+    tokio::spawn(async move {
+        loop {
+            // 每轮分发 N 个任务
+            let batch_size = 10;
+            for _ in 0..batch_size {
+                if let Some(task_entry) = next_fair_task(&mut round_robin_queue) {
+                    let tx = tx.clone();
+                    task::spawn(async move {
+                        let messages = kline_fetch_process(
+                            task_entry.symbol.clone(),
+                            task_entry.exchange.clone(),
+                            chrono::Utc::now().timestamp_millis(),
+                            task_entry.time_frame.clone(),
+                        )
+                        .await;
+
+                        for msg in messages {
+                            let _ = tx.send(msg).await;
+                        }
+                    });
+                }
+            }
+
+            tokio::time::sleep(Duration::from_secs(3)).await;
+        }
+    });
+
+    Ok(())
+}
+
+/// 构建轮转调度队列（每个任务配置优先级）
+fn build_task_queues(
+    symbols: &[&str],
+    timeframes: &[TimeFrame],
+) -> HashMap<u8, VecDeque<ArchiveTaskEntry>> {
+    let mut map: HashMap<u8, VecDeque<ArchiveTaskEntry>> = HashMap::new();
+
+    for symbol in symbols {
+        for tf in timeframes {
+            let priority = match tf {
+                TimeFrame::M1 => 1,
+                TimeFrame::M5 => 2,
+                TimeFrame::H1 => 3,
+                _ => 10,
+            };
+            map.entry(priority)
+                .or_default()
+                .push_back(ArchiveTaskEntry {
+                    symbol: symbol.to_string(),
+                    exchange: "binance".to_string(),
+                    time_frame: Arc::new(tf.clone()),
+                    priority,
+                });
+        }
+    }
+
+    map
+}
+
+/// 公平调度，按优先级轮转队列分发任务
+fn next_fair_task(
+    queues: &mut HashMap<u8, VecDeque<ArchiveTaskEntry>>,
+) -> Option<ArchiveTaskEntry> {
+    let mut keys: Vec<u8> = queues.keys().cloned().collect();
+    keys.sort();
+
+    for k in keys {
+        if let Some(queue) = queues.get_mut(&k) {
+            if let Some(task) = queue.pop_front() {
+                queue.push_back(task.clone()); // 重新放回队尾形成轮转
+                return Some(task);
+            }
+        }
+    }
+    None
+}
+
+/// 启动异步 Worker 池，消费 `KlineMessage` 并按方向写入目标（MySQL/ClickHouse）
+pub async fn start_worker_pool(receiver: mpsc::Receiver<KlineMessage>, num_workers: usize) {
+    let receiver = Arc::new(Mutex::new(receiver));
+
+    for i in 0..num_workers {
+        let receiver = Arc::clone(&receiver);
+        let buffer = get_flush_buffer(); // Forward 和 Backward 都共用一个 buffer，内部按方向区分
+
+        tokio::spawn(async move {
+            loop {
+                // 尽量缩小锁粒度
+                let maybe_msg = {
+                    let mut locked = receiver.lock().await;
+                    locked.recv().await
+                };
+
+                let Some(msg) = maybe_msg else {
+                    break;
+                };
+
+                buffer.add(msg).await;
+
+                // Flush 逻辑交给统一调度器处理
+                if buffer.should_flush_forward().await || buffer.should_flush_backward().await {
+                    if let Err(e) = flush_all(&*buffer).await {
+                        tracing::error!("Worker {i} flush failed: {:?}", e);
+                    }
+                }
+            }
+
+            // 最后一轮 drain
+            if let Err(e) = flush_all(&*buffer).await {
+                tracing::error!("Worker {i} final flush failed: {:?}", e);
+            }
+        });
+    }
+}
