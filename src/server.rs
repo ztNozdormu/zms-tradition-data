@@ -1,4 +1,3 @@
-use crate::collector::handle_trade_aggregation;
 use crate::global::init_global_services;
 use crate::scheduler::Scheduler;
 use listen_tracing::{LogCache, LogEntry};
@@ -45,9 +44,6 @@ pub async fn start() {
     tokio::spawn(async move {
         scheduler.run().await;
     });
-
-    //  trade driven aggregator update klines async
-    // handle_trade_aggregation().await;
 
     let bind_address: SocketAddr = "127.0.0.1:10099".parse().unwrap();
 

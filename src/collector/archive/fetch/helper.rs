@@ -66,7 +66,7 @@ pub fn get_default_start_time_with_offset(tf: &TimeFrame, days_offset: i64) -> O
 
 /// 时间窗口生成
 pub fn create_windows(start_time: i64, end_time: i64, chunk_size: i64) -> Vec<ArchiveWindow> {
-    crate::collector::maintenance::split_into_chunks(start_time, end_time, chunk_size)
+    split_into_chunks(start_time, end_time, chunk_size)
         .into_iter()
         .map(|(s, e)| ArchiveWindow {
             start_time: Some(s),
