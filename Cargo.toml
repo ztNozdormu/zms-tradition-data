@@ -35,9 +35,6 @@ barter-integration = { git = "https://github.com/ztNozdormu/barter-rs.git", bran
 reqwest = { version = "0.12.9",default-features = false, features = ["rustls-tls", "json"] }
 
 # Cryptographic Signatures
-hmac = { version = "0.12.1" }
-sha2 = { version = "0.10.8" }
-hex = { version = "0.4.3" }
 base64 = { version = "0.22.1" }
 
 futures-util = "0.3.31"
