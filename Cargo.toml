@@ -31,7 +31,7 @@ futures = "0.3.31"
 # Kline tool
 trade_aggregation = "12.0.3"
 # Barter Ecosystem
-barter = { git = "https://github.com/ztNozdormu/barter-rs.git", branch = "dev-local" }
+barter-integration = { git = "https://github.com/ztNozdormu/barter-rs.git", branch = "dev-local" }
 reqwest = { version = "0.12.9",default-features = false, features = ["rustls-tls", "json"] }
 
 # Cryptographic Signatures

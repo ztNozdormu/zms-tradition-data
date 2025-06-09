@@ -1,5 +1,5 @@
 use crate::infra::external::binance::constant;
-use barter::barter_integration::protocol::http::rest::RestRequest;
+use barter_integration::protocol::http::rest::RestRequest;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 

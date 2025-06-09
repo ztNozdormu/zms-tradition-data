@@ -1,5 +1,5 @@
-use barter::barter_integration::error::SocketError;
-use barter::barter_integration::protocol::http::HttpParser;
+use barter_integration::error::SocketError;
+use barter_integration::protocol::http::HttpParser;
 use reqwest::StatusCode;
 use thiserror::Error;
 

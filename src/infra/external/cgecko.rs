@@ -12,11 +12,11 @@ use crate::infra::external::cgecko::coin_data::{
 use crate::infra::external::cgecko::coin_rank::{CoinQueryParams, CoinRank, FetchCoinRequest};
 use crate::infra::external::cgecko::constant::BASE_URL;
 use crate::infra::external::CommonExternalParser;
-use barter::barter_integration::error::SocketError;
-use barter::barter_integration::protocol::http::private::Signer;
-use barter::barter_integration::protocol::http::rest::client::RestClient;
-use barter::barter_integration::protocol::http::rest::RestRequest;
-use barter::barter_integration::protocol::http::{BuildStrategy, HttpParser};
+use barter_integration::error::SocketError;
+use barter_integration::protocol::http::private::Signer;
+use barter_integration::protocol::http::rest::client::RestClient;
+use barter_integration::protocol::http::rest::RestRequest;
+use barter_integration::protocol::http::{BuildStrategy, HttpParser};
 use reqwest::RequestBuilder;
 use serde::Deserialize;
 use std::fmt::Debug;

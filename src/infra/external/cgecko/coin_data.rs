@@ -1,6 +1,6 @@
 use crate::common::serde_fun;
 use crate::infra::external::cgecko::constant::COIN_DATA;
-use barter::barter_integration::protocol::http::rest::RestRequest;
+use barter_integration::protocol::http::rest::RestRequest;
 use bigdecimal::BigDecimal;
 use chrono::{NaiveDate, NaiveDateTime};
 use serde::{Deserialize, Serialize};

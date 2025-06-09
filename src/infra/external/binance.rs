@@ -3,11 +3,11 @@ use crate::infra::external::binance::meta::{
     BinanceExchangeInfo, FetchExchangeInfoRequest, Symbol,
 };
 use crate::infra::external::CommonExternalParser;
-use barter::barter_integration::error::SocketError;
-use barter::barter_integration::protocol::http::private::Signer;
-use barter::barter_integration::protocol::http::rest::client::RestClient;
-use barter::barter_integration::protocol::http::rest::RestRequest;
-use barter::barter_integration::protocol::http::{BuildStrategy, HttpParser};
+use barter_integration::error::SocketError;
+use barter_integration::protocol::http::private::Signer;
+use barter_integration::protocol::http::rest::client::RestClient;
+use barter_integration::protocol::http::rest::RestRequest;
+use barter_integration::protocol::http::{BuildStrategy, HttpParser};
 use reqwest::RequestBuilder;
 use std::collections::BTreeMap;
 use std::fmt::Debug;

@@ -1,6 +1,6 @@
 use crate::common::serde_fun::{parse_field, ParseError};
 use crate::infra::external::binance::constant;
-use barter::barter_integration::protocol::http::rest::RestRequest;
+use barter_integration::protocol::http::rest::RestRequest;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
 use std::borrow::Cow;

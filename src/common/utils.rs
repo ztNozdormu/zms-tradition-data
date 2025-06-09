@@ -1,8 +1,6 @@
 use crate::infra::cache::kv_store::RedisKVStore;
 use crate::infra::db::{ckdb::ClickhouseDb, types::ClickHouseDatabase};
 use anyhow::Result;
-use barter::barter_xchange::exchange::binance::api::Binance;
-use barter::barter_xchange::exchange::binance::futures::market::FuturesMarket;
 use bb8_redis::{bb8, RedisConnectionManager};
 use bigdecimal::BigDecimal;
 use std::{fs::File, io::BufWriter, sync::Arc};
@@ -10,10 +8,6 @@ use std::{fs::File, io::BufWriter, sync::Arc};
 pub fn is_local() -> bool {
     std::env::var("LOCAL").is_ok()
 }
-pub async fn make_binace_client() -> Result<Arc<FuturesMarket>> {
-    Ok(Arc::new(Binance::new(None, None)))
-}
-
 pub async fn make_kv_store() -> Result<Arc<RedisKVStore>> {
     match is_local() {
         true => {
@@ -80,7 +74,6 @@ pub fn format_opt_decimal(val: &Option<BigDecimal>) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[tokio::test]
     async fn test_get_jup_price() {
