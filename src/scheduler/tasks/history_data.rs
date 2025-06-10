@@ -16,22 +16,3 @@ pub async fn exchange_history_data() -> Result<(), anyhow::Error> {
 
     Ok(())
 }
-//
-// pub async fn generate_tasks(
-//     sender: mpsc::Sender<KlineMessage>,
-//     symbols: &[&str],
-//     intervals: &[&str],
-// ) {
-//     for symbol in symbols {
-//         for interval in intervals {
-//             let time_frame = TimeFrame::H1;
-//             let kline_messages = historical_maintenance_process_tasks(symbol.to_string(),"binance".to_string(),Arc::new(time_frame)).await;
-//             for kline_message in kline_messages {
-//                 // ❸ 发送到 downstream
-//                 if let Err(e) = sender.send(kline_message).await {
-//                     eprintln!("failed to send KlineMessage: {e}");
-//                 }
-//             }
-//         }
-//     }
-// }

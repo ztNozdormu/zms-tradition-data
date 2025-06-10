@@ -1,5 +1,6 @@
 # zms-tradition-data
-zms-tradition-data 
+zms-tradition-data
+Unofficial Rust Library for the [Binance API](https://github.com/binance/binance-spot-api-docs) and [Binance Futures API (Under development with upcoming breaking changes)](https://developers.binance.com/docs/derivatives/usds-margined-futures/common-definition#enum-definitions)
 
 ## 组件
 

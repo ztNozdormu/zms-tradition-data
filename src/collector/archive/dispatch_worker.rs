@@ -21,8 +21,8 @@ struct ArchiveTaskEntry {
 /// 主调度器（生成任务 + 轮转调度）
 pub async fn start_fair_task_scheduler() -> Result<(), anyhow::Error> {
     let (tx, rx) = mpsc::channel::<KlineMessage>(1000);
-    let symbols = vec!["btcusdt", "ethusdt", "solusdt"];
-    let timeframes = vec![TimeFrame::M1, TimeFrame::M5, TimeFrame::H1];
+    let symbols = vec!["btcusdt"]; //, "ethusdt", "solusdt"
+    let timeframes = vec![TimeFrame::M1]; //, TimeFrame::M5, TimeFrame::H1
 
     // 启动异步 worker pool
     tokio::spawn(start_worker_pool(rx, 20));

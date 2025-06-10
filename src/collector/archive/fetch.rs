@@ -51,10 +51,10 @@ impl KlineFetcher for BinanceFetcher {
         start: Option<u64>,
         end: Option<u64>,
     ) -> anyhow::Result<Vec<KlineSummary>> {
-        let symbol_with_usdt = format!("{}usdt", symbol);
+        //let symbol_with_usdt = format!("{}usdt", symbol);
         let dbe = DefaultBinanceExchange::default();
         let klines = dbe
-            .get_klines(symbol_with_usdt, tf, limit, start, end)
+            .get_klines(symbol, tf, limit, start, end)
             .await;
         Ok(klines)
     }
