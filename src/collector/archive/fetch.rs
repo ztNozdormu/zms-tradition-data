@@ -53,7 +53,7 @@ impl KlineFetcher for BinanceFetcher {
         end: Option<u64>,
     ) -> anyhow::Result<Vec<KlineSummary>> {
         // 阻塞式限流，等待令牌
-        get_binance_limiter().acquire().await;
+        get_binance_limiter().acquire_with_limit(limit.unwrap_or(1000).into()).await;
         //let symbol_with_usdt = format!("{}usdt", symbol);
         let dbe = DefaultBinanceExchange::default();
         let klines = dbe.get_klines(symbol, tf, limit, start, end).await;
