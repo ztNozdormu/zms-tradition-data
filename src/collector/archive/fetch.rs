@@ -7,6 +7,7 @@ use crate::collector::archive::fetch::helper::{
 use crate::collector::archive::fetch::progress::ProgressTracker;
 use crate::collector::archive::types::{ArchiveDirection, ArchiveError, ArchiveTask};
 use crate::collector::archive::KlineMessage;
+use crate::global::get_binance_limiter;
 use crate::infra::external::binance::market::KlineSummary;
 use crate::infra::external::binance::DefaultBinanceExchange;
 use crate::model::cex::kline::MinMaxCloseTime;
@@ -51,11 +52,11 @@ impl KlineFetcher for BinanceFetcher {
         start: Option<u64>,
         end: Option<u64>,
     ) -> anyhow::Result<Vec<KlineSummary>> {
+        // 阻塞式限流，等待令牌
+        get_binance_limiter().acquire().await;
         //let symbol_with_usdt = format!("{}usdt", symbol);
         let dbe = DefaultBinanceExchange::default();
-        let klines = dbe
-            .get_klines(symbol, tf, limit, start, end)
-            .await;
+        let klines = dbe.get_klines(symbol, tf, limit, start, end).await;
         Ok(klines)
     }
 }

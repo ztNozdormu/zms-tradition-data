@@ -16,7 +16,6 @@ use tracing::error;
 mod constant;
 pub mod market;
 pub mod meta;
-
 pub struct BinanceSigner;
 impl BuildStrategy for BinanceSigner {
     fn build<Request>(

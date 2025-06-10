@@ -4,8 +4,8 @@ use async_trait::async_trait;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-pub const FORWARD_FLUSH_THRESHOLD: usize = 100;//1_000;
-pub const BACKWARD_FLUSH_THRESHOLD: usize = 1000;// 50_000;
+pub const FORWARD_FLUSH_THRESHOLD: usize = 100; //1_000;
+pub const BACKWARD_FLUSH_THRESHOLD: usize = 1000; // 50_000;
 
 #[derive(Default, Clone, Debug)]
 pub struct KlineBuffer {

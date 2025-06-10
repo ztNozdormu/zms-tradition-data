@@ -5,6 +5,7 @@ use thiserror::Error;
 
 pub mod binance;
 pub mod cgecko;
+pub mod rate_limiter;
 
 /// Parser for third domain responses
 #[derive(Debug)]

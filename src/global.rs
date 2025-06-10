@@ -4,6 +4,7 @@ use crate::infra::cache::flush_controller::FlushController;
 use crate::infra::cache::kv_store::RedisKVStore;
 use crate::infra::db::ckdb::ClickhouseDb;
 use crate::infra::db::mysql::{make_mysql_pool, MySqlPool};
+use crate::infra::external::rate_limiter::binance_limiter::BinanceLimiter;
 use once_cell::sync::OnceCell;
 use std::sync::Arc;
 
@@ -13,6 +14,7 @@ pub static KV_STORE: OnceCell<Arc<RedisKVStore>> = OnceCell::new();
 pub static MYSQL_POOL: OnceCell<Arc<MySqlPool>> = OnceCell::new();
 pub static FLUSH_CONTROLLER: OnceCell<Arc<FlushController>> = OnceCell::new();
 pub static FLUSH_BUFFER: OnceCell<Arc<KlineBuffer>> = OnceCell::new();
+pub static BINANCE_LIMITER: OnceCell<Arc<BinanceLimiter>> = OnceCell::new();
 
 pub async fn init_global_services() {
     let ck_db = make_db().await.expect("Failed to initialize ClickhouseDb");
@@ -29,11 +31,14 @@ pub async fn init_global_services() {
 
     let flush_buffer = Arc::new(KlineBuffer::new());
 
+    let binance_limiter = Arc::new(BinanceLimiter::new());
+
     let _ = set_ck_db(ck_db);
     let _ = set_kv_store(redis_store).unwrap();
     let _ = set_mysql_pool(mysql_pool).unwrap();
     let _ = set_flush_controller(flush_controller);
     let _ = set_flush_buffer(flush_buffer);
+    let _ = set_binance_limiter(binance_limiter);
 }
 
 pub fn set_ck_db(instance: Arc<ClickhouseDb>) -> Result<(), Arc<ClickhouseDb>> {
@@ -85,5 +90,18 @@ pub fn get_flush_buffer() -> Arc<KlineBuffer> {
     FLUSH_BUFFER
         .get()
         .expect("FLUSH_BUFFER not initialized")
+        .clone()
+}
+
+/// Setter binance_limiter
+pub fn set_binance_limiter(instance: Arc<BinanceLimiter>) -> Result<(), Arc<BinanceLimiter>> {
+    BINANCE_LIMITER.set(instance)
+}
+
+/// Getter binance_limiter
+pub fn get_binance_limiter() -> Arc<BinanceLimiter> {
+    BINANCE_LIMITER
+        .get()
+        .expect("BinanceLimiter not initialized")
         .clone()
 }
