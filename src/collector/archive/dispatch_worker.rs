@@ -8,6 +8,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::{mpsc, Mutex};
 use tokio::task;
+use tracing::info;
 
 /// 每个任务
 #[derive(Clone)]
@@ -30,14 +31,16 @@ pub async fn start_fair_task_scheduler() -> Result<(), anyhow::Error> {
     // 启动调度器定时生成任务（公平轮询 + 优先级支持）
     let mut round_robin_queue = build_task_queues(&symbols, &timeframes);
 
-    // 任务投递
+    // 任务投递 这种方式每个任务执行一次
     tokio::spawn(async move {
         loop {
-            // 每轮分发 N 个任务
-            let batch_size = 10;
-            for _ in 0..batch_size {
+            let mut dispatched = false;
+
+            for _ in 0..round_robin_queue.len() {
                 if let Some(task_entry) = next_fair_task(&mut round_robin_queue) {
+                    dispatched = true;
                     let tx = tx.clone();
+
                     task::spawn(async move {
                         let messages = kline_fetch_process(
                             task_entry.symbol.clone(),
@@ -50,10 +53,19 @@ pub async fn start_fair_task_scheduler() -> Result<(), anyhow::Error> {
                             let _ = tx.send(msg).await;
                         }
                     });
+
+                    tokio::time::sleep(Duration::from_millis(200)).await;
                 }
             }
 
-            tokio::time::sleep(Duration::from_secs(3)).await;
+            // 所有任务已调度完成（空）
+            if !dispatched {
+                info!("All archive tasks have been dispatched.");
+                break;
+            }
+
+            // 控制每轮调度间隔
+            tokio::time::sleep(Duration::from_secs(2)).await;
         }
     });
 
@@ -89,21 +101,39 @@ fn build_task_queues(
     map
 }
 
-/// 公平调度，按优先级轮转队列分发任务
-fn next_fair_task(
-    queues: &mut HashMap<u8, VecDeque<ArchiveTaskEntry>>,
-) -> Option<ArchiveTaskEntry> {
-    let mut keys: Vec<u8> = queues.keys().cloned().collect();
-    keys.sort();
+/// 公平调度，按优先级轮转队列分发任务 会重复执行
+// fn next_fair_task(
+//     queues: &mut HashMap<u8, VecDeque<ArchiveTaskEntry>>,
+// ) -> Option<ArchiveTaskEntry> {
+//     let mut keys: Vec<u8> = queues.keys().cloned().collect();
+//     keys.sort();
+//
+//     for k in keys {
+//         if let Some(queue) = queues.get_mut(&k) {
+//             if let Some(task) = queue.pop_front() {
+//                 queue.push_back(task.clone()); // 重新放回队尾形成轮转
+//                 return Some(task);
+//             }
+//         }
+//     }
+//     None
+// }
 
-    for k in keys {
-        if let Some(queue) = queues.get_mut(&k) {
+/// 从多级队列中公平地弹出一个任务 让每个任务只执行一次
+fn next_fair_task(
+    queue_map: &mut HashMap<u8, VecDeque<ArchiveTaskEntry>>,
+) -> Option<ArchiveTaskEntry> {
+    let mut keys: Vec<u8> = queue_map.keys().cloned().collect();
+    keys.sort(); // 从低数字的优先级开始
+
+    for key in keys {
+        if let Some(queue) = queue_map.get_mut(&key) {
             if let Some(task) = queue.pop_front() {
-                queue.push_back(task.clone()); // 重新放回队尾形成轮转
                 return Some(task);
             }
         }
     }
+
     None
 }
 

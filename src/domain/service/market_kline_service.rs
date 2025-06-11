@@ -66,12 +66,23 @@ impl<'a> MarketKlineService<'a> {
             .first::<(Option<i64>, Option<i64>)>(self.repo.conn)
             .optional()?; // 返回 Ok(None) 如果没有行
 
-        // 统一处理为 Some(0, 0) 即使没有数据
-        let (min, max) = result.unwrap_or((Some(0), Some(0)));
-        Ok(Some(MinMaxCloseTime {
-            min_close_time: min.unwrap_or(0),
-            max_close_time: max.unwrap_or(0),
-        }))
+        match result {
+            Some((min_opt, max_opt)) => {
+                // 取默认值为0
+                let min = min_opt.unwrap_or(0);
+                let max = max_opt.unwrap_or(0);
+
+                if min == 0 && max == 0 {
+                    Ok(None)
+                } else {
+                    Ok(Some(MinMaxCloseTime {
+                        min_close_time: min,
+                        max_close_time: max,
+                    }))
+                }
+            }
+            None => Ok(None),
+        }
     }
 }
 

@@ -2,7 +2,8 @@ pub mod helper;
 pub mod progress;
 
 use crate::collector::archive::fetch::helper::{
-    create_windows, is_kline_continuous, should_skip_archiving_due_to_old_data, valid_window_range,
+    create_aligned_windows_with_limit, create_aligned_windows_with_limit_backward,
+    is_kline_continuous, should_skip_archiving_due_to_old_data, valid_window_range,
 };
 use crate::collector::archive::fetch::progress::ProgressTracker;
 use crate::collector::archive::types::{ArchiveDirection, ArchiveError, ArchiveTask};
@@ -53,9 +54,12 @@ impl KlineFetcher for BinanceFetcher {
         end: Option<u64>,
     ) -> anyhow::Result<Vec<KlineSummary>> {
         // 阻塞式限流，等待令牌
-        get_binance_limiter().acquire_with_limit(limit.unwrap_or(1000).into()).await;
+        get_binance_limiter()
+            .acquire_with_limit(limit.unwrap_or(1000).into())
+            .await;
         //let symbol_with_usdt = format!("{}usdt", symbol);
         let dbe = DefaultBinanceExchange::default();
+
         let klines = dbe.get_klines(symbol, tf, limit, start, end).await;
         Ok(klines)
     }
@@ -72,7 +76,7 @@ pub async fn kline_fetch_process(
     // 3. 构建归档任务
     let tasks = build_all_archive_tasks(&symbol, &exchange, time_frame.clone()).await;
 
-    // 4. 执行带重试的归档任务
+    // // 4. 执行带重试的归档任务
     match run_archive_task_with_retry(&tasks).await {
         Ok(messages) => {
             if messages.is_empty() {
@@ -103,12 +107,12 @@ pub async fn build_all_archive_tasks(
 ) -> Vec<ArchiveTask> {
     let mut tasks = vec![];
 
-    if let Some(backward_task) = build_backward_tasks(symbol, exchange, tf.clone()).await {
-        tasks.push(backward_task);
-    }
-
     if let Some(forward_task) = build_forward_tasks(symbol, exchange, tf.clone()).await {
         tasks.push(forward_task);
+    }
+
+    if let Some(backward_task) = build_backward_tasks(symbol, exchange, tf.clone()).await {
+        tasks.push(backward_task);
     }
 
     tasks
@@ -124,7 +128,6 @@ pub async fn build_backward_tasks(
         ProgressTracker::get_or_init_progress(symbol, exchange, &tf, ArchiveDirection::Backward)
             .await;
 
-    // 2. 数据太老跳过
     if should_skip_archiving_due_to_old_data(mima_time.min_close_time, &symbol, &exchange, &tf) {
         info!(
             "Skipping old data: {} - {} - {}",
@@ -141,19 +144,23 @@ pub async fn build_backward_tasks(
     let default_chunk_size_ms = 1000 * period_ms;
     let actual_chunk_size_ms = default_chunk_size_ms.min(backtrack_ms);
 
+    // 注意回溯方向：起点在更早时间，终点在更晚时间
     let start = mima_time.min_close_time - backtrack_ms;
     let end = mima_time.min_close_time;
 
-    if start < end {
+    let windows =
+        create_aligned_windows_with_limit_backward(start, end, actual_chunk_size_ms, period_ms);
+
+    if windows.is_empty() {
+        None
+    } else {
         Some(ArchiveTask {
             symbol: symbol.to_string(),
             exchange: exchange.to_string(),
             tf,
-            window: create_windows(start, end, actual_chunk_size_ms),
+            window: windows,
             direction: ArchiveDirection::Backward,
         })
-    } else {
-        None
     }
 }
 
@@ -171,19 +178,23 @@ pub async fn build_forward_tasks(
     let backtrack_count = tf.backtrack_count() as i64;
     let backtrack_ms = backtrack_count * period_ms;
 
-    // 默认1000根[binance]一批次
     let default_chunk_size_ms = 1000 * period_ms;
-
-    // 保证 chunk_size 不超过总回溯区间
     let actual_chunk_size_ms = default_chunk_size_ms.min(backtrack_ms);
 
-    let forward_end = mima_time.max_close_time + backtrack_ms;
+    let start = mima_time.max_close_time;
+    let end = start + backtrack_ms;
+
+    let windows = create_aligned_windows_with_limit(start, end, actual_chunk_size_ms, period_ms);
+
+    if windows.is_empty() {
+        return None;
+    }
 
     Some(ArchiveTask {
         symbol: symbol.to_string(),
         exchange: exchange.to_string(),
         tf,
-        window: create_windows(mima_time.max_close_time, forward_end, actual_chunk_size_ms),
+        window: windows,
         direction: ArchiveDirection::Forward,
     })
 }
