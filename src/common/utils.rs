@@ -42,6 +42,12 @@ pub fn write_json(data: &str, file_name: &str) -> Result<()> {
     Ok(())
 }
 
+pub fn get_env_bool(key: &str, default: bool) -> bool {
+    std::env::var(key)
+        .map(|val| matches!(val.to_lowercase().as_str(), "1" | "true" | "yes"))
+        .unwrap_or(default)
+}
+
 pub fn round_to_decimals(x: f64, decimals: u32) -> f64 {
     let y = 10i32.pow(decimals) as f64;
     (x * y).round() / y

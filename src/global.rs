@@ -1,5 +1,5 @@
 use crate::collector::archive::kline_buffer::KlineBuffer;
-use crate::common::utils::{make_db, make_kv_store};
+use crate::common::utils::{get_env_bool, make_db, make_kv_store, must_get_env};
 use crate::infra::cache::flush_controller::FlushController;
 use crate::infra::cache::kv_store::RedisKVStore;
 use crate::infra::db::ckdb::ClickhouseDb;
@@ -17,7 +17,15 @@ pub static FLUSH_BUFFER: OnceCell<Arc<KlineBuffer>> = OnceCell::new();
 pub static BINANCE_LIMITER: OnceCell<Arc<BinanceLimiter>> = OnceCell::new();
 
 pub async fn init_global_services() {
-    let ck_db = make_db().await.expect("Failed to initialize ClickhouseDb");
+
+    // 控制 ClickHouse 初始化
+    if get_env_bool("ENABLE_CLICKHOUSE", true) {
+        let ck_db = make_db().await.expect("Failed to initialize ClickhouseDb");
+        let _ = set_ck_db(ck_db);
+    } else {
+        tracing::warn!("ClickHouse initialization skipped (ENABLE_CLICKHOUSE=false)");
+    }
+
     let redis_store = make_kv_store()
         .await
         .expect("Failed to initialize Redis Store");
@@ -33,7 +41,7 @@ pub async fn init_global_services() {
 
     let binance_limiter = Arc::new(BinanceLimiter::new());
 
-    let _ = set_ck_db(ck_db);
+    // let _ = set_ck_db(ck_db);
     let _ = set_kv_store(redis_store).unwrap();
     let _ = set_mysql_pool(mysql_pool).unwrap();
     let _ = set_flush_controller(flush_controller);

@@ -22,6 +22,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{error, info, warn};
+use crate::common::utils::get_env_bool;
 
 #[async_trait]
 pub trait KlineFetcher: Send + Sync {
@@ -110,9 +111,10 @@ pub async fn build_all_archive_tasks(
     if let Some(forward_task) = build_forward_tasks(symbol, exchange, tf.clone()).await {
         tasks.push(forward_task);
     }
-
-    if let Some(backward_task) = build_backward_tasks(symbol, exchange, tf.clone()).await {
-        tasks.push(backward_task);
+    if get_env_bool("ENABLE_CLICKHOUSE", true) {
+        if let Some(backward_task) = build_backward_tasks(symbol, exchange, tf.clone()).await {
+            tasks.push(backward_task);
+        }
     }
 
     tasks
