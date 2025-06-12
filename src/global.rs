@@ -17,7 +17,6 @@ pub static FLUSH_BUFFER: OnceCell<Arc<KlineBuffer>> = OnceCell::new();
 pub static BINANCE_LIMITER: OnceCell<Arc<BinanceLimiter>> = OnceCell::new();
 
 pub async fn init_global_services() {
-
     // 控制 ClickHouse 初始化
     if get_env_bool("ENABLE_CLICKHOUSE", true) {
         let ck_db = make_db().await.expect("Failed to initialize ClickhouseDb");

@@ -8,6 +8,7 @@ use crate::collector::archive::fetch::helper::{
 use crate::collector::archive::fetch::progress::ProgressTracker;
 use crate::collector::archive::types::{ArchiveDirection, ArchiveError, ArchiveTask};
 use crate::collector::archive::KlineMessage;
+use crate::common::utils::get_env_bool;
 use crate::global::get_binance_limiter;
 use crate::infra::external::binance::market::KlineSummary;
 use crate::infra::external::binance::DefaultBinanceExchange;
@@ -22,7 +23,6 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{error, info, warn};
-use crate::common::utils::get_env_bool;
 
 #[async_trait]
 pub trait KlineFetcher: Send + Sync {
